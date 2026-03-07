@@ -1,5 +1,7 @@
 # AI Authority Exchange
 
+![AI Authority Exchange preview](./image.png)
+
 This Next.js app lets you:
 
 - create a match between two businesses from the home page
