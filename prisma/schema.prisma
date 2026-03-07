@@ -1,0 +1,48 @@
+generator client {
+    provider = "prisma-client"
+    output   = "../generated/prisma"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+enum BusinessRoleType {
+    client
+    partner
+
+    @@map("business_role_type")
+}
+
+enum MatchStatus {
+    Not_Started     @map("Not Started")
+    In_Progress     @map("In Progress")
+    Done
+    Leaving
+    Partner_Leaving @map("Partner Leaving")
+
+    @@map("match_status")
+}
+
+model Business {
+    id            Int               @id @default(autoincrement()) @map("id")
+    business      String            @unique(map: "clients_name_unique_idx") @map("name")
+    websiteUrl    String?           @map("website_url")
+    clientType    BusinessRoleType? @default(partner) @map("role")
+    hostedMatches Match[]           @relation("HostBusiness")
+    guestMatches  Match[]           @relation("GuestBusiness")
+
+    @@map("businesses")
+}
+
+model Match {
+    id      Int          @id @default(autoincrement()) @map("id")
+    hostId  Int          @map("publisher_id")
+    guestId Int          @map("guest_id")
+    status  MatchStatus? @default(Not_Started) @map("status")
+    host    Business     @relation("HostBusiness", fields: [hostId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "matches_subject_id_fkey")
+    guest   Business     @relation("GuestBusiness", fields: [guestId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "matches_matched_id_fkey")
+
+    @@unique([hostId, guestId], map: "unique_match_pair")
+    @@map("ai_authority_exchange_matches")
+}

@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Authority Exchange
 
-## Getting Started
+This Next.js app lets you:
 
-First, run the development server:
+- create a match between two businesses from the home page
+- show success and error feedback in toasts
+- browse all saved matches on `/matches` with business names instead of raw IDs
+
+## Stack
+
+- Next.js App Router
+- Prisma ORM
+- Neon Postgres via `DATABASE_URL`
+- Sonner for toast notifications
+
+## Setup
+
+1. Create your environment file from the example.
+2. Set `DATABASE_URL` to your Neon connection string.
+3. Install dependencies.
+4. Run the Prisma migration if this is a fresh database.
+5. Start the dev server.
 
 ```bash
+cp .env.example .env
+npm install
+npm run db:migrate
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+If your Neon database already has the `businesses` and `ai_authority_exchange_matches` tables, you only need the generated client:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+npm run db:generate
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Prisma
 
-## Learn More
+Prisma is configured with:
 
-To learn more about Next.js, take a look at the following resources:
+- schema at `prisma/schema.prisma`
+- config at `prisma.config.ts`
+- generated client at `generated/prisma`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Useful commands:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run db:generate
+npm run db:migrate
+```
 
-## Deploy on Vercel
+## Routes
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `/` creates a new match
+- `/matches` lists all current matches
+- `/api/matches` handles match creation
