@@ -8,13 +8,24 @@ const businessSelection = {
   websiteUrl: true,
 } as const;
 
+const businessNameCollator = new Intl.Collator(undefined, {
+  numeric: true,
+  sensitivity: "base",
+});
+
+function compareBusinessNames(
+  left: { business: string },
+  right: { business: string },
+) {
+  return businessNameCollator.compare(left.business, right.business);
+}
+
 export const getBusinesses = cache(async () => {
-  return prisma.business.findMany({
-    orderBy: {
-      business: "asc",
-    },
+  const businesses = await prisma.business.findMany({
     select: businessSelection,
   });
+
+  return businesses.toSorted(compareBusinessNames);
 });
 
 export type BusinessOption = Awaited<ReturnType<typeof getBusinesses>>[number];
@@ -47,6 +58,12 @@ export const getMatches = cache(async (hostId?: number, guestId?: number) => {
 export type BusinessRelationshipRow = BusinessOption & {
   publishedBy: BusinessOption[];
   publishedFor: BusinessOption[];
+};
+
+export type BusinessRelationshipState = {
+  id: number;
+  publishedByIds: number[];
+  publishedForIds: number[];
 };
 
 export const getBusinessRelationshipRows = cache(
@@ -102,12 +119,8 @@ export const getBusinessRelationshipRows = cache(
         }
       }
 
-      relationshipRow.publishedBy.sort((left, right) =>
-        left.business.localeCompare(right.business),
-      );
-      relationshipRow.publishedFor.sort((left, right) =>
-        left.business.localeCompare(right.business),
-      );
+      relationshipRow.publishedBy.sort(compareBusinessNames);
+      relationshipRow.publishedFor.sort(compareBusinessNames);
 
       return [relationshipRow];
     }
@@ -164,12 +177,8 @@ export const getBusinessRelationshipRows = cache(
     }
 
     for (const row of relationshipRows) {
-      row.publishedBy.sort((left, right) =>
-        left.business.localeCompare(right.business),
-      );
-      row.publishedFor.sort((left, right) =>
-        left.business.localeCompare(right.business),
-      );
+      row.publishedBy.sort(compareBusinessNames);
+      row.publishedFor.sort(compareBusinessNames);
     }
 
     if (hostId === undefined && guestId === undefined) {

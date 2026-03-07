@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { Prisma } from "@/generated/prisma/client";
-import { prisma } from "@/lib/prisma";
+import { formatDatabaseError, withDatabaseRetry } from "@/lib/prisma";
 
 type CreateMatchPayload = {
   hostId?: unknown;
@@ -82,43 +82,79 @@ export async function POST(request: Request) {
     );
   }
 
-  const [host, guests] = await Promise.all([
-    prisma.business.findUnique({
-      where: { id: hostId },
-      select: { id: true, business: true },
-    }),
-    prisma.business.findMany({
-      where: {
-        id: {
-          in: guestIds,
-        },
-      },
-      select: { id: true, business: true },
-    }),
-  ]);
-
-  if (!host || guests.length !== guestIds.length) {
-    return NextResponse.json(
-      { error: "One or both selected businesses do not exist." },
-      { status: 404 },
-    );
-  }
-
-  const guestsById = new Map(guests.map((guest) => [guest.id, guest] as const));
-  const orderedGuestNames = guestIds
-    .map((guestId) => guestsById.get(guestId)?.business)
-    .filter(
-      (guestBusiness): guestBusiness is string => guestBusiness !== undefined,
-    );
-
   try {
-    const creationResult = await prisma.match.createMany({
-      data: guestIds.map((guestId) => ({
-        hostId,
-        guestId,
-      })),
-      skipDuplicates: true,
-    });
+    const [host, guests, reverseMatches] = await withDatabaseRetry((database) =>
+      Promise.all([
+        database.business.findUnique({
+          where: { id: hostId },
+          select: { id: true, business: true },
+        }),
+        database.business.findMany({
+          where: {
+            id: {
+              in: guestIds,
+            },
+          },
+          select: { id: true, business: true },
+        }),
+        database.match.findMany({
+          where: {
+            OR: guestIds.map((guestId) => ({
+              guestId: hostId,
+              hostId: guestId,
+            })),
+          },
+          select: {
+            host: {
+              select: { business: true, id: true },
+            },
+            guest: {
+              select: { business: true, id: true },
+            },
+          },
+        }),
+      ]),
+    );
+
+    if (!host || guests.length !== guestIds.length) {
+      return NextResponse.json(
+        { error: "One or both selected businesses do not exist." },
+        { status: 404 },
+      );
+    }
+
+    if (reverseMatches.length > 0) {
+      const blockedPairs = reverseMatches.map(
+        (match) =>
+          `${match.host.business} already publishes for ${match.guest.business}`,
+      );
+
+      return NextResponse.json(
+        {
+          error: `These reciprocal relationships are not allowed: ${blockedPairs.join("; ")}.`,
+        },
+        { status: 409 },
+      );
+    }
+
+    const guestsById = new Map(
+      guests.map((guest) => [guest.id, guest] as const),
+    );
+    const orderedGuestNames = guestIds
+      .map((guestId) => guestsById.get(guestId)?.business)
+      .filter(
+        (guestBusiness): guestBusiness is string => guestBusiness !== undefined,
+      );
+
+    const creationResult = await withDatabaseRetry((database) =>
+      database.match.createMany({
+        data: guestIds.map((guestId) => ({
+          hostId,
+          guestId,
+        })),
+        skipDuplicates: true,
+      }),
+    );
 
     if (creationResult.count === 0) {
       return NextResponse.json(
@@ -165,7 +201,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(
-      { error: "The match could not be saved." },
+      { error: `The match could not be saved. ${formatDatabaseError(error)}` },
       { status: 500 },
     );
   }

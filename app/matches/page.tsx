@@ -9,6 +9,7 @@ import {
   getBusinesses,
   getBusinessRelationshipRows,
   type BusinessOption,
+  type BusinessRelationshipState,
 } from "@/lib/matches";
 
 export const dynamic = "force-dynamic";
@@ -147,10 +148,19 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
     businessFilter === undefined ? requestedGuestFilter : undefined;
   const requestedPage = parsePageNumber(resolvedSearchParams.page);
   const perPage = parseResultsPerPage(resolvedSearchParams.perPage);
-  const [businesses, relationshipRows] = await Promise.all([
-    getBusinesses(),
-    getBusinessRelationshipRows(hostFilter, guestFilter, businessFilter),
-  ]);
+  const [businesses, allRelationshipRows, relationshipRows] = await Promise.all(
+    [
+      getBusinesses(),
+      getBusinessRelationshipRows(),
+      getBusinessRelationshipRows(hostFilter, guestFilter, businessFilter),
+    ],
+  );
+  const relationshipStates: BusinessRelationshipState[] =
+    allRelationshipRows.map((row) => ({
+      id: row.id,
+      publishedByIds: row.publishedBy.map((business) => business.id),
+      publishedForIds: row.publishedFor.map((business) => business.id),
+    }));
   const businessById = new Map(
     businesses.map((business) => [business.id, business.business] as const),
   );
@@ -230,7 +240,10 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
 
         <div className="flex flex-wrap items-center justify-end gap-3">
           <AddClientModal />
-          <CreateMatchesModal businesses={businesses} />
+          <CreateMatchesModal
+            businesses={businesses}
+            relationshipStates={relationshipStates}
+          />
         </div>
       </section>
 

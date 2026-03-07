@@ -4,23 +4,41 @@ import { useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { BusinessRoleBadge } from "@/components/business-role-badge";
-import type { BusinessOption } from "@/lib/matches";
+import type { BusinessOption, BusinessRelationshipState } from "@/lib/matches";
 
 type CreateMatchesModalProps = {
   businesses: BusinessOption[];
+  relationshipStates: BusinessRelationshipState[];
 };
 
-export function CreateMatchesModal({ businesses }: CreateMatchesModalProps) {
+export function CreateMatchesModal({
+  businesses,
+  relationshipStates,
+}: CreateMatchesModalProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [hostId, setHostId] = useState("");
   const [guestIds, setGuestIds] = useState<string[]>([]);
+  const relationshipStateById = new Map(
+    relationshipStates.map((relationshipState) => [
+      relationshipState.id,
+      relationshipState,
+    ]),
+  );
+  const blockedGuestIds = new Set(
+    hostId
+      ? (relationshipStateById.get(Number(hostId))?.publishedByIds ?? []).map(
+          (guestId) => guestId.toString(),
+        )
+      : [],
+  );
 
   const availableGuests = businesses.filter(
     (business) => business.id.toString() !== hostId,
   );
   const selectedGuestCount = guestIds.length;
+  const blockedGuestCount = blockedGuestIds.size;
 
   function resetForm() {
     setHostId("");
@@ -45,9 +63,20 @@ export function CreateMatchesModal({ businesses }: CreateMatchesModalProps) {
   }
 
   function handleHostChange(nextHostId: string) {
+    const nextBlockedGuestIds = new Set(
+      nextHostId
+        ? (
+            relationshipStateById.get(Number(nextHostId))?.publishedByIds ?? []
+          ).map((guestId) => guestId.toString())
+        : [],
+    );
+
     setHostId(nextHostId);
     setGuestIds((currentGuestIds) =>
-      currentGuestIds.filter((guestId) => guestId !== nextHostId),
+      currentGuestIds.filter(
+        (guestId) =>
+          guestId !== nextHostId && !nextBlockedGuestIds.has(guestId),
+      ),
     );
   }
 
@@ -167,7 +196,11 @@ export function CreateMatchesModal({ businesses }: CreateMatchesModalProps) {
                           <input
                             checked={isChecked}
                             className="mt-1 h-4 w-4 rounded border-border text-accent focus:ring-accent"
-                            disabled={!hostId || isPending}
+                            disabled={
+                              !hostId ||
+                              isPending ||
+                              (!isChecked && blockedGuestIds.has(businessId))
+                            }
                             onChange={() => toggleGuest(businessId)}
                             type="checkbox"
                           />
@@ -190,7 +223,7 @@ export function CreateMatchesModal({ businesses }: CreateMatchesModalProps) {
                 <p className="text-sm leading-7 text-muted">
                   {businesses.length === 0
                     ? "Add business records first, then create matches."
-                    : `${availableGuests.length} businesses available to publish for.`}
+                    : `${availableGuests.length} businesses available to publish for.${hostId && blockedGuestCount > 0 ? ` ${blockedGuestCount} business${blockedGuestCount === 1 ? " is" : "es are"} disabled because ${blockedGuestCount === 1 ? "it already publishes" : "they already publish"} for the selected publisher.` : ""}`}
                 </p>
 
                 <button

@@ -22,6 +22,7 @@ type ManageBusinessRelationshipsModalProps = {
 
 type RelationshipSelectorProps = {
   description: string;
+  disabledIds?: string[];
   emptyLabel: string;
   onQueryChange: Dispatch<SetStateAction<string>>;
   onToggleSelection: (businessId: string) => void;
@@ -33,6 +34,7 @@ type RelationshipSelectorProps = {
 
 function RelationshipSelector({
   description,
+  disabledIds = [],
   emptyLabel,
   onQueryChange,
   onToggleSelection,
@@ -42,6 +44,7 @@ function RelationshipSelector({
   title,
 }: RelationshipSelectorProps) {
   const selectedIdSet = new Set(selectedIds);
+  const disabledIdSet = new Set(disabledIds);
 
   return (
     <section className="space-y-4 rounded-3xl border border-border bg-white/55 p-4 sm:p-5">
@@ -73,14 +76,18 @@ function RelationshipSelector({
             {options.map((option) => {
               const optionId = option.id.toString();
               const isSelected = selectedIdSet.has(optionId);
+              const isDisabled = !isSelected && disabledIdSet.has(optionId);
 
               return (
                 <button
                   aria-pressed={isSelected}
+                  disabled={isDisabled}
                   className={
                     isSelected
                       ? "inline-flex items-center gap-2 rounded-full border border-accent bg-accent px-3.5 py-2 text-sm font-medium text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-accent-strong"
-                      : "inline-flex items-center gap-2 rounded-full border border-border bg-white px-3.5 py-2 text-sm font-medium text-foreground transition hover:-translate-y-0.5 hover:border-accent/40 hover:text-accent"
+                      : isDisabled
+                        ? "inline-flex items-center gap-2 rounded-full border border-border bg-white/55 px-3.5 py-2 text-sm font-medium text-muted opacity-60"
+                        : "inline-flex items-center gap-2 rounded-full border border-border bg-white px-3.5 py-2 text-sm font-medium text-foreground transition hover:-translate-y-0.5 hover:border-accent/40 hover:text-accent"
                   }
                   key={option.id}
                   onClick={() => onToggleSelection(optionId)}
@@ -121,15 +128,22 @@ export function ManageBusinessRelationshipsModal({
   const selectableBusinesses = businesses.filter(
     (candidate) => candidate.id !== business.id,
   );
-  const filteredPublishedByOptions = selectableBusinesses.filter((candidate) =>
-    candidate.business
-      .toLocaleLowerCase()
-      .includes(deferredPublishedByQuery.trim().toLocaleLowerCase()),
+  const overlappingIds = publishedByIds.filter((candidateId) =>
+    publishedForIds.includes(candidateId),
   );
-  const filteredPublishedForOptions = selectableBusinesses.filter((candidate) =>
-    candidate.business
-      .toLocaleLowerCase()
-      .includes(deferredPublishedForQuery.trim().toLocaleLowerCase()),
+  const filteredPublishedByOptions = selectableBusinesses.filter(
+    (candidate) => {
+      return candidate.business
+        .toLocaleLowerCase()
+        .includes(deferredPublishedByQuery.trim().toLocaleLowerCase());
+    },
+  );
+  const filteredPublishedForOptions = selectableBusinesses.filter(
+    (candidate) => {
+      return candidate.business
+        .toLocaleLowerCase()
+        .includes(deferredPublishedForQuery.trim().toLocaleLowerCase());
+    },
   );
 
   function openModal() {
@@ -160,6 +174,13 @@ export function ManageBusinessRelationshipsModal({
   }
 
   function handleSubmit() {
+    if (overlappingIds.length > 0) {
+      toast.error(
+        `A business cannot appear in both Published By and Published For for ${business.business}. Remove the duplicate relationship first.`,
+      );
+      return;
+    }
+
     startTransition(async () => {
       const response = await fetch("/api/business-relationships", {
         method: "PUT",
@@ -173,14 +194,30 @@ export function ManageBusinessRelationshipsModal({
         }),
       });
 
-      const payload = (await response.json().catch(() => null)) as {
+      const responseText = await response.text();
+      const payload = (() => {
+        if (!responseText) {
+          return null;
+        }
+
+        try {
+          return JSON.parse(responseText) as {
+            error?: string;
+            message?: string;
+          };
+        } catch {
+          return null;
+        }
+      })() as {
         error?: string;
         message?: string;
       } | null;
 
       if (!response.ok) {
         toast.error(
-          payload?.error ?? "The business relationships could not be updated.",
+          payload?.error ??
+            (responseText.trim() ||
+              "The business relationships could not be updated."),
         );
         return;
       }
@@ -230,7 +267,8 @@ export function ManageBusinessRelationshipsModal({
 
                 <div className="mt-8 grid gap-5 lg:grid-cols-2">
                   <RelationshipSelector
-                    description="Select the businesses that publish this business."
+                    description="Select the businesses that publish this business. Businesses already selected under Published For are shown but disabled here."
+                    disabledIds={publishedForIds}
                     emptyLabel="No businesses matched that search."
                     onQueryChange={setPublishedByQuery}
                     onToggleSelection={(businessId) =>
@@ -243,7 +281,8 @@ export function ManageBusinessRelationshipsModal({
                   />
 
                   <RelationshipSelector
-                    description="Select the businesses this business publishes for."
+                    description="Select the businesses this business publishes for. Businesses already selected under Published By are shown but disabled here."
+                    disabledIds={publishedByIds}
                     emptyLabel="No businesses matched that search."
                     onQueryChange={setPublishedForQuery}
                     onToggleSelection={(businessId) =>
@@ -258,12 +297,9 @@ export function ManageBusinessRelationshipsModal({
 
                 <div className="mt-6 flex flex-col gap-4 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
                   <p className="text-sm leading-7 text-muted">
-                    {publishedByIds.length + publishedForIds.length} total
-                    relationship selection
-                    {publishedByIds.length + publishedForIds.length === 1
-                      ? ""
-                      : "s"}{" "}
-                    across both lists.
+                    {overlappingIds.length > 0
+                      ? `Remove ${overlappingIds.length} duplicate relationship${overlappingIds.length === 1 ? "" : "s"} that currently appear on both sides before saving.`
+                      : `${publishedByIds.length + publishedForIds.length} total relationship selection${publishedByIds.length + publishedForIds.length === 1 ? "" : "s"} across both lists.`}
                   </p>
 
                   <div className="flex flex-wrap gap-3">

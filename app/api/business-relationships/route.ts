@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { Prisma } from "@/generated/prisma/client";
-import { prisma } from "@/lib/prisma";
+import { formatDatabaseError, withDatabaseRetry } from "@/lib/prisma";
 
 type UpdateBusinessRelationshipsPayload = {
   businessId?: unknown;
@@ -85,128 +85,156 @@ export async function PUT(request: Request) {
     );
   }
 
-  const relatedBusinessIds = [
-    ...new Set([...publishedByIds, ...publishedForIds]),
-  ];
-  const [business, relatedBusinesses] = await Promise.all([
-    prisma.business.findUnique({
-      where: { id: businessId },
-      select: { business: true, id: true },
-    }),
-    relatedBusinessIds.length === 0
-      ? Promise.resolve([])
-      : prisma.business.findMany({
-          where: {
-            id: {
-              in: relatedBusinessIds,
-            },
-          },
-          select: { id: true },
-        }),
-  ]);
-
-  if (!business) {
-    return NextResponse.json(
-      { error: "The selected business does not exist." },
-      { status: 404 },
-    );
-  }
-
-  if (relatedBusinesses.length !== relatedBusinessIds.length) {
-    return NextResponse.json(
-      { error: "One or more selected related businesses do not exist." },
-      { status: 404 },
-    );
-  }
-
   try {
-    const summary = await prisma.$transaction(async (transaction) => {
-      const existingPublishedFor = await transaction.match.findMany({
-        where: { hostId: businessId },
-        select: { guestId: true },
-      });
-      const existingPublishedBy = await transaction.match.findMany({
-        where: { guestId: businessId },
-        select: { hostId: true },
-      });
+    const relatedBusinessIds = [
+      ...new Set([...publishedByIds, ...publishedForIds]),
+    ];
+    const [business, relatedBusinesses] = await withDatabaseRetry((database) =>
+      Promise.all([
+        database.business.findUnique({
+          where: { id: businessId },
+          select: { business: true, id: true },
+        }),
+        relatedBusinessIds.length === 0
+          ? Promise.resolve([])
+          : database.business.findMany({
+              where: {
+                id: {
+                  in: relatedBusinessIds,
+                },
+              },
+              select: { business: true, id: true },
+            }),
+      ]),
+    );
 
-      const currentPublishedForIds = new Set(
-        existingPublishedFor.map((match) => match.guestId),
+    if (!business) {
+      return NextResponse.json(
+        { error: "The selected business does not exist." },
+        { status: 404 },
       );
-      const currentPublishedByIds = new Set(
-        existingPublishedBy.map((match) => match.hostId),
-      );
-      const desiredPublishedForIds = new Set(publishedForIds);
-      const desiredPublishedByIds = new Set(publishedByIds);
+    }
 
-      const publishedForIdsToCreate = publishedForIds.filter(
-        (guestId) => !currentPublishedForIds.has(guestId),
+    if (relatedBusinesses.length !== relatedBusinessIds.length) {
+      return NextResponse.json(
+        { error: "One or more selected related businesses do not exist." },
+        { status: 404 },
       );
-      const publishedByIdsToCreate = publishedByIds.filter(
-        (hostId) => !currentPublishedByIds.has(hostId),
+    }
+
+    const overlappingIds = publishedByIds.filter((candidateId) =>
+      publishedForIds.includes(candidateId),
+    );
+
+    if (overlappingIds.length > 0) {
+      const businessNamesById = new Map(
+        relatedBusinesses.map(
+          (relatedBusiness) =>
+            [relatedBusiness.id, relatedBusiness.business] as const,
+        ),
       );
-      const publishedForIdsToDelete = [...currentPublishedForIds].filter(
-        (guestId) => !desiredPublishedForIds.has(guestId),
-      );
-      const publishedByIdsToDelete = [...currentPublishedByIds].filter(
-        (hostId) => !desiredPublishedByIds.has(hostId),
+      const overlappingNames = overlappingIds.map(
+        (overlappingId) =>
+          businessNamesById.get(overlappingId) ?? `Business ${overlappingId}`,
       );
 
-      let createdCount = 0;
-      let deletedCount = 0;
+      return NextResponse.json(
+        {
+          error: `${overlappingNames.join(", ")} cannot appear in both Published By and Published For for ${business.business}.`,
+        },
+        { status: 409 },
+      );
+    }
 
-      if (publishedForIdsToDelete.length > 0) {
-        const result = await transaction.match.deleteMany({
-          where: {
-            guestId: {
-              in: publishedForIdsToDelete,
+    const summary = await withDatabaseRetry((database) =>
+      database.$transaction(async (transaction) => {
+        const existingPublishedFor = await transaction.match.findMany({
+          where: { hostId: businessId },
+          select: { guestId: true },
+        });
+        const existingPublishedBy = await transaction.match.findMany({
+          where: { guestId: businessId },
+          select: { hostId: true },
+        });
+
+        const currentPublishedForIds = new Set(
+          existingPublishedFor.map((match) => match.guestId),
+        );
+        const currentPublishedByIds = new Set(
+          existingPublishedBy.map((match) => match.hostId),
+        );
+        const desiredPublishedForIds = new Set(publishedForIds);
+        const desiredPublishedByIds = new Set(publishedByIds);
+
+        const publishedForIdsToCreate = publishedForIds.filter(
+          (guestId) => !currentPublishedForIds.has(guestId),
+        );
+        const publishedByIdsToCreate = publishedByIds.filter(
+          (hostId) => !currentPublishedByIds.has(hostId),
+        );
+        const publishedForIdsToDelete = [...currentPublishedForIds].filter(
+          (guestId) => !desiredPublishedForIds.has(guestId),
+        );
+        const publishedByIdsToDelete = [...currentPublishedByIds].filter(
+          (hostId) => !desiredPublishedByIds.has(hostId),
+        );
+
+        let createdCount = 0;
+        let deletedCount = 0;
+
+        if (publishedForIdsToDelete.length > 0) {
+          const result = await transaction.match.deleteMany({
+            where: {
+              guestId: {
+                in: publishedForIdsToDelete,
+              },
+              hostId: businessId,
             },
-            hostId: businessId,
-          },
-        });
+          });
 
-        deletedCount += result.count;
-      }
+          deletedCount += result.count;
+        }
 
-      if (publishedByIdsToDelete.length > 0) {
-        const result = await transaction.match.deleteMany({
-          where: {
-            guestId: businessId,
-            hostId: {
-              in: publishedByIdsToDelete,
+        if (publishedByIdsToDelete.length > 0) {
+          const result = await transaction.match.deleteMany({
+            where: {
+              guestId: businessId,
+              hostId: {
+                in: publishedByIdsToDelete,
+              },
             },
-          },
-        });
+          });
 
-        deletedCount += result.count;
-      }
+          deletedCount += result.count;
+        }
 
-      if (publishedForIdsToCreate.length > 0) {
-        const result = await transaction.match.createMany({
-          data: publishedForIdsToCreate.map((guestId) => ({
-            guestId,
-            hostId: businessId,
-          })),
-          skipDuplicates: true,
-        });
+        if (publishedForIdsToCreate.length > 0) {
+          const result = await transaction.match.createMany({
+            data: publishedForIdsToCreate.map((guestId) => ({
+              guestId,
+              hostId: businessId,
+            })),
+            skipDuplicates: true,
+          });
 
-        createdCount += result.count;
-      }
+          createdCount += result.count;
+        }
 
-      if (publishedByIdsToCreate.length > 0) {
-        const result = await transaction.match.createMany({
-          data: publishedByIdsToCreate.map((hostId) => ({
-            guestId: businessId,
-            hostId,
-          })),
-          skipDuplicates: true,
-        });
+        if (publishedByIdsToCreate.length > 0) {
+          const result = await transaction.match.createMany({
+            data: publishedByIdsToCreate.map((hostId) => ({
+              guestId: businessId,
+              hostId,
+            })),
+            skipDuplicates: true,
+          });
 
-        createdCount += result.count;
-      }
+          createdCount += result.count;
+        }
 
-      return { createdCount, deletedCount };
-    });
+        return { createdCount, deletedCount };
+      }),
+    );
 
     const message =
       summary.createdCount === 0 && summary.deletedCount === 0
@@ -226,7 +254,9 @@ export async function PUT(request: Request) {
     }
 
     return NextResponse.json(
-      { error: "The business relationships could not be updated." },
+      {
+        error: `The business relationships could not be updated. ${formatDatabaseError(error)}`,
+      },
       { status: 500 },
     );
   }
