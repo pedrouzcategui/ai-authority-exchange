@@ -334,6 +334,13 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                     </td>
                     <td className="border-t border-border px-6 py-5 text-right sm:px-8">
                       <div className="flex flex-wrap justify-end gap-2">
+                        <Link
+                          className="inline-flex min-h-11 items-center justify-center rounded-full border border-border bg-white/80 px-5 py-3 text-sm font-medium text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent"
+                          href={`/matches/${row.id}`}
+                          prefetch={false}
+                        >
+                          Find Matches
+                        </Link>
                         <EditBusinessModal
                           business={{
                             business: row.business,

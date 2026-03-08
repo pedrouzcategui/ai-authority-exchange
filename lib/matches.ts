@@ -30,6 +30,15 @@ export const getBusinesses = cache(async () => {
 
 export type BusinessOption = Awaited<ReturnType<typeof getBusinesses>>[number];
 
+export const getBusinessById = cache(async (businessId: number) => {
+  return prisma.business.findUnique({
+    where: {
+      id: businessId,
+    },
+    select: businessSelection,
+  });
+});
+
 export const getMatches = cache(async (hostId?: number, guestId?: number) => {
   const where =
     hostId === undefined && guestId === undefined
