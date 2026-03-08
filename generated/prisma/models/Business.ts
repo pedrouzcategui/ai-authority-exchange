@@ -28,16 +28,34 @@ export type AggregateBusiness = {
 
 export type BusinessAvgAggregateOutputType = {
   id: number | null
+  business_category_id: number | null
+  domain_rating: number | null
+  related_category_ids: number | null
 }
 
 export type BusinessSumAggregateOutputType = {
   id: number | null
+  business_category_id: number | null
+  domain_rating: number | null
+  related_category_ids: number[]
 }
 
 export type BusinessMinAggregateOutputType = {
   id: number | null
   business: string | null
   websiteUrl: string | null
+  google_drive_folder_url: string | null
+  writer_411_document_url: string | null
+  discovery_packet_document_url: string | null
+  client_status: $Enums.client_status | null
+  created_at: Date | null
+  updated_at: Date | null
+  subcategory: string | null
+  description: string | null
+  target_audience: string | null
+  business_category_id: number | null
+  domain_rating: number | null
+  related_categories_reasoning: string | null
   clientType: $Enums.BusinessRoleType | null
 }
 
@@ -45,6 +63,18 @@ export type BusinessMaxAggregateOutputType = {
   id: number | null
   business: string | null
   websiteUrl: string | null
+  google_drive_folder_url: string | null
+  writer_411_document_url: string | null
+  discovery_packet_document_url: string | null
+  client_status: $Enums.client_status | null
+  created_at: Date | null
+  updated_at: Date | null
+  subcategory: string | null
+  description: string | null
+  target_audience: string | null
+  business_category_id: number | null
+  domain_rating: number | null
+  related_categories_reasoning: string | null
   clientType: $Enums.BusinessRoleType | null
 }
 
@@ -52,6 +82,20 @@ export type BusinessCountAggregateOutputType = {
   id: number
   business: number
   websiteUrl: number
+  google_drive_folder_url: number
+  writer_411_document_url: number
+  discovery_packet_document_url: number
+  client_status: number
+  created_at: number
+  updated_at: number
+  subcategory: number
+  description: number
+  writing_topics: number
+  target_audience: number
+  business_category_id: number
+  domain_rating: number
+  related_category_ids: number
+  related_categories_reasoning: number
   clientType: number
   _all: number
 }
@@ -59,16 +103,34 @@ export type BusinessCountAggregateOutputType = {
 
 export type BusinessAvgAggregateInputType = {
   id?: true
+  business_category_id?: true
+  domain_rating?: true
+  related_category_ids?: true
 }
 
 export type BusinessSumAggregateInputType = {
   id?: true
+  business_category_id?: true
+  domain_rating?: true
+  related_category_ids?: true
 }
 
 export type BusinessMinAggregateInputType = {
   id?: true
   business?: true
   websiteUrl?: true
+  google_drive_folder_url?: true
+  writer_411_document_url?: true
+  discovery_packet_document_url?: true
+  client_status?: true
+  created_at?: true
+  updated_at?: true
+  subcategory?: true
+  description?: true
+  target_audience?: true
+  business_category_id?: true
+  domain_rating?: true
+  related_categories_reasoning?: true
   clientType?: true
 }
 
@@ -76,6 +138,18 @@ export type BusinessMaxAggregateInputType = {
   id?: true
   business?: true
   websiteUrl?: true
+  google_drive_folder_url?: true
+  writer_411_document_url?: true
+  discovery_packet_document_url?: true
+  client_status?: true
+  created_at?: true
+  updated_at?: true
+  subcategory?: true
+  description?: true
+  target_audience?: true
+  business_category_id?: true
+  domain_rating?: true
+  related_categories_reasoning?: true
   clientType?: true
 }
 
@@ -83,6 +157,20 @@ export type BusinessCountAggregateInputType = {
   id?: true
   business?: true
   websiteUrl?: true
+  google_drive_folder_url?: true
+  writer_411_document_url?: true
+  discovery_packet_document_url?: true
+  client_status?: true
+  created_at?: true
+  updated_at?: true
+  subcategory?: true
+  description?: true
+  writing_topics?: true
+  target_audience?: true
+  business_category_id?: true
+  domain_rating?: true
+  related_category_ids?: true
+  related_categories_reasoning?: true
   clientType?: true
   _all?: true
 }
@@ -177,6 +265,20 @@ export type BusinessGroupByOutputType = {
   id: number
   business: string
   websiteUrl: string | null
+  google_drive_folder_url: string | null
+  writer_411_document_url: string | null
+  discovery_packet_document_url: string | null
+  client_status: $Enums.client_status
+  created_at: Date
+  updated_at: Date
+  subcategory: string | null
+  description: string | null
+  writing_topics: string[]
+  target_audience: string | null
+  business_category_id: number | null
+  domain_rating: number | null
+  related_category_ids: number[]
+  related_categories_reasoning: string | null
   clientType: $Enums.BusinessRoleType | null
   _count: BusinessCountAggregateOutputType | null
   _avg: BusinessAvgAggregateOutputType | null
@@ -207,36 +309,101 @@ export type BusinessWhereInput = {
   id?: Prisma.IntFilter<"Business"> | number
   business?: Prisma.StringFilter<"Business"> | string
   websiteUrl?: Prisma.StringNullableFilter<"Business"> | string | null
+  google_drive_folder_url?: Prisma.StringNullableFilter<"Business"> | string | null
+  writer_411_document_url?: Prisma.StringNullableFilter<"Business"> | string | null
+  discovery_packet_document_url?: Prisma.StringNullableFilter<"Business"> | string | null
+  client_status?: Prisma.Enumclient_statusFilter<"Business"> | $Enums.client_status
+  created_at?: Prisma.DateTimeFilter<"Business"> | Date | string
+  updated_at?: Prisma.DateTimeFilter<"Business"> | Date | string
+  subcategory?: Prisma.StringNullableFilter<"Business"> | string | null
+  description?: Prisma.StringNullableFilter<"Business"> | string | null
+  writing_topics?: Prisma.StringNullableListFilter<"Business">
+  target_audience?: Prisma.StringNullableFilter<"Business"> | string | null
+  business_category_id?: Prisma.IntNullableFilter<"Business"> | number | null
+  domain_rating?: Prisma.IntNullableFilter<"Business"> | number | null
+  related_category_ids?: Prisma.IntNullableListFilter<"Business">
+  related_categories_reasoning?: Prisma.StringNullableFilter<"Business"> | string | null
   clientType?: Prisma.EnumBusinessRoleTypeNullableFilter<"Business"> | $Enums.BusinessRoleType | null
-  hostedMatches?: Prisma.MatchListRelationFilter
   guestMatches?: Prisma.MatchListRelationFilter
+  hostedMatches?: Prisma.MatchListRelationFilter
+  business_categories?: Prisma.XOR<Prisma.Business_categoriesNullableScalarRelationFilter, Prisma.business_categoriesWhereInput> | null
+  client_details?: Prisma.XOR<Prisma.Client_detailsNullableScalarRelationFilter, Prisma.client_detailsWhereInput> | null
+  publications?: Prisma.PublicationsListRelationFilter
 }
 
 export type BusinessOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   business?: Prisma.SortOrder
   websiteUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  google_drive_folder_url?: Prisma.SortOrderInput | Prisma.SortOrder
+  writer_411_document_url?: Prisma.SortOrderInput | Prisma.SortOrder
+  discovery_packet_document_url?: Prisma.SortOrderInput | Prisma.SortOrder
+  client_status?: Prisma.SortOrder
+  created_at?: Prisma.SortOrder
+  updated_at?: Prisma.SortOrder
+  subcategory?: Prisma.SortOrderInput | Prisma.SortOrder
+  description?: Prisma.SortOrderInput | Prisma.SortOrder
+  writing_topics?: Prisma.SortOrder
+  target_audience?: Prisma.SortOrderInput | Prisma.SortOrder
+  business_category_id?: Prisma.SortOrderInput | Prisma.SortOrder
+  domain_rating?: Prisma.SortOrderInput | Prisma.SortOrder
+  related_category_ids?: Prisma.SortOrder
+  related_categories_reasoning?: Prisma.SortOrderInput | Prisma.SortOrder
   clientType?: Prisma.SortOrderInput | Prisma.SortOrder
-  hostedMatches?: Prisma.MatchOrderByRelationAggregateInput
   guestMatches?: Prisma.MatchOrderByRelationAggregateInput
+  hostedMatches?: Prisma.MatchOrderByRelationAggregateInput
+  business_categories?: Prisma.business_categoriesOrderByWithRelationInput
+  client_details?: Prisma.client_detailsOrderByWithRelationInput
+  publications?: Prisma.publicationsOrderByRelationAggregateInput
 }
 
 export type BusinessWhereUniqueInput = Prisma.AtLeast<{
   id?: number
   business?: string
+  websiteUrl?: string
   AND?: Prisma.BusinessWhereInput | Prisma.BusinessWhereInput[]
   OR?: Prisma.BusinessWhereInput[]
   NOT?: Prisma.BusinessWhereInput | Prisma.BusinessWhereInput[]
-  websiteUrl?: Prisma.StringNullableFilter<"Business"> | string | null
+  google_drive_folder_url?: Prisma.StringNullableFilter<"Business"> | string | null
+  writer_411_document_url?: Prisma.StringNullableFilter<"Business"> | string | null
+  discovery_packet_document_url?: Prisma.StringNullableFilter<"Business"> | string | null
+  client_status?: Prisma.Enumclient_statusFilter<"Business"> | $Enums.client_status
+  created_at?: Prisma.DateTimeFilter<"Business"> | Date | string
+  updated_at?: Prisma.DateTimeFilter<"Business"> | Date | string
+  subcategory?: Prisma.StringNullableFilter<"Business"> | string | null
+  description?: Prisma.StringNullableFilter<"Business"> | string | null
+  writing_topics?: Prisma.StringNullableListFilter<"Business">
+  target_audience?: Prisma.StringNullableFilter<"Business"> | string | null
+  business_category_id?: Prisma.IntNullableFilter<"Business"> | number | null
+  domain_rating?: Prisma.IntNullableFilter<"Business"> | number | null
+  related_category_ids?: Prisma.IntNullableListFilter<"Business">
+  related_categories_reasoning?: Prisma.StringNullableFilter<"Business"> | string | null
   clientType?: Prisma.EnumBusinessRoleTypeNullableFilter<"Business"> | $Enums.BusinessRoleType | null
-  hostedMatches?: Prisma.MatchListRelationFilter
   guestMatches?: Prisma.MatchListRelationFilter
-}, "id" | "business">
+  hostedMatches?: Prisma.MatchListRelationFilter
+  business_categories?: Prisma.XOR<Prisma.Business_categoriesNullableScalarRelationFilter, Prisma.business_categoriesWhereInput> | null
+  client_details?: Prisma.XOR<Prisma.Client_detailsNullableScalarRelationFilter, Prisma.client_detailsWhereInput> | null
+  publications?: Prisma.PublicationsListRelationFilter
+}, "id" | "business" | "websiteUrl">
 
 export type BusinessOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   business?: Prisma.SortOrder
   websiteUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  google_drive_folder_url?: Prisma.SortOrderInput | Prisma.SortOrder
+  writer_411_document_url?: Prisma.SortOrderInput | Prisma.SortOrder
+  discovery_packet_document_url?: Prisma.SortOrderInput | Prisma.SortOrder
+  client_status?: Prisma.SortOrder
+  created_at?: Prisma.SortOrder
+  updated_at?: Prisma.SortOrder
+  subcategory?: Prisma.SortOrderInput | Prisma.SortOrder
+  description?: Prisma.SortOrderInput | Prisma.SortOrder
+  writing_topics?: Prisma.SortOrder
+  target_audience?: Prisma.SortOrderInput | Prisma.SortOrder
+  business_category_id?: Prisma.SortOrderInput | Prisma.SortOrder
+  domain_rating?: Prisma.SortOrderInput | Prisma.SortOrder
+  related_category_ids?: Prisma.SortOrder
+  related_categories_reasoning?: Prisma.SortOrderInput | Prisma.SortOrder
   clientType?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.BusinessCountOrderByAggregateInput
   _avg?: Prisma.BusinessAvgOrderByAggregateInput
@@ -252,53 +419,158 @@ export type BusinessScalarWhereWithAggregatesInput = {
   id?: Prisma.IntWithAggregatesFilter<"Business"> | number
   business?: Prisma.StringWithAggregatesFilter<"Business"> | string
   websiteUrl?: Prisma.StringNullableWithAggregatesFilter<"Business"> | string | null
+  google_drive_folder_url?: Prisma.StringNullableWithAggregatesFilter<"Business"> | string | null
+  writer_411_document_url?: Prisma.StringNullableWithAggregatesFilter<"Business"> | string | null
+  discovery_packet_document_url?: Prisma.StringNullableWithAggregatesFilter<"Business"> | string | null
+  client_status?: Prisma.Enumclient_statusWithAggregatesFilter<"Business"> | $Enums.client_status
+  created_at?: Prisma.DateTimeWithAggregatesFilter<"Business"> | Date | string
+  updated_at?: Prisma.DateTimeWithAggregatesFilter<"Business"> | Date | string
+  subcategory?: Prisma.StringNullableWithAggregatesFilter<"Business"> | string | null
+  description?: Prisma.StringNullableWithAggregatesFilter<"Business"> | string | null
+  writing_topics?: Prisma.StringNullableListFilter<"Business">
+  target_audience?: Prisma.StringNullableWithAggregatesFilter<"Business"> | string | null
+  business_category_id?: Prisma.IntNullableWithAggregatesFilter<"Business"> | number | null
+  domain_rating?: Prisma.IntNullableWithAggregatesFilter<"Business"> | number | null
+  related_category_ids?: Prisma.IntNullableListFilter<"Business">
+  related_categories_reasoning?: Prisma.StringNullableWithAggregatesFilter<"Business"> | string | null
   clientType?: Prisma.EnumBusinessRoleTypeNullableWithAggregatesFilter<"Business"> | $Enums.BusinessRoleType | null
 }
 
 export type BusinessCreateInput = {
   business: string
   websiteUrl?: string | null
+  google_drive_folder_url?: string | null
+  writer_411_document_url?: string | null
+  discovery_packet_document_url?: string | null
+  client_status?: $Enums.client_status
+  created_at?: Date | string
+  updated_at?: Date | string
+  subcategory?: string | null
+  description?: string | null
+  writing_topics?: Prisma.BusinessCreatewriting_topicsInput | string[]
+  target_audience?: string | null
+  domain_rating?: number | null
+  related_category_ids?: Prisma.BusinessCreaterelated_category_idsInput | number[]
+  related_categories_reasoning?: string | null
   clientType?: $Enums.BusinessRoleType | null
-  hostedMatches?: Prisma.MatchCreateNestedManyWithoutHostInput
   guestMatches?: Prisma.MatchCreateNestedManyWithoutGuestInput
+  hostedMatches?: Prisma.MatchCreateNestedManyWithoutHostInput
+  business_categories?: Prisma.business_categoriesCreateNestedOneWithoutBusinessesInput
+  client_details?: Prisma.client_detailsCreateNestedOneWithoutBusinessesInput
+  publications?: Prisma.publicationsCreateNestedManyWithoutBusinessesInput
 }
 
 export type BusinessUncheckedCreateInput = {
   id?: number
   business: string
   websiteUrl?: string | null
+  google_drive_folder_url?: string | null
+  writer_411_document_url?: string | null
+  discovery_packet_document_url?: string | null
+  client_status?: $Enums.client_status
+  created_at?: Date | string
+  updated_at?: Date | string
+  subcategory?: string | null
+  description?: string | null
+  writing_topics?: Prisma.BusinessCreatewriting_topicsInput | string[]
+  target_audience?: string | null
+  business_category_id?: number | null
+  domain_rating?: number | null
+  related_category_ids?: Prisma.BusinessCreaterelated_category_idsInput | number[]
+  related_categories_reasoning?: string | null
   clientType?: $Enums.BusinessRoleType | null
-  hostedMatches?: Prisma.MatchUncheckedCreateNestedManyWithoutHostInput
   guestMatches?: Prisma.MatchUncheckedCreateNestedManyWithoutGuestInput
+  hostedMatches?: Prisma.MatchUncheckedCreateNestedManyWithoutHostInput
+  client_details?: Prisma.client_detailsUncheckedCreateNestedOneWithoutBusinessesInput
+  publications?: Prisma.publicationsUncheckedCreateNestedManyWithoutBusinessesInput
 }
 
 export type BusinessUpdateInput = {
   business?: Prisma.StringFieldUpdateOperationsInput | string
   websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  client_status?: Prisma.Enumclient_statusFieldUpdateOperationsInput | $Enums.client_status
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  subcategory?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writing_topics?: Prisma.BusinessUpdatewriting_topicsInput | string[]
+  target_audience?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  domain_rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  related_category_ids?: Prisma.BusinessUpdaterelated_category_idsInput | number[]
+  related_categories_reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
-  hostedMatches?: Prisma.MatchUpdateManyWithoutHostNestedInput
   guestMatches?: Prisma.MatchUpdateManyWithoutGuestNestedInput
+  hostedMatches?: Prisma.MatchUpdateManyWithoutHostNestedInput
+  business_categories?: Prisma.business_categoriesUpdateOneWithoutBusinessesNestedInput
+  client_details?: Prisma.client_detailsUpdateOneWithoutBusinessesNestedInput
+  publications?: Prisma.publicationsUpdateManyWithoutBusinessesNestedInput
 }
 
 export type BusinessUncheckedUpdateInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   business?: Prisma.StringFieldUpdateOperationsInput | string
   websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  client_status?: Prisma.Enumclient_statusFieldUpdateOperationsInput | $Enums.client_status
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  subcategory?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writing_topics?: Prisma.BusinessUpdatewriting_topicsInput | string[]
+  target_audience?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  business_category_id?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  domain_rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  related_category_ids?: Prisma.BusinessUpdaterelated_category_idsInput | number[]
+  related_categories_reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
-  hostedMatches?: Prisma.MatchUncheckedUpdateManyWithoutHostNestedInput
   guestMatches?: Prisma.MatchUncheckedUpdateManyWithoutGuestNestedInput
+  hostedMatches?: Prisma.MatchUncheckedUpdateManyWithoutHostNestedInput
+  client_details?: Prisma.client_detailsUncheckedUpdateOneWithoutBusinessesNestedInput
+  publications?: Prisma.publicationsUncheckedUpdateManyWithoutBusinessesNestedInput
 }
 
 export type BusinessCreateManyInput = {
   id?: number
   business: string
   websiteUrl?: string | null
+  google_drive_folder_url?: string | null
+  writer_411_document_url?: string | null
+  discovery_packet_document_url?: string | null
+  client_status?: $Enums.client_status
+  created_at?: Date | string
+  updated_at?: Date | string
+  subcategory?: string | null
+  description?: string | null
+  writing_topics?: Prisma.BusinessCreatewriting_topicsInput | string[]
+  target_audience?: string | null
+  business_category_id?: number | null
+  domain_rating?: number | null
+  related_category_ids?: Prisma.BusinessCreaterelated_category_idsInput | number[]
+  related_categories_reasoning?: string | null
   clientType?: $Enums.BusinessRoleType | null
 }
 
 export type BusinessUpdateManyMutationInput = {
   business?: Prisma.StringFieldUpdateOperationsInput | string
   websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  client_status?: Prisma.Enumclient_statusFieldUpdateOperationsInput | $Enums.client_status
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  subcategory?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writing_topics?: Prisma.BusinessUpdatewriting_topicsInput | string[]
+  target_audience?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  domain_rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  related_category_ids?: Prisma.BusinessUpdaterelated_category_idsInput | number[]
+  related_categories_reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
 }
 
@@ -306,24 +578,83 @@ export type BusinessUncheckedUpdateManyInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   business?: Prisma.StringFieldUpdateOperationsInput | string
   websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  client_status?: Prisma.Enumclient_statusFieldUpdateOperationsInput | $Enums.client_status
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  subcategory?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writing_topics?: Prisma.BusinessUpdatewriting_topicsInput | string[]
+  target_audience?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  business_category_id?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  domain_rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  related_category_ids?: Prisma.BusinessUpdaterelated_category_idsInput | number[]
+  related_categories_reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
+}
+
+export type StringNullableListFilter<$PrismaModel = never> = {
+  equals?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel> | null
+  has?: string | Prisma.StringFieldRefInput<$PrismaModel> | null
+  hasEvery?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
+  hasSome?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
+  isEmpty?: boolean
+}
+
+export type IntNullableListFilter<$PrismaModel = never> = {
+  equals?: number[] | Prisma.ListIntFieldRefInput<$PrismaModel> | null
+  has?: number | Prisma.IntFieldRefInput<$PrismaModel> | null
+  hasEvery?: number[] | Prisma.ListIntFieldRefInput<$PrismaModel>
+  hasSome?: number[] | Prisma.ListIntFieldRefInput<$PrismaModel>
+  isEmpty?: boolean
 }
 
 export type BusinessCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   business?: Prisma.SortOrder
   websiteUrl?: Prisma.SortOrder
+  google_drive_folder_url?: Prisma.SortOrder
+  writer_411_document_url?: Prisma.SortOrder
+  discovery_packet_document_url?: Prisma.SortOrder
+  client_status?: Prisma.SortOrder
+  created_at?: Prisma.SortOrder
+  updated_at?: Prisma.SortOrder
+  subcategory?: Prisma.SortOrder
+  description?: Prisma.SortOrder
+  writing_topics?: Prisma.SortOrder
+  target_audience?: Prisma.SortOrder
+  business_category_id?: Prisma.SortOrder
+  domain_rating?: Prisma.SortOrder
+  related_category_ids?: Prisma.SortOrder
+  related_categories_reasoning?: Prisma.SortOrder
   clientType?: Prisma.SortOrder
 }
 
 export type BusinessAvgOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  business_category_id?: Prisma.SortOrder
+  domain_rating?: Prisma.SortOrder
+  related_category_ids?: Prisma.SortOrder
 }
 
 export type BusinessMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   business?: Prisma.SortOrder
   websiteUrl?: Prisma.SortOrder
+  google_drive_folder_url?: Prisma.SortOrder
+  writer_411_document_url?: Prisma.SortOrder
+  discovery_packet_document_url?: Prisma.SortOrder
+  client_status?: Prisma.SortOrder
+  created_at?: Prisma.SortOrder
+  updated_at?: Prisma.SortOrder
+  subcategory?: Prisma.SortOrder
+  description?: Prisma.SortOrder
+  target_audience?: Prisma.SortOrder
+  business_category_id?: Prisma.SortOrder
+  domain_rating?: Prisma.SortOrder
+  related_categories_reasoning?: Prisma.SortOrder
   clientType?: Prisma.SortOrder
 }
 
@@ -331,16 +662,49 @@ export type BusinessMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   business?: Prisma.SortOrder
   websiteUrl?: Prisma.SortOrder
+  google_drive_folder_url?: Prisma.SortOrder
+  writer_411_document_url?: Prisma.SortOrder
+  discovery_packet_document_url?: Prisma.SortOrder
+  client_status?: Prisma.SortOrder
+  created_at?: Prisma.SortOrder
+  updated_at?: Prisma.SortOrder
+  subcategory?: Prisma.SortOrder
+  description?: Prisma.SortOrder
+  target_audience?: Prisma.SortOrder
+  business_category_id?: Prisma.SortOrder
+  domain_rating?: Prisma.SortOrder
+  related_categories_reasoning?: Prisma.SortOrder
   clientType?: Prisma.SortOrder
 }
 
 export type BusinessSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  business_category_id?: Prisma.SortOrder
+  domain_rating?: Prisma.SortOrder
+  related_category_ids?: Prisma.SortOrder
 }
 
 export type BusinessScalarRelationFilter = {
   is?: Prisma.BusinessWhereInput
   isNot?: Prisma.BusinessWhereInput
+}
+
+export type BusinessListRelationFilter = {
+  every?: Prisma.BusinessWhereInput
+  some?: Prisma.BusinessWhereInput
+  none?: Prisma.BusinessWhereInput
+}
+
+export type BusinessOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
+}
+
+export type BusinessCreatewriting_topicsInput = {
+  set: string[]
+}
+
+export type BusinessCreaterelated_category_idsInput = {
+  set: number[]
 }
 
 export type StringFieldUpdateOperationsInput = {
@@ -349,6 +713,32 @@ export type StringFieldUpdateOperationsInput = {
 
 export type NullableStringFieldUpdateOperationsInput = {
   set?: string | null
+}
+
+export type Enumclient_statusFieldUpdateOperationsInput = {
+  set?: $Enums.client_status
+}
+
+export type DateTimeFieldUpdateOperationsInput = {
+  set?: Date | string
+}
+
+export type BusinessUpdatewriting_topicsInput = {
+  set?: string[]
+  push?: string | string[]
+}
+
+export type NullableIntFieldUpdateOperationsInput = {
+  set?: number | null
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
+}
+
+export type BusinessUpdaterelated_category_idsInput = {
+  set?: number[]
+  push?: number | number[]
 }
 
 export type NullableEnumBusinessRoleTypeFieldUpdateOperationsInput = {
@@ -363,24 +753,16 @@ export type IntFieldUpdateOperationsInput = {
   divide?: number
 }
 
-export type BusinessCreateNestedOneWithoutHostedMatchesInput = {
-  create?: Prisma.XOR<Prisma.BusinessCreateWithoutHostedMatchesInput, Prisma.BusinessUncheckedCreateWithoutHostedMatchesInput>
-  connectOrCreate?: Prisma.BusinessCreateOrConnectWithoutHostedMatchesInput
-  connect?: Prisma.BusinessWhereUniqueInput
-}
-
 export type BusinessCreateNestedOneWithoutGuestMatchesInput = {
   create?: Prisma.XOR<Prisma.BusinessCreateWithoutGuestMatchesInput, Prisma.BusinessUncheckedCreateWithoutGuestMatchesInput>
   connectOrCreate?: Prisma.BusinessCreateOrConnectWithoutGuestMatchesInput
   connect?: Prisma.BusinessWhereUniqueInput
 }
 
-export type BusinessUpdateOneRequiredWithoutHostedMatchesNestedInput = {
+export type BusinessCreateNestedOneWithoutHostedMatchesInput = {
   create?: Prisma.XOR<Prisma.BusinessCreateWithoutHostedMatchesInput, Prisma.BusinessUncheckedCreateWithoutHostedMatchesInput>
   connectOrCreate?: Prisma.BusinessCreateOrConnectWithoutHostedMatchesInput
-  upsert?: Prisma.BusinessUpsertWithoutHostedMatchesInput
   connect?: Prisma.BusinessWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.BusinessUpdateToOneWithWhereWithoutHostedMatchesInput, Prisma.BusinessUpdateWithoutHostedMatchesInput>, Prisma.BusinessUncheckedUpdateWithoutHostedMatchesInput>
 }
 
 export type BusinessUpdateOneRequiredWithoutGuestMatchesNestedInput = {
@@ -391,39 +773,129 @@ export type BusinessUpdateOneRequiredWithoutGuestMatchesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.BusinessUpdateToOneWithWhereWithoutGuestMatchesInput, Prisma.BusinessUpdateWithoutGuestMatchesInput>, Prisma.BusinessUncheckedUpdateWithoutGuestMatchesInput>
 }
 
-export type BusinessCreateWithoutHostedMatchesInput = {
-  business: string
-  websiteUrl?: string | null
-  clientType?: $Enums.BusinessRoleType | null
-  guestMatches?: Prisma.MatchCreateNestedManyWithoutGuestInput
+export type BusinessUpdateOneRequiredWithoutHostedMatchesNestedInput = {
+  create?: Prisma.XOR<Prisma.BusinessCreateWithoutHostedMatchesInput, Prisma.BusinessUncheckedCreateWithoutHostedMatchesInput>
+  connectOrCreate?: Prisma.BusinessCreateOrConnectWithoutHostedMatchesInput
+  upsert?: Prisma.BusinessUpsertWithoutHostedMatchesInput
+  connect?: Prisma.BusinessWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.BusinessUpdateToOneWithWhereWithoutHostedMatchesInput, Prisma.BusinessUpdateWithoutHostedMatchesInput>, Prisma.BusinessUncheckedUpdateWithoutHostedMatchesInput>
 }
 
-export type BusinessUncheckedCreateWithoutHostedMatchesInput = {
-  id?: number
-  business: string
-  websiteUrl?: string | null
-  clientType?: $Enums.BusinessRoleType | null
-  guestMatches?: Prisma.MatchUncheckedCreateNestedManyWithoutGuestInput
+export type BusinessCreateNestedManyWithoutBusiness_categoriesInput = {
+  create?: Prisma.XOR<Prisma.BusinessCreateWithoutBusiness_categoriesInput, Prisma.BusinessUncheckedCreateWithoutBusiness_categoriesInput> | Prisma.BusinessCreateWithoutBusiness_categoriesInput[] | Prisma.BusinessUncheckedCreateWithoutBusiness_categoriesInput[]
+  connectOrCreate?: Prisma.BusinessCreateOrConnectWithoutBusiness_categoriesInput | Prisma.BusinessCreateOrConnectWithoutBusiness_categoriesInput[]
+  createMany?: Prisma.BusinessCreateManyBusiness_categoriesInputEnvelope
+  connect?: Prisma.BusinessWhereUniqueInput | Prisma.BusinessWhereUniqueInput[]
 }
 
-export type BusinessCreateOrConnectWithoutHostedMatchesInput = {
-  where: Prisma.BusinessWhereUniqueInput
-  create: Prisma.XOR<Prisma.BusinessCreateWithoutHostedMatchesInput, Prisma.BusinessUncheckedCreateWithoutHostedMatchesInput>
+export type BusinessUncheckedCreateNestedManyWithoutBusiness_categoriesInput = {
+  create?: Prisma.XOR<Prisma.BusinessCreateWithoutBusiness_categoriesInput, Prisma.BusinessUncheckedCreateWithoutBusiness_categoriesInput> | Prisma.BusinessCreateWithoutBusiness_categoriesInput[] | Prisma.BusinessUncheckedCreateWithoutBusiness_categoriesInput[]
+  connectOrCreate?: Prisma.BusinessCreateOrConnectWithoutBusiness_categoriesInput | Prisma.BusinessCreateOrConnectWithoutBusiness_categoriesInput[]
+  createMany?: Prisma.BusinessCreateManyBusiness_categoriesInputEnvelope
+  connect?: Prisma.BusinessWhereUniqueInput | Prisma.BusinessWhereUniqueInput[]
+}
+
+export type BusinessUpdateManyWithoutBusiness_categoriesNestedInput = {
+  create?: Prisma.XOR<Prisma.BusinessCreateWithoutBusiness_categoriesInput, Prisma.BusinessUncheckedCreateWithoutBusiness_categoriesInput> | Prisma.BusinessCreateWithoutBusiness_categoriesInput[] | Prisma.BusinessUncheckedCreateWithoutBusiness_categoriesInput[]
+  connectOrCreate?: Prisma.BusinessCreateOrConnectWithoutBusiness_categoriesInput | Prisma.BusinessCreateOrConnectWithoutBusiness_categoriesInput[]
+  upsert?: Prisma.BusinessUpsertWithWhereUniqueWithoutBusiness_categoriesInput | Prisma.BusinessUpsertWithWhereUniqueWithoutBusiness_categoriesInput[]
+  createMany?: Prisma.BusinessCreateManyBusiness_categoriesInputEnvelope
+  set?: Prisma.BusinessWhereUniqueInput | Prisma.BusinessWhereUniqueInput[]
+  disconnect?: Prisma.BusinessWhereUniqueInput | Prisma.BusinessWhereUniqueInput[]
+  delete?: Prisma.BusinessWhereUniqueInput | Prisma.BusinessWhereUniqueInput[]
+  connect?: Prisma.BusinessWhereUniqueInput | Prisma.BusinessWhereUniqueInput[]
+  update?: Prisma.BusinessUpdateWithWhereUniqueWithoutBusiness_categoriesInput | Prisma.BusinessUpdateWithWhereUniqueWithoutBusiness_categoriesInput[]
+  updateMany?: Prisma.BusinessUpdateManyWithWhereWithoutBusiness_categoriesInput | Prisma.BusinessUpdateManyWithWhereWithoutBusiness_categoriesInput[]
+  deleteMany?: Prisma.BusinessScalarWhereInput | Prisma.BusinessScalarWhereInput[]
+}
+
+export type BusinessUncheckedUpdateManyWithoutBusiness_categoriesNestedInput = {
+  create?: Prisma.XOR<Prisma.BusinessCreateWithoutBusiness_categoriesInput, Prisma.BusinessUncheckedCreateWithoutBusiness_categoriesInput> | Prisma.BusinessCreateWithoutBusiness_categoriesInput[] | Prisma.BusinessUncheckedCreateWithoutBusiness_categoriesInput[]
+  connectOrCreate?: Prisma.BusinessCreateOrConnectWithoutBusiness_categoriesInput | Prisma.BusinessCreateOrConnectWithoutBusiness_categoriesInput[]
+  upsert?: Prisma.BusinessUpsertWithWhereUniqueWithoutBusiness_categoriesInput | Prisma.BusinessUpsertWithWhereUniqueWithoutBusiness_categoriesInput[]
+  createMany?: Prisma.BusinessCreateManyBusiness_categoriesInputEnvelope
+  set?: Prisma.BusinessWhereUniqueInput | Prisma.BusinessWhereUniqueInput[]
+  disconnect?: Prisma.BusinessWhereUniqueInput | Prisma.BusinessWhereUniqueInput[]
+  delete?: Prisma.BusinessWhereUniqueInput | Prisma.BusinessWhereUniqueInput[]
+  connect?: Prisma.BusinessWhereUniqueInput | Prisma.BusinessWhereUniqueInput[]
+  update?: Prisma.BusinessUpdateWithWhereUniqueWithoutBusiness_categoriesInput | Prisma.BusinessUpdateWithWhereUniqueWithoutBusiness_categoriesInput[]
+  updateMany?: Prisma.BusinessUpdateManyWithWhereWithoutBusiness_categoriesInput | Prisma.BusinessUpdateManyWithWhereWithoutBusiness_categoriesInput[]
+  deleteMany?: Prisma.BusinessScalarWhereInput | Prisma.BusinessScalarWhereInput[]
+}
+
+export type BusinessCreateNestedOneWithoutClient_detailsInput = {
+  create?: Prisma.XOR<Prisma.BusinessCreateWithoutClient_detailsInput, Prisma.BusinessUncheckedCreateWithoutClient_detailsInput>
+  connectOrCreate?: Prisma.BusinessCreateOrConnectWithoutClient_detailsInput
+  connect?: Prisma.BusinessWhereUniqueInput
+}
+
+export type BusinessUpdateOneRequiredWithoutClient_detailsNestedInput = {
+  create?: Prisma.XOR<Prisma.BusinessCreateWithoutClient_detailsInput, Prisma.BusinessUncheckedCreateWithoutClient_detailsInput>
+  connectOrCreate?: Prisma.BusinessCreateOrConnectWithoutClient_detailsInput
+  upsert?: Prisma.BusinessUpsertWithoutClient_detailsInput
+  connect?: Prisma.BusinessWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.BusinessUpdateToOneWithWhereWithoutClient_detailsInput, Prisma.BusinessUpdateWithoutClient_detailsInput>, Prisma.BusinessUncheckedUpdateWithoutClient_detailsInput>
+}
+
+export type BusinessCreateNestedOneWithoutPublicationsInput = {
+  create?: Prisma.XOR<Prisma.BusinessCreateWithoutPublicationsInput, Prisma.BusinessUncheckedCreateWithoutPublicationsInput>
+  connectOrCreate?: Prisma.BusinessCreateOrConnectWithoutPublicationsInput
+  connect?: Prisma.BusinessWhereUniqueInput
+}
+
+export type BusinessUpdateOneRequiredWithoutPublicationsNestedInput = {
+  create?: Prisma.XOR<Prisma.BusinessCreateWithoutPublicationsInput, Prisma.BusinessUncheckedCreateWithoutPublicationsInput>
+  connectOrCreate?: Prisma.BusinessCreateOrConnectWithoutPublicationsInput
+  upsert?: Prisma.BusinessUpsertWithoutPublicationsInput
+  connect?: Prisma.BusinessWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.BusinessUpdateToOneWithWhereWithoutPublicationsInput, Prisma.BusinessUpdateWithoutPublicationsInput>, Prisma.BusinessUncheckedUpdateWithoutPublicationsInput>
 }
 
 export type BusinessCreateWithoutGuestMatchesInput = {
   business: string
   websiteUrl?: string | null
+  google_drive_folder_url?: string | null
+  writer_411_document_url?: string | null
+  discovery_packet_document_url?: string | null
+  client_status?: $Enums.client_status
+  created_at?: Date | string
+  updated_at?: Date | string
+  subcategory?: string | null
+  description?: string | null
+  writing_topics?: Prisma.BusinessCreatewriting_topicsInput | string[]
+  target_audience?: string | null
+  domain_rating?: number | null
+  related_category_ids?: Prisma.BusinessCreaterelated_category_idsInput | number[]
+  related_categories_reasoning?: string | null
   clientType?: $Enums.BusinessRoleType | null
   hostedMatches?: Prisma.MatchCreateNestedManyWithoutHostInput
+  business_categories?: Prisma.business_categoriesCreateNestedOneWithoutBusinessesInput
+  client_details?: Prisma.client_detailsCreateNestedOneWithoutBusinessesInput
+  publications?: Prisma.publicationsCreateNestedManyWithoutBusinessesInput
 }
 
 export type BusinessUncheckedCreateWithoutGuestMatchesInput = {
   id?: number
   business: string
   websiteUrl?: string | null
+  google_drive_folder_url?: string | null
+  writer_411_document_url?: string | null
+  discovery_packet_document_url?: string | null
+  client_status?: $Enums.client_status
+  created_at?: Date | string
+  updated_at?: Date | string
+  subcategory?: string | null
+  description?: string | null
+  writing_topics?: Prisma.BusinessCreatewriting_topicsInput | string[]
+  target_audience?: string | null
+  business_category_id?: number | null
+  domain_rating?: number | null
+  related_category_ids?: Prisma.BusinessCreaterelated_category_idsInput | number[]
+  related_categories_reasoning?: string | null
   clientType?: $Enums.BusinessRoleType | null
   hostedMatches?: Prisma.MatchUncheckedCreateNestedManyWithoutHostInput
+  client_details?: Prisma.client_detailsUncheckedCreateNestedOneWithoutBusinessesInput
+  publications?: Prisma.publicationsUncheckedCreateNestedManyWithoutBusinessesInput
 }
 
 export type BusinessCreateOrConnectWithoutGuestMatchesInput = {
@@ -431,30 +903,56 @@ export type BusinessCreateOrConnectWithoutGuestMatchesInput = {
   create: Prisma.XOR<Prisma.BusinessCreateWithoutGuestMatchesInput, Prisma.BusinessUncheckedCreateWithoutGuestMatchesInput>
 }
 
-export type BusinessUpsertWithoutHostedMatchesInput = {
-  update: Prisma.XOR<Prisma.BusinessUpdateWithoutHostedMatchesInput, Prisma.BusinessUncheckedUpdateWithoutHostedMatchesInput>
+export type BusinessCreateWithoutHostedMatchesInput = {
+  business: string
+  websiteUrl?: string | null
+  google_drive_folder_url?: string | null
+  writer_411_document_url?: string | null
+  discovery_packet_document_url?: string | null
+  client_status?: $Enums.client_status
+  created_at?: Date | string
+  updated_at?: Date | string
+  subcategory?: string | null
+  description?: string | null
+  writing_topics?: Prisma.BusinessCreatewriting_topicsInput | string[]
+  target_audience?: string | null
+  domain_rating?: number | null
+  related_category_ids?: Prisma.BusinessCreaterelated_category_idsInput | number[]
+  related_categories_reasoning?: string | null
+  clientType?: $Enums.BusinessRoleType | null
+  guestMatches?: Prisma.MatchCreateNestedManyWithoutGuestInput
+  business_categories?: Prisma.business_categoriesCreateNestedOneWithoutBusinessesInput
+  client_details?: Prisma.client_detailsCreateNestedOneWithoutBusinessesInput
+  publications?: Prisma.publicationsCreateNestedManyWithoutBusinessesInput
+}
+
+export type BusinessUncheckedCreateWithoutHostedMatchesInput = {
+  id?: number
+  business: string
+  websiteUrl?: string | null
+  google_drive_folder_url?: string | null
+  writer_411_document_url?: string | null
+  discovery_packet_document_url?: string | null
+  client_status?: $Enums.client_status
+  created_at?: Date | string
+  updated_at?: Date | string
+  subcategory?: string | null
+  description?: string | null
+  writing_topics?: Prisma.BusinessCreatewriting_topicsInput | string[]
+  target_audience?: string | null
+  business_category_id?: number | null
+  domain_rating?: number | null
+  related_category_ids?: Prisma.BusinessCreaterelated_category_idsInput | number[]
+  related_categories_reasoning?: string | null
+  clientType?: $Enums.BusinessRoleType | null
+  guestMatches?: Prisma.MatchUncheckedCreateNestedManyWithoutGuestInput
+  client_details?: Prisma.client_detailsUncheckedCreateNestedOneWithoutBusinessesInput
+  publications?: Prisma.publicationsUncheckedCreateNestedManyWithoutBusinessesInput
+}
+
+export type BusinessCreateOrConnectWithoutHostedMatchesInput = {
+  where: Prisma.BusinessWhereUniqueInput
   create: Prisma.XOR<Prisma.BusinessCreateWithoutHostedMatchesInput, Prisma.BusinessUncheckedCreateWithoutHostedMatchesInput>
-  where?: Prisma.BusinessWhereInput
-}
-
-export type BusinessUpdateToOneWithWhereWithoutHostedMatchesInput = {
-  where?: Prisma.BusinessWhereInput
-  data: Prisma.XOR<Prisma.BusinessUpdateWithoutHostedMatchesInput, Prisma.BusinessUncheckedUpdateWithoutHostedMatchesInput>
-}
-
-export type BusinessUpdateWithoutHostedMatchesInput = {
-  business?: Prisma.StringFieldUpdateOperationsInput | string
-  websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
-  guestMatches?: Prisma.MatchUpdateManyWithoutGuestNestedInput
-}
-
-export type BusinessUncheckedUpdateWithoutHostedMatchesInput = {
-  id?: Prisma.IntFieldUpdateOperationsInput | number
-  business?: Prisma.StringFieldUpdateOperationsInput | string
-  websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
-  guestMatches?: Prisma.MatchUncheckedUpdateManyWithoutGuestNestedInput
 }
 
 export type BusinessUpsertWithoutGuestMatchesInput = {
@@ -471,16 +969,510 @@ export type BusinessUpdateToOneWithWhereWithoutGuestMatchesInput = {
 export type BusinessUpdateWithoutGuestMatchesInput = {
   business?: Prisma.StringFieldUpdateOperationsInput | string
   websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  client_status?: Prisma.Enumclient_statusFieldUpdateOperationsInput | $Enums.client_status
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  subcategory?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writing_topics?: Prisma.BusinessUpdatewriting_topicsInput | string[]
+  target_audience?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  domain_rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  related_category_ids?: Prisma.BusinessUpdaterelated_category_idsInput | number[]
+  related_categories_reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
   hostedMatches?: Prisma.MatchUpdateManyWithoutHostNestedInput
+  business_categories?: Prisma.business_categoriesUpdateOneWithoutBusinessesNestedInput
+  client_details?: Prisma.client_detailsUpdateOneWithoutBusinessesNestedInput
+  publications?: Prisma.publicationsUpdateManyWithoutBusinessesNestedInput
 }
 
 export type BusinessUncheckedUpdateWithoutGuestMatchesInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   business?: Prisma.StringFieldUpdateOperationsInput | string
   websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  client_status?: Prisma.Enumclient_statusFieldUpdateOperationsInput | $Enums.client_status
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  subcategory?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writing_topics?: Prisma.BusinessUpdatewriting_topicsInput | string[]
+  target_audience?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  business_category_id?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  domain_rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  related_category_ids?: Prisma.BusinessUpdaterelated_category_idsInput | number[]
+  related_categories_reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
   hostedMatches?: Prisma.MatchUncheckedUpdateManyWithoutHostNestedInput
+  client_details?: Prisma.client_detailsUncheckedUpdateOneWithoutBusinessesNestedInput
+  publications?: Prisma.publicationsUncheckedUpdateManyWithoutBusinessesNestedInput
+}
+
+export type BusinessUpsertWithoutHostedMatchesInput = {
+  update: Prisma.XOR<Prisma.BusinessUpdateWithoutHostedMatchesInput, Prisma.BusinessUncheckedUpdateWithoutHostedMatchesInput>
+  create: Prisma.XOR<Prisma.BusinessCreateWithoutHostedMatchesInput, Prisma.BusinessUncheckedCreateWithoutHostedMatchesInput>
+  where?: Prisma.BusinessWhereInput
+}
+
+export type BusinessUpdateToOneWithWhereWithoutHostedMatchesInput = {
+  where?: Prisma.BusinessWhereInput
+  data: Prisma.XOR<Prisma.BusinessUpdateWithoutHostedMatchesInput, Prisma.BusinessUncheckedUpdateWithoutHostedMatchesInput>
+}
+
+export type BusinessUpdateWithoutHostedMatchesInput = {
+  business?: Prisma.StringFieldUpdateOperationsInput | string
+  websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  client_status?: Prisma.Enumclient_statusFieldUpdateOperationsInput | $Enums.client_status
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  subcategory?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writing_topics?: Prisma.BusinessUpdatewriting_topicsInput | string[]
+  target_audience?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  domain_rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  related_category_ids?: Prisma.BusinessUpdaterelated_category_idsInput | number[]
+  related_categories_reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
+  guestMatches?: Prisma.MatchUpdateManyWithoutGuestNestedInput
+  business_categories?: Prisma.business_categoriesUpdateOneWithoutBusinessesNestedInput
+  client_details?: Prisma.client_detailsUpdateOneWithoutBusinessesNestedInput
+  publications?: Prisma.publicationsUpdateManyWithoutBusinessesNestedInput
+}
+
+export type BusinessUncheckedUpdateWithoutHostedMatchesInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  business?: Prisma.StringFieldUpdateOperationsInput | string
+  websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  client_status?: Prisma.Enumclient_statusFieldUpdateOperationsInput | $Enums.client_status
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  subcategory?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writing_topics?: Prisma.BusinessUpdatewriting_topicsInput | string[]
+  target_audience?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  business_category_id?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  domain_rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  related_category_ids?: Prisma.BusinessUpdaterelated_category_idsInput | number[]
+  related_categories_reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
+  guestMatches?: Prisma.MatchUncheckedUpdateManyWithoutGuestNestedInput
+  client_details?: Prisma.client_detailsUncheckedUpdateOneWithoutBusinessesNestedInput
+  publications?: Prisma.publicationsUncheckedUpdateManyWithoutBusinessesNestedInput
+}
+
+export type BusinessCreateWithoutBusiness_categoriesInput = {
+  business: string
+  websiteUrl?: string | null
+  google_drive_folder_url?: string | null
+  writer_411_document_url?: string | null
+  discovery_packet_document_url?: string | null
+  client_status?: $Enums.client_status
+  created_at?: Date | string
+  updated_at?: Date | string
+  subcategory?: string | null
+  description?: string | null
+  writing_topics?: Prisma.BusinessCreatewriting_topicsInput | string[]
+  target_audience?: string | null
+  domain_rating?: number | null
+  related_category_ids?: Prisma.BusinessCreaterelated_category_idsInput | number[]
+  related_categories_reasoning?: string | null
+  clientType?: $Enums.BusinessRoleType | null
+  guestMatches?: Prisma.MatchCreateNestedManyWithoutGuestInput
+  hostedMatches?: Prisma.MatchCreateNestedManyWithoutHostInput
+  client_details?: Prisma.client_detailsCreateNestedOneWithoutBusinessesInput
+  publications?: Prisma.publicationsCreateNestedManyWithoutBusinessesInput
+}
+
+export type BusinessUncheckedCreateWithoutBusiness_categoriesInput = {
+  id?: number
+  business: string
+  websiteUrl?: string | null
+  google_drive_folder_url?: string | null
+  writer_411_document_url?: string | null
+  discovery_packet_document_url?: string | null
+  client_status?: $Enums.client_status
+  created_at?: Date | string
+  updated_at?: Date | string
+  subcategory?: string | null
+  description?: string | null
+  writing_topics?: Prisma.BusinessCreatewriting_topicsInput | string[]
+  target_audience?: string | null
+  domain_rating?: number | null
+  related_category_ids?: Prisma.BusinessCreaterelated_category_idsInput | number[]
+  related_categories_reasoning?: string | null
+  clientType?: $Enums.BusinessRoleType | null
+  guestMatches?: Prisma.MatchUncheckedCreateNestedManyWithoutGuestInput
+  hostedMatches?: Prisma.MatchUncheckedCreateNestedManyWithoutHostInput
+  client_details?: Prisma.client_detailsUncheckedCreateNestedOneWithoutBusinessesInput
+  publications?: Prisma.publicationsUncheckedCreateNestedManyWithoutBusinessesInput
+}
+
+export type BusinessCreateOrConnectWithoutBusiness_categoriesInput = {
+  where: Prisma.BusinessWhereUniqueInput
+  create: Prisma.XOR<Prisma.BusinessCreateWithoutBusiness_categoriesInput, Prisma.BusinessUncheckedCreateWithoutBusiness_categoriesInput>
+}
+
+export type BusinessCreateManyBusiness_categoriesInputEnvelope = {
+  data: Prisma.BusinessCreateManyBusiness_categoriesInput | Prisma.BusinessCreateManyBusiness_categoriesInput[]
+  skipDuplicates?: boolean
+}
+
+export type BusinessUpsertWithWhereUniqueWithoutBusiness_categoriesInput = {
+  where: Prisma.BusinessWhereUniqueInput
+  update: Prisma.XOR<Prisma.BusinessUpdateWithoutBusiness_categoriesInput, Prisma.BusinessUncheckedUpdateWithoutBusiness_categoriesInput>
+  create: Prisma.XOR<Prisma.BusinessCreateWithoutBusiness_categoriesInput, Prisma.BusinessUncheckedCreateWithoutBusiness_categoriesInput>
+}
+
+export type BusinessUpdateWithWhereUniqueWithoutBusiness_categoriesInput = {
+  where: Prisma.BusinessWhereUniqueInput
+  data: Prisma.XOR<Prisma.BusinessUpdateWithoutBusiness_categoriesInput, Prisma.BusinessUncheckedUpdateWithoutBusiness_categoriesInput>
+}
+
+export type BusinessUpdateManyWithWhereWithoutBusiness_categoriesInput = {
+  where: Prisma.BusinessScalarWhereInput
+  data: Prisma.XOR<Prisma.BusinessUpdateManyMutationInput, Prisma.BusinessUncheckedUpdateManyWithoutBusiness_categoriesInput>
+}
+
+export type BusinessScalarWhereInput = {
+  AND?: Prisma.BusinessScalarWhereInput | Prisma.BusinessScalarWhereInput[]
+  OR?: Prisma.BusinessScalarWhereInput[]
+  NOT?: Prisma.BusinessScalarWhereInput | Prisma.BusinessScalarWhereInput[]
+  id?: Prisma.IntFilter<"Business"> | number
+  business?: Prisma.StringFilter<"Business"> | string
+  websiteUrl?: Prisma.StringNullableFilter<"Business"> | string | null
+  google_drive_folder_url?: Prisma.StringNullableFilter<"Business"> | string | null
+  writer_411_document_url?: Prisma.StringNullableFilter<"Business"> | string | null
+  discovery_packet_document_url?: Prisma.StringNullableFilter<"Business"> | string | null
+  client_status?: Prisma.Enumclient_statusFilter<"Business"> | $Enums.client_status
+  created_at?: Prisma.DateTimeFilter<"Business"> | Date | string
+  updated_at?: Prisma.DateTimeFilter<"Business"> | Date | string
+  subcategory?: Prisma.StringNullableFilter<"Business"> | string | null
+  description?: Prisma.StringNullableFilter<"Business"> | string | null
+  writing_topics?: Prisma.StringNullableListFilter<"Business">
+  target_audience?: Prisma.StringNullableFilter<"Business"> | string | null
+  business_category_id?: Prisma.IntNullableFilter<"Business"> | number | null
+  domain_rating?: Prisma.IntNullableFilter<"Business"> | number | null
+  related_category_ids?: Prisma.IntNullableListFilter<"Business">
+  related_categories_reasoning?: Prisma.StringNullableFilter<"Business"> | string | null
+  clientType?: Prisma.EnumBusinessRoleTypeNullableFilter<"Business"> | $Enums.BusinessRoleType | null
+}
+
+export type BusinessCreateWithoutClient_detailsInput = {
+  business: string
+  websiteUrl?: string | null
+  google_drive_folder_url?: string | null
+  writer_411_document_url?: string | null
+  discovery_packet_document_url?: string | null
+  client_status?: $Enums.client_status
+  created_at?: Date | string
+  updated_at?: Date | string
+  subcategory?: string | null
+  description?: string | null
+  writing_topics?: Prisma.BusinessCreatewriting_topicsInput | string[]
+  target_audience?: string | null
+  domain_rating?: number | null
+  related_category_ids?: Prisma.BusinessCreaterelated_category_idsInput | number[]
+  related_categories_reasoning?: string | null
+  clientType?: $Enums.BusinessRoleType | null
+  guestMatches?: Prisma.MatchCreateNestedManyWithoutGuestInput
+  hostedMatches?: Prisma.MatchCreateNestedManyWithoutHostInput
+  business_categories?: Prisma.business_categoriesCreateNestedOneWithoutBusinessesInput
+  publications?: Prisma.publicationsCreateNestedManyWithoutBusinessesInput
+}
+
+export type BusinessUncheckedCreateWithoutClient_detailsInput = {
+  id?: number
+  business: string
+  websiteUrl?: string | null
+  google_drive_folder_url?: string | null
+  writer_411_document_url?: string | null
+  discovery_packet_document_url?: string | null
+  client_status?: $Enums.client_status
+  created_at?: Date | string
+  updated_at?: Date | string
+  subcategory?: string | null
+  description?: string | null
+  writing_topics?: Prisma.BusinessCreatewriting_topicsInput | string[]
+  target_audience?: string | null
+  business_category_id?: number | null
+  domain_rating?: number | null
+  related_category_ids?: Prisma.BusinessCreaterelated_category_idsInput | number[]
+  related_categories_reasoning?: string | null
+  clientType?: $Enums.BusinessRoleType | null
+  guestMatches?: Prisma.MatchUncheckedCreateNestedManyWithoutGuestInput
+  hostedMatches?: Prisma.MatchUncheckedCreateNestedManyWithoutHostInput
+  publications?: Prisma.publicationsUncheckedCreateNestedManyWithoutBusinessesInput
+}
+
+export type BusinessCreateOrConnectWithoutClient_detailsInput = {
+  where: Prisma.BusinessWhereUniqueInput
+  create: Prisma.XOR<Prisma.BusinessCreateWithoutClient_detailsInput, Prisma.BusinessUncheckedCreateWithoutClient_detailsInput>
+}
+
+export type BusinessUpsertWithoutClient_detailsInput = {
+  update: Prisma.XOR<Prisma.BusinessUpdateWithoutClient_detailsInput, Prisma.BusinessUncheckedUpdateWithoutClient_detailsInput>
+  create: Prisma.XOR<Prisma.BusinessCreateWithoutClient_detailsInput, Prisma.BusinessUncheckedCreateWithoutClient_detailsInput>
+  where?: Prisma.BusinessWhereInput
+}
+
+export type BusinessUpdateToOneWithWhereWithoutClient_detailsInput = {
+  where?: Prisma.BusinessWhereInput
+  data: Prisma.XOR<Prisma.BusinessUpdateWithoutClient_detailsInput, Prisma.BusinessUncheckedUpdateWithoutClient_detailsInput>
+}
+
+export type BusinessUpdateWithoutClient_detailsInput = {
+  business?: Prisma.StringFieldUpdateOperationsInput | string
+  websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  client_status?: Prisma.Enumclient_statusFieldUpdateOperationsInput | $Enums.client_status
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  subcategory?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writing_topics?: Prisma.BusinessUpdatewriting_topicsInput | string[]
+  target_audience?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  domain_rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  related_category_ids?: Prisma.BusinessUpdaterelated_category_idsInput | number[]
+  related_categories_reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
+  guestMatches?: Prisma.MatchUpdateManyWithoutGuestNestedInput
+  hostedMatches?: Prisma.MatchUpdateManyWithoutHostNestedInput
+  business_categories?: Prisma.business_categoriesUpdateOneWithoutBusinessesNestedInput
+  publications?: Prisma.publicationsUpdateManyWithoutBusinessesNestedInput
+}
+
+export type BusinessUncheckedUpdateWithoutClient_detailsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  business?: Prisma.StringFieldUpdateOperationsInput | string
+  websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  client_status?: Prisma.Enumclient_statusFieldUpdateOperationsInput | $Enums.client_status
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  subcategory?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writing_topics?: Prisma.BusinessUpdatewriting_topicsInput | string[]
+  target_audience?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  business_category_id?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  domain_rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  related_category_ids?: Prisma.BusinessUpdaterelated_category_idsInput | number[]
+  related_categories_reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
+  guestMatches?: Prisma.MatchUncheckedUpdateManyWithoutGuestNestedInput
+  hostedMatches?: Prisma.MatchUncheckedUpdateManyWithoutHostNestedInput
+  publications?: Prisma.publicationsUncheckedUpdateManyWithoutBusinessesNestedInput
+}
+
+export type BusinessCreateWithoutPublicationsInput = {
+  business: string
+  websiteUrl?: string | null
+  google_drive_folder_url?: string | null
+  writer_411_document_url?: string | null
+  discovery_packet_document_url?: string | null
+  client_status?: $Enums.client_status
+  created_at?: Date | string
+  updated_at?: Date | string
+  subcategory?: string | null
+  description?: string | null
+  writing_topics?: Prisma.BusinessCreatewriting_topicsInput | string[]
+  target_audience?: string | null
+  domain_rating?: number | null
+  related_category_ids?: Prisma.BusinessCreaterelated_category_idsInput | number[]
+  related_categories_reasoning?: string | null
+  clientType?: $Enums.BusinessRoleType | null
+  guestMatches?: Prisma.MatchCreateNestedManyWithoutGuestInput
+  hostedMatches?: Prisma.MatchCreateNestedManyWithoutHostInput
+  business_categories?: Prisma.business_categoriesCreateNestedOneWithoutBusinessesInput
+  client_details?: Prisma.client_detailsCreateNestedOneWithoutBusinessesInput
+}
+
+export type BusinessUncheckedCreateWithoutPublicationsInput = {
+  id?: number
+  business: string
+  websiteUrl?: string | null
+  google_drive_folder_url?: string | null
+  writer_411_document_url?: string | null
+  discovery_packet_document_url?: string | null
+  client_status?: $Enums.client_status
+  created_at?: Date | string
+  updated_at?: Date | string
+  subcategory?: string | null
+  description?: string | null
+  writing_topics?: Prisma.BusinessCreatewriting_topicsInput | string[]
+  target_audience?: string | null
+  business_category_id?: number | null
+  domain_rating?: number | null
+  related_category_ids?: Prisma.BusinessCreaterelated_category_idsInput | number[]
+  related_categories_reasoning?: string | null
+  clientType?: $Enums.BusinessRoleType | null
+  guestMatches?: Prisma.MatchUncheckedCreateNestedManyWithoutGuestInput
+  hostedMatches?: Prisma.MatchUncheckedCreateNestedManyWithoutHostInput
+  client_details?: Prisma.client_detailsUncheckedCreateNestedOneWithoutBusinessesInput
+}
+
+export type BusinessCreateOrConnectWithoutPublicationsInput = {
+  where: Prisma.BusinessWhereUniqueInput
+  create: Prisma.XOR<Prisma.BusinessCreateWithoutPublicationsInput, Prisma.BusinessUncheckedCreateWithoutPublicationsInput>
+}
+
+export type BusinessUpsertWithoutPublicationsInput = {
+  update: Prisma.XOR<Prisma.BusinessUpdateWithoutPublicationsInput, Prisma.BusinessUncheckedUpdateWithoutPublicationsInput>
+  create: Prisma.XOR<Prisma.BusinessCreateWithoutPublicationsInput, Prisma.BusinessUncheckedCreateWithoutPublicationsInput>
+  where?: Prisma.BusinessWhereInput
+}
+
+export type BusinessUpdateToOneWithWhereWithoutPublicationsInput = {
+  where?: Prisma.BusinessWhereInput
+  data: Prisma.XOR<Prisma.BusinessUpdateWithoutPublicationsInput, Prisma.BusinessUncheckedUpdateWithoutPublicationsInput>
+}
+
+export type BusinessUpdateWithoutPublicationsInput = {
+  business?: Prisma.StringFieldUpdateOperationsInput | string
+  websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  client_status?: Prisma.Enumclient_statusFieldUpdateOperationsInput | $Enums.client_status
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  subcategory?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writing_topics?: Prisma.BusinessUpdatewriting_topicsInput | string[]
+  target_audience?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  domain_rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  related_category_ids?: Prisma.BusinessUpdaterelated_category_idsInput | number[]
+  related_categories_reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
+  guestMatches?: Prisma.MatchUpdateManyWithoutGuestNestedInput
+  hostedMatches?: Prisma.MatchUpdateManyWithoutHostNestedInput
+  business_categories?: Prisma.business_categoriesUpdateOneWithoutBusinessesNestedInput
+  client_details?: Prisma.client_detailsUpdateOneWithoutBusinessesNestedInput
+}
+
+export type BusinessUncheckedUpdateWithoutPublicationsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  business?: Prisma.StringFieldUpdateOperationsInput | string
+  websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  client_status?: Prisma.Enumclient_statusFieldUpdateOperationsInput | $Enums.client_status
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  subcategory?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writing_topics?: Prisma.BusinessUpdatewriting_topicsInput | string[]
+  target_audience?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  business_category_id?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  domain_rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  related_category_ids?: Prisma.BusinessUpdaterelated_category_idsInput | number[]
+  related_categories_reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
+  guestMatches?: Prisma.MatchUncheckedUpdateManyWithoutGuestNestedInput
+  hostedMatches?: Prisma.MatchUncheckedUpdateManyWithoutHostNestedInput
+  client_details?: Prisma.client_detailsUncheckedUpdateOneWithoutBusinessesNestedInput
+}
+
+export type BusinessCreateManyBusiness_categoriesInput = {
+  id?: number
+  business: string
+  websiteUrl?: string | null
+  google_drive_folder_url?: string | null
+  writer_411_document_url?: string | null
+  discovery_packet_document_url?: string | null
+  client_status?: $Enums.client_status
+  created_at?: Date | string
+  updated_at?: Date | string
+  subcategory?: string | null
+  description?: string | null
+  writing_topics?: Prisma.BusinessCreatewriting_topicsInput | string[]
+  target_audience?: string | null
+  domain_rating?: number | null
+  related_category_ids?: Prisma.BusinessCreaterelated_category_idsInput | number[]
+  related_categories_reasoning?: string | null
+  clientType?: $Enums.BusinessRoleType | null
+}
+
+export type BusinessUpdateWithoutBusiness_categoriesInput = {
+  business?: Prisma.StringFieldUpdateOperationsInput | string
+  websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  client_status?: Prisma.Enumclient_statusFieldUpdateOperationsInput | $Enums.client_status
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  subcategory?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writing_topics?: Prisma.BusinessUpdatewriting_topicsInput | string[]
+  target_audience?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  domain_rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  related_category_ids?: Prisma.BusinessUpdaterelated_category_idsInput | number[]
+  related_categories_reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
+  guestMatches?: Prisma.MatchUpdateManyWithoutGuestNestedInput
+  hostedMatches?: Prisma.MatchUpdateManyWithoutHostNestedInput
+  client_details?: Prisma.client_detailsUpdateOneWithoutBusinessesNestedInput
+  publications?: Prisma.publicationsUpdateManyWithoutBusinessesNestedInput
+}
+
+export type BusinessUncheckedUpdateWithoutBusiness_categoriesInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  business?: Prisma.StringFieldUpdateOperationsInput | string
+  websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  client_status?: Prisma.Enumclient_statusFieldUpdateOperationsInput | $Enums.client_status
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  subcategory?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writing_topics?: Prisma.BusinessUpdatewriting_topicsInput | string[]
+  target_audience?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  domain_rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  related_category_ids?: Prisma.BusinessUpdaterelated_category_idsInput | number[]
+  related_categories_reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
+  guestMatches?: Prisma.MatchUncheckedUpdateManyWithoutGuestNestedInput
+  hostedMatches?: Prisma.MatchUncheckedUpdateManyWithoutHostNestedInput
+  client_details?: Prisma.client_detailsUncheckedUpdateOneWithoutBusinessesNestedInput
+  publications?: Prisma.publicationsUncheckedUpdateManyWithoutBusinessesNestedInput
+}
+
+export type BusinessUncheckedUpdateManyWithoutBusiness_categoriesInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  business?: Prisma.StringFieldUpdateOperationsInput | string
+  websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  client_status?: Prisma.Enumclient_statusFieldUpdateOperationsInput | $Enums.client_status
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  subcategory?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writing_topics?: Prisma.BusinessUpdatewriting_topicsInput | string[]
+  target_audience?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  domain_rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  related_category_ids?: Prisma.BusinessUpdaterelated_category_idsInput | number[]
+  related_categories_reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
 }
 
 
@@ -489,13 +1481,15 @@ export type BusinessUncheckedUpdateWithoutGuestMatchesInput = {
  */
 
 export type BusinessCountOutputType = {
-  hostedMatches: number
   guestMatches: number
+  hostedMatches: number
+  publications: number
 }
 
 export type BusinessCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  hostedMatches?: boolean | BusinessCountOutputTypeCountHostedMatchesArgs
   guestMatches?: boolean | BusinessCountOutputTypeCountGuestMatchesArgs
+  hostedMatches?: boolean | BusinessCountOutputTypeCountHostedMatchesArgs
+  publications?: boolean | BusinessCountOutputTypeCountPublicationsArgs
 }
 
 /**
@@ -511,6 +1505,13 @@ export type BusinessCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Ext
 /**
  * BusinessCountOutputType without action
  */
+export type BusinessCountOutputTypeCountGuestMatchesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.MatchWhereInput
+}
+
+/**
+ * BusinessCountOutputType without action
+ */
 export type BusinessCountOutputTypeCountHostedMatchesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.MatchWhereInput
 }
@@ -518,8 +1519,8 @@ export type BusinessCountOutputTypeCountHostedMatchesArgs<ExtArgs extends runtim
 /**
  * BusinessCountOutputType without action
  */
-export type BusinessCountOutputTypeCountGuestMatchesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.MatchWhereInput
+export type BusinessCountOutputTypeCountPublicationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.publicationsWhereInput
 }
 
 
@@ -527,9 +1528,26 @@ export type BusinessSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   id?: boolean
   business?: boolean
   websiteUrl?: boolean
+  google_drive_folder_url?: boolean
+  writer_411_document_url?: boolean
+  discovery_packet_document_url?: boolean
+  client_status?: boolean
+  created_at?: boolean
+  updated_at?: boolean
+  subcategory?: boolean
+  description?: boolean
+  writing_topics?: boolean
+  target_audience?: boolean
+  business_category_id?: boolean
+  domain_rating?: boolean
+  related_category_ids?: boolean
+  related_categories_reasoning?: boolean
   clientType?: boolean
-  hostedMatches?: boolean | Prisma.Business$hostedMatchesArgs<ExtArgs>
   guestMatches?: boolean | Prisma.Business$guestMatchesArgs<ExtArgs>
+  hostedMatches?: boolean | Prisma.Business$hostedMatchesArgs<ExtArgs>
+  business_categories?: boolean | Prisma.Business$business_categoriesArgs<ExtArgs>
+  client_details?: boolean | Prisma.Business$client_detailsArgs<ExtArgs>
+  publications?: boolean | Prisma.Business$publicationsArgs<ExtArgs>
   _count?: boolean | Prisma.BusinessCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["business"]>
 
@@ -537,42 +1555,110 @@ export type BusinessSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   id?: boolean
   business?: boolean
   websiteUrl?: boolean
+  google_drive_folder_url?: boolean
+  writer_411_document_url?: boolean
+  discovery_packet_document_url?: boolean
+  client_status?: boolean
+  created_at?: boolean
+  updated_at?: boolean
+  subcategory?: boolean
+  description?: boolean
+  writing_topics?: boolean
+  target_audience?: boolean
+  business_category_id?: boolean
+  domain_rating?: boolean
+  related_category_ids?: boolean
+  related_categories_reasoning?: boolean
   clientType?: boolean
+  business_categories?: boolean | Prisma.Business$business_categoriesArgs<ExtArgs>
 }, ExtArgs["result"]["business"]>
 
 export type BusinessSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   business?: boolean
   websiteUrl?: boolean
+  google_drive_folder_url?: boolean
+  writer_411_document_url?: boolean
+  discovery_packet_document_url?: boolean
+  client_status?: boolean
+  created_at?: boolean
+  updated_at?: boolean
+  subcategory?: boolean
+  description?: boolean
+  writing_topics?: boolean
+  target_audience?: boolean
+  business_category_id?: boolean
+  domain_rating?: boolean
+  related_category_ids?: boolean
+  related_categories_reasoning?: boolean
   clientType?: boolean
+  business_categories?: boolean | Prisma.Business$business_categoriesArgs<ExtArgs>
 }, ExtArgs["result"]["business"]>
 
 export type BusinessSelectScalar = {
   id?: boolean
   business?: boolean
   websiteUrl?: boolean
+  google_drive_folder_url?: boolean
+  writer_411_document_url?: boolean
+  discovery_packet_document_url?: boolean
+  client_status?: boolean
+  created_at?: boolean
+  updated_at?: boolean
+  subcategory?: boolean
+  description?: boolean
+  writing_topics?: boolean
+  target_audience?: boolean
+  business_category_id?: boolean
+  domain_rating?: boolean
+  related_category_ids?: boolean
+  related_categories_reasoning?: boolean
   clientType?: boolean
 }
 
-export type BusinessOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "business" | "websiteUrl" | "clientType", ExtArgs["result"]["business"]>
+export type BusinessOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "business" | "websiteUrl" | "google_drive_folder_url" | "writer_411_document_url" | "discovery_packet_document_url" | "client_status" | "created_at" | "updated_at" | "subcategory" | "description" | "writing_topics" | "target_audience" | "business_category_id" | "domain_rating" | "related_category_ids" | "related_categories_reasoning" | "clientType", ExtArgs["result"]["business"]>
 export type BusinessInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  hostedMatches?: boolean | Prisma.Business$hostedMatchesArgs<ExtArgs>
   guestMatches?: boolean | Prisma.Business$guestMatchesArgs<ExtArgs>
+  hostedMatches?: boolean | Prisma.Business$hostedMatchesArgs<ExtArgs>
+  business_categories?: boolean | Prisma.Business$business_categoriesArgs<ExtArgs>
+  client_details?: boolean | Prisma.Business$client_detailsArgs<ExtArgs>
+  publications?: boolean | Prisma.Business$publicationsArgs<ExtArgs>
   _count?: boolean | Prisma.BusinessCountOutputTypeDefaultArgs<ExtArgs>
 }
-export type BusinessIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
-export type BusinessIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
+export type BusinessIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  business_categories?: boolean | Prisma.Business$business_categoriesArgs<ExtArgs>
+}
+export type BusinessIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  business_categories?: boolean | Prisma.Business$business_categoriesArgs<ExtArgs>
+}
 
 export type $BusinessPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Business"
   objects: {
-    hostedMatches: Prisma.$MatchPayload<ExtArgs>[]
     guestMatches: Prisma.$MatchPayload<ExtArgs>[]
+    hostedMatches: Prisma.$MatchPayload<ExtArgs>[]
+    business_categories: Prisma.$business_categoriesPayload<ExtArgs> | null
+    client_details: Prisma.$client_detailsPayload<ExtArgs> | null
+    publications: Prisma.$publicationsPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
     business: string
     websiteUrl: string | null
+    google_drive_folder_url: string | null
+    writer_411_document_url: string | null
+    discovery_packet_document_url: string | null
+    client_status: $Enums.client_status
+    created_at: Date
+    updated_at: Date
+    subcategory: string | null
+    description: string | null
+    writing_topics: string[]
+    target_audience: string | null
+    business_category_id: number | null
+    domain_rating: number | null
+    related_category_ids: number[]
+    related_categories_reasoning: string | null
     clientType: $Enums.BusinessRoleType | null
   }, ExtArgs["result"]["business"]>
   composites: {}
@@ -968,8 +2054,11 @@ readonly fields: BusinessFieldRefs;
  */
 export interface Prisma__BusinessClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  hostedMatches<T extends Prisma.Business$hostedMatchesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Business$hostedMatchesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MatchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   guestMatches<T extends Prisma.Business$guestMatchesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Business$guestMatchesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MatchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  hostedMatches<T extends Prisma.Business$hostedMatchesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Business$hostedMatchesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MatchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  business_categories<T extends Prisma.Business$business_categoriesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Business$business_categoriesArgs<ExtArgs>>): Prisma.Prisma__business_categoriesClient<runtime.Types.Result.GetResult<Prisma.$business_categoriesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  client_details<T extends Prisma.Business$client_detailsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Business$client_detailsArgs<ExtArgs>>): Prisma.Prisma__client_detailsClient<runtime.Types.Result.GetResult<Prisma.$client_detailsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  publications<T extends Prisma.Business$publicationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Business$publicationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$publicationsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1002,6 +2091,20 @@ export interface BusinessFieldRefs {
   readonly id: Prisma.FieldRef<"Business", 'Int'>
   readonly business: Prisma.FieldRef<"Business", 'String'>
   readonly websiteUrl: Prisma.FieldRef<"Business", 'String'>
+  readonly google_drive_folder_url: Prisma.FieldRef<"Business", 'String'>
+  readonly writer_411_document_url: Prisma.FieldRef<"Business", 'String'>
+  readonly discovery_packet_document_url: Prisma.FieldRef<"Business", 'String'>
+  readonly client_status: Prisma.FieldRef<"Business", 'client_status'>
+  readonly created_at: Prisma.FieldRef<"Business", 'DateTime'>
+  readonly updated_at: Prisma.FieldRef<"Business", 'DateTime'>
+  readonly subcategory: Prisma.FieldRef<"Business", 'String'>
+  readonly description: Prisma.FieldRef<"Business", 'String'>
+  readonly writing_topics: Prisma.FieldRef<"Business", 'String[]'>
+  readonly target_audience: Prisma.FieldRef<"Business", 'String'>
+  readonly business_category_id: Prisma.FieldRef<"Business", 'Int'>
+  readonly domain_rating: Prisma.FieldRef<"Business", 'Int'>
+  readonly related_category_ids: Prisma.FieldRef<"Business", 'Int[]'>
+  readonly related_categories_reasoning: Prisma.FieldRef<"Business", 'String'>
   readonly clientType: Prisma.FieldRef<"Business", 'BusinessRoleType'>
 }
     
@@ -1252,6 +2355,10 @@ export type BusinessCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Extens
    */
   data: Prisma.BusinessCreateManyInput | Prisma.BusinessCreateManyInput[]
   skipDuplicates?: boolean
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.BusinessIncludeCreateManyAndReturn<ExtArgs> | null
 }
 
 /**
@@ -1322,6 +2429,10 @@ export type BusinessUpdateManyAndReturnArgs<ExtArgs extends runtime.Types.Extens
    * Limit how many Businesses to update.
    */
   limit?: number
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.BusinessIncludeUpdateManyAndReturn<ExtArgs> | null
 }
 
 /**
@@ -1391,6 +2502,30 @@ export type BusinessDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Inte
 }
 
 /**
+ * Business.guestMatches
+ */
+export type Business$guestMatchesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Match
+   */
+  select?: Prisma.MatchSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Match
+   */
+  omit?: Prisma.MatchOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.MatchInclude<ExtArgs> | null
+  where?: Prisma.MatchWhereInput
+  orderBy?: Prisma.MatchOrderByWithRelationInput | Prisma.MatchOrderByWithRelationInput[]
+  cursor?: Prisma.MatchWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.MatchScalarFieldEnum | Prisma.MatchScalarFieldEnum[]
+}
+
+/**
  * Business.hostedMatches
  */
 export type Business$hostedMatchesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1415,27 +2550,65 @@ export type Business$hostedMatchesArgs<ExtArgs extends runtime.Types.Extensions.
 }
 
 /**
- * Business.guestMatches
+ * Business.business_categories
  */
-export type Business$guestMatchesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+export type Business$business_categoriesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
-   * Select specific fields to fetch from the Match
+   * Select specific fields to fetch from the business_categories
    */
-  select?: Prisma.MatchSelect<ExtArgs> | null
+  select?: Prisma.business_categoriesSelect<ExtArgs> | null
   /**
-   * Omit specific fields from the Match
+   * Omit specific fields from the business_categories
    */
-  omit?: Prisma.MatchOmit<ExtArgs> | null
+  omit?: Prisma.business_categoriesOmit<ExtArgs> | null
   /**
    * Choose, which related nodes to fetch as well
    */
-  include?: Prisma.MatchInclude<ExtArgs> | null
-  where?: Prisma.MatchWhereInput
-  orderBy?: Prisma.MatchOrderByWithRelationInput | Prisma.MatchOrderByWithRelationInput[]
-  cursor?: Prisma.MatchWhereUniqueInput
+  include?: Prisma.business_categoriesInclude<ExtArgs> | null
+  where?: Prisma.business_categoriesWhereInput
+}
+
+/**
+ * Business.client_details
+ */
+export type Business$client_detailsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the client_details
+   */
+  select?: Prisma.client_detailsSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the client_details
+   */
+  omit?: Prisma.client_detailsOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.client_detailsInclude<ExtArgs> | null
+  where?: Prisma.client_detailsWhereInput
+}
+
+/**
+ * Business.publications
+ */
+export type Business$publicationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the publications
+   */
+  select?: Prisma.publicationsSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the publications
+   */
+  omit?: Prisma.publicationsOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.publicationsInclude<ExtArgs> | null
+  where?: Prisma.publicationsWhereInput
+  orderBy?: Prisma.publicationsOrderByWithRelationInput | Prisma.publicationsOrderByWithRelationInput[]
+  cursor?: Prisma.publicationsWhereUniqueInput
   take?: number
   skip?: number
-  distinct?: Prisma.MatchScalarFieldEnum | Prisma.MatchScalarFieldEnum[]
+  distinct?: Prisma.PublicationsScalarFieldEnum | Prisma.PublicationsScalarFieldEnum[]
 }
 
 /**

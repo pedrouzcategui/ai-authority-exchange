@@ -385,7 +385,12 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 export const ModelName = {
   Business: 'Business',
-  Match: 'Match'
+  Match: 'Match',
+  business_categories: 'business_categories',
+  client_details: 'client_details',
+  economic_sectors: 'economic_sectors',
+  publications: 'publications',
+  users: 'users'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -401,7 +406,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "business" | "match"
+    modelProps: "business" | "match" | "business_categories" | "client_details" | "economic_sectors" | "publications" | "users"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -553,6 +558,376 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    business_categories: {
+      payload: Prisma.$business_categoriesPayload<ExtArgs>
+      fields: Prisma.business_categoriesFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.business_categoriesFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$business_categoriesPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.business_categoriesFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$business_categoriesPayload>
+        }
+        findFirst: {
+          args: Prisma.business_categoriesFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$business_categoriesPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.business_categoriesFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$business_categoriesPayload>
+        }
+        findMany: {
+          args: Prisma.business_categoriesFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$business_categoriesPayload>[]
+        }
+        create: {
+          args: Prisma.business_categoriesCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$business_categoriesPayload>
+        }
+        createMany: {
+          args: Prisma.business_categoriesCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.business_categoriesCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$business_categoriesPayload>[]
+        }
+        delete: {
+          args: Prisma.business_categoriesDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$business_categoriesPayload>
+        }
+        update: {
+          args: Prisma.business_categoriesUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$business_categoriesPayload>
+        }
+        deleteMany: {
+          args: Prisma.business_categoriesDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.business_categoriesUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.business_categoriesUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$business_categoriesPayload>[]
+        }
+        upsert: {
+          args: Prisma.business_categoriesUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$business_categoriesPayload>
+        }
+        aggregate: {
+          args: Prisma.Business_categoriesAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateBusiness_categories>
+        }
+        groupBy: {
+          args: Prisma.business_categoriesGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Business_categoriesGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.business_categoriesCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Business_categoriesCountAggregateOutputType> | number
+        }
+      }
+    }
+    client_details: {
+      payload: Prisma.$client_detailsPayload<ExtArgs>
+      fields: Prisma.client_detailsFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.client_detailsFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$client_detailsPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.client_detailsFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$client_detailsPayload>
+        }
+        findFirst: {
+          args: Prisma.client_detailsFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$client_detailsPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.client_detailsFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$client_detailsPayload>
+        }
+        findMany: {
+          args: Prisma.client_detailsFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$client_detailsPayload>[]
+        }
+        create: {
+          args: Prisma.client_detailsCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$client_detailsPayload>
+        }
+        createMany: {
+          args: Prisma.client_detailsCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.client_detailsCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$client_detailsPayload>[]
+        }
+        delete: {
+          args: Prisma.client_detailsDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$client_detailsPayload>
+        }
+        update: {
+          args: Prisma.client_detailsUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$client_detailsPayload>
+        }
+        deleteMany: {
+          args: Prisma.client_detailsDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.client_detailsUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.client_detailsUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$client_detailsPayload>[]
+        }
+        upsert: {
+          args: Prisma.client_detailsUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$client_detailsPayload>
+        }
+        aggregate: {
+          args: Prisma.Client_detailsAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateClient_details>
+        }
+        groupBy: {
+          args: Prisma.client_detailsGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Client_detailsGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.client_detailsCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Client_detailsCountAggregateOutputType> | number
+        }
+      }
+    }
+    economic_sectors: {
+      payload: Prisma.$economic_sectorsPayload<ExtArgs>
+      fields: Prisma.economic_sectorsFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.economic_sectorsFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$economic_sectorsPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.economic_sectorsFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$economic_sectorsPayload>
+        }
+        findFirst: {
+          args: Prisma.economic_sectorsFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$economic_sectorsPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.economic_sectorsFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$economic_sectorsPayload>
+        }
+        findMany: {
+          args: Prisma.economic_sectorsFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$economic_sectorsPayload>[]
+        }
+        create: {
+          args: Prisma.economic_sectorsCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$economic_sectorsPayload>
+        }
+        createMany: {
+          args: Prisma.economic_sectorsCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.economic_sectorsCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$economic_sectorsPayload>[]
+        }
+        delete: {
+          args: Prisma.economic_sectorsDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$economic_sectorsPayload>
+        }
+        update: {
+          args: Prisma.economic_sectorsUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$economic_sectorsPayload>
+        }
+        deleteMany: {
+          args: Prisma.economic_sectorsDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.economic_sectorsUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.economic_sectorsUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$economic_sectorsPayload>[]
+        }
+        upsert: {
+          args: Prisma.economic_sectorsUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$economic_sectorsPayload>
+        }
+        aggregate: {
+          args: Prisma.Economic_sectorsAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateEconomic_sectors>
+        }
+        groupBy: {
+          args: Prisma.economic_sectorsGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Economic_sectorsGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.economic_sectorsCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Economic_sectorsCountAggregateOutputType> | number
+        }
+      }
+    }
+    publications: {
+      payload: Prisma.$publicationsPayload<ExtArgs>
+      fields: Prisma.publicationsFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.publicationsFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$publicationsPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.publicationsFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$publicationsPayload>
+        }
+        findFirst: {
+          args: Prisma.publicationsFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$publicationsPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.publicationsFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$publicationsPayload>
+        }
+        findMany: {
+          args: Prisma.publicationsFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$publicationsPayload>[]
+        }
+        create: {
+          args: Prisma.publicationsCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$publicationsPayload>
+        }
+        createMany: {
+          args: Prisma.publicationsCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.publicationsCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$publicationsPayload>[]
+        }
+        delete: {
+          args: Prisma.publicationsDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$publicationsPayload>
+        }
+        update: {
+          args: Prisma.publicationsUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$publicationsPayload>
+        }
+        deleteMany: {
+          args: Prisma.publicationsDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.publicationsUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.publicationsUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$publicationsPayload>[]
+        }
+        upsert: {
+          args: Prisma.publicationsUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$publicationsPayload>
+        }
+        aggregate: {
+          args: Prisma.PublicationsAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePublications>
+        }
+        groupBy: {
+          args: Prisma.publicationsGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PublicationsGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.publicationsCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PublicationsCountAggregateOutputType> | number
+        }
+      }
+    }
+    users: {
+      payload: Prisma.$usersPayload<ExtArgs>
+      fields: Prisma.usersFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.usersFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$usersPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.usersFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$usersPayload>
+        }
+        findFirst: {
+          args: Prisma.usersFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$usersPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.usersFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$usersPayload>
+        }
+        findMany: {
+          args: Prisma.usersFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$usersPayload>[]
+        }
+        create: {
+          args: Prisma.usersCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$usersPayload>
+        }
+        createMany: {
+          args: Prisma.usersCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.usersCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$usersPayload>[]
+        }
+        delete: {
+          args: Prisma.usersDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$usersPayload>
+        }
+        update: {
+          args: Prisma.usersUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$usersPayload>
+        }
+        deleteMany: {
+          args: Prisma.usersDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.usersUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.usersUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$usersPayload>[]
+        }
+        upsert: {
+          args: Prisma.usersUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$usersPayload>
+        }
+        aggregate: {
+          args: Prisma.UsersAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateUsers>
+        }
+        groupBy: {
+          args: Prisma.usersGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UsersGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.usersCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UsersCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -596,6 +971,20 @@ export const BusinessScalarFieldEnum = {
   id: 'id',
   business: 'business',
   websiteUrl: 'websiteUrl',
+  google_drive_folder_url: 'google_drive_folder_url',
+  writer_411_document_url: 'writer_411_document_url',
+  discovery_packet_document_url: 'discovery_packet_document_url',
+  client_status: 'client_status',
+  created_at: 'created_at',
+  updated_at: 'updated_at',
+  subcategory: 'subcategory',
+  description: 'description',
+  writing_topics: 'writing_topics',
+  target_audience: 'target_audience',
+  business_category_id: 'business_category_id',
+  domain_rating: 'domain_rating',
+  related_category_ids: 'related_category_ids',
+  related_categories_reasoning: 'related_categories_reasoning',
   clientType: 'clientType'
 } as const
 
@@ -606,10 +995,76 @@ export const MatchScalarFieldEnum = {
   id: 'id',
   hostId: 'hostId',
   guestId: 'guestId',
-  status: 'status'
+  status: 'status',
+  interview_sent: 'interview_sent',
+  interview_published: 'interview_published',
+  partner_interview_received: 'partner_interview_received',
+  partner_interview_published: 'partner_interview_published',
+  notes: 'notes',
+  created_at: 'created_at'
 } as const
 
 export type MatchScalarFieldEnum = (typeof MatchScalarFieldEnum)[keyof typeof MatchScalarFieldEnum]
+
+
+export const Business_categoriesScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  sector_id: 'sector_id'
+} as const
+
+export type Business_categoriesScalarFieldEnum = (typeof Business_categoriesScalarFieldEnum)[keyof typeof Business_categoriesScalarFieldEnum]
+
+
+export const Client_detailsScalarFieldEnum = {
+  id: 'id',
+  business_id: 'business_id',
+  status: 'status',
+  google_drive_folder_url: 'google_drive_folder_url',
+  writer_411_document_url: 'writer_411_document_url',
+  discovery_packet_document_url: 'discovery_packet_document_url',
+  internal_notes: 'internal_notes',
+  updated_at: 'updated_at'
+} as const
+
+export type Client_detailsScalarFieldEnum = (typeof Client_detailsScalarFieldEnum)[keyof typeof Client_detailsScalarFieldEnum]
+
+
+export const Economic_sectorsScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description'
+} as const
+
+export type Economic_sectorsScalarFieldEnum = (typeof Economic_sectorsScalarFieldEnum)[keyof typeof Economic_sectorsScalarFieldEnum]
+
+
+export const PublicationsScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  target_keyword: 'target_keyword',
+  core_offer: 'core_offer',
+  template_url: 'template_url',
+  special_instructions: 'special_instructions',
+  general_notes: 'general_notes',
+  client_id: 'client_id',
+  user_id: 'user_id',
+  page_type: 'page_type'
+} as const
+
+export type PublicationsScalarFieldEnum = (typeof PublicationsScalarFieldEnum)[keyof typeof PublicationsScalarFieldEnum]
+
+
+export const UsersScalarFieldEnum = {
+  id: 'id',
+  first_name: 'first_name',
+  last_name: 'last_name',
+  full_name: 'full_name',
+  email: 'email',
+  google_chat_space_id: 'google_chat_space_id'
+} as const
+
+export type UsersScalarFieldEnum = (typeof UsersScalarFieldEnum)[keyof typeof UsersScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -671,6 +1126,34 @@ export type ListStringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaMod
 
 
 /**
+ * Reference to a field of type 'client_status'
+ */
+export type Enumclient_statusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'client_status'>
+    
+
+
+/**
+ * Reference to a field of type 'client_status[]'
+ */
+export type ListEnumclient_statusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'client_status[]'>
+    
+
+
+/**
+ * Reference to a field of type 'DateTime'
+ */
+export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
+    
+
+
+/**
+ * Reference to a field of type 'DateTime[]'
+ */
+export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
+    
+
+
+/**
  * Reference to a field of type 'BusinessRoleType'
  */
 export type EnumBusinessRoleTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BusinessRoleType'>
@@ -695,6 +1178,27 @@ export type EnumMatchStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$Pris
  * Reference to a field of type 'MatchStatus[]'
  */
 export type ListEnumMatchStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MatchStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Boolean'
+ */
+export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+/**
+ * Reference to a field of type 'page_type'
+ */
+export type Enumpage_typeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'page_type'>
+    
+
+
+/**
+ * Reference to a field of type 'page_type[]'
+ */
+export type ListEnumpage_typeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'page_type[]'>
     
 
 
@@ -808,6 +1312,11 @@ export type PrismaClientOptions = ({
 export type GlobalOmitConfig = {
   business?: Prisma.BusinessOmit
   match?: Prisma.MatchOmit
+  business_categories?: Prisma.business_categoriesOmit
+  client_details?: Prisma.client_detailsOmit
+  economic_sectors?: Prisma.economic_sectorsOmit
+  publications?: Prisma.publicationsOmit
+  users?: Prisma.usersOmit
 }
 
 /* Types for Logging */

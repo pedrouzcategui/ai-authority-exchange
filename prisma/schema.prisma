@@ -1,48 +1,146 @@
 generator client {
-    provider = "prisma-client"
-    output   = "../generated/prisma"
+  provider = "prisma-client"
+  output   = "../generated/prisma"
 }
 
 datasource db {
-    provider = "postgresql"
-}
-
-enum BusinessRoleType {
-    client
-    partner
-
-    @@map("business_role_type")
-}
-
-enum MatchStatus {
-    Not_Started     @map("Not Started")
-    In_Progress     @map("In Progress")
-    Done
-    Leaving
-    Partner_Leaving @map("Partner Leaving")
-
-    @@map("match_status")
+  provider = "postgresql"
 }
 
 model Business {
-    id            Int               @id @default(autoincrement()) @map("id")
-    business      String            @unique(map: "clients_name_unique_idx") @map("name")
-    websiteUrl    String?           @map("website_url")
-    clientType    BusinessRoleType? @default(partner) @map("role")
-    hostedMatches Match[]           @relation("HostBusiness")
-    guestMatches  Match[]           @relation("GuestBusiness")
+  id                            Int                  @id(map: "clients_pkey") @default(autoincrement()) @map("id")
+  business                      String               @unique(map: "clients_name_unique_idx") @map("name")
+  websiteUrl                    String?              @unique @map("website_url")
+  google_drive_folder_url       String?
+  writer_411_document_url       String?
+  discovery_packet_document_url String?
+  client_status                 client_status        @default(active)
+  created_at                    DateTime             @default(now()) @db.Date
+  updated_at                    DateTime             @default(now()) @db.Date
+  subcategory                   String?              @db.VarChar
+  description                   String?
+  writing_topics                String[]
+  target_audience               String?
+  business_category_id          Int?
+  domain_rating                 Int?
+  related_category_ids          Int[]
+  related_categories_reasoning  String?
+  clientType                    BusinessRoleType?    @default(partner) @map("role")
+  guestMatches                  Match[]              @relation("GuestBusiness")
+  hostedMatches                 Match[]              @relation("HostBusiness")
+  business_categories           business_categories? @relation(fields: [business_category_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "business_category_id")
+  client_details                client_details?
+  publications                  publications[]
 
-    @@map("businesses")
+  @@index([related_category_ids], map: "idx_clients_related_categories", type: Gin)
+  @@index([writing_topics], map: "idx_clients_writing_topics", type: Gin)
+  @@map("businesses")
 }
 
 model Match {
-    id      Int          @id @default(autoincrement()) @map("id")
-    hostId  Int          @map("publisher_id")
-    guestId Int          @map("guest_id")
-    status  MatchStatus? @default(Not_Started) @map("status")
-    host    Business     @relation("HostBusiness", fields: [hostId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "matches_subject_id_fkey")
-    guest   Business     @relation("GuestBusiness", fields: [guestId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "matches_matched_id_fkey")
+  id                          Int          @id(map: "matches_pkey") @default(autoincrement()) @map("id")
+  hostId                      Int          @map("publisher_id")
+  guestId                     Int          @map("guest_id")
+  status                      MatchStatus? @default(Not_Started) @map("status")
+  interview_sent              Boolean?     @default(false)
+  interview_published         Boolean?     @default(false)
+  partner_interview_received  Boolean?     @default(false)
+  partner_interview_published Boolean?     @default(false)
+  notes                       String?
+  created_at                  DateTime?    @default(now()) @db.Timestamp(6)
+  guest                       Business     @relation("GuestBusiness", fields: [guestId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "matches_matched_id_fkey")
+  host                        Business     @relation("HostBusiness", fields: [hostId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "matches_subject_id_fkey")
 
-    @@unique([hostId, guestId], map: "unique_match_pair")
-    @@map("ai_authority_exchange_matches")
+  @@unique([hostId, guestId], map: "unique_match_pair")
+  @@map("ai_authority_exchange_matches")
+}
+
+model business_categories {
+  id               Int               @id
+  name             String?
+  sector_id        Int?
+  economic_sectors economic_sectors? @relation(fields: [sector_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  businesses       Business[]
+}
+
+model client_details {
+  id                            Int            @id @default(autoincrement())
+  business_id                   Int            @unique
+  status                        client_status? @default(active)
+  google_drive_folder_url       String?
+  writer_411_document_url       String?
+  discovery_packet_document_url String?
+  internal_notes                String?
+  updated_at                    DateTime?      @default(now()) @db.Timestamp(6)
+  businesses                    Business       @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model economic_sectors {
+  id                  Int                   @id @default(autoincrement())
+  name                String                @db.VarChar(50)
+  description         String?
+  business_categories business_categories[]
+}
+
+model publications {
+  id                   Int       @id @default(autoincrement())
+  name                 String?
+  target_keyword       String?
+  core_offer           String?
+  template_url         String?
+  special_instructions String?
+  general_notes        String?
+  client_id            Int
+  user_id              Int
+  page_type            page_type
+  businesses           Business  @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "client_id")
+  users                users     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_id")
+}
+
+model users {
+  id                   Int            @id @default(autoincrement())
+  first_name           String?
+  last_name            String?
+  full_name            String?
+  email                String?        @unique
+  google_chat_space_id String?
+  publications         publications[]
+}
+
+enum BusinessRoleType {
+  client
+  partner
+
+  @@map("business_role_type")
+}
+
+enum MatchStatus {
+  Not_Started     @map("Not Started")
+  In_Progress     @map("In Progress")
+  Done
+  Leaving
+  Partner_Leaving @map("Partner Leaving")
+
+  @@map("match_status")
+}
+
+enum client_status {
+  active
+  inactive
+}
+
+enum page_type {
+  Location
+  Service
+  Industry
+  Use_Case           @map("Use Case")
+  Product_Collection @map("Product Collection")
+  Comparison_Blog    @map("Comparison Blog")
+  Blog_Guide         @map("Blog/Guide")
+  Metrics_Data       @map("Metrics/Data")
+}
+
+enum publication_direction {
+  subject_publishes_match
+  match_publishes_subject
 }

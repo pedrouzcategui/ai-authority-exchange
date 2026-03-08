@@ -52,7 +52,12 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   Business: 'Business',
-  Match: 'Match'
+  Match: 'Match',
+  business_categories: 'business_categories',
+  client_details: 'client_details',
+  economic_sectors: 'economic_sectors',
+  publications: 'publications',
+  users: 'users'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -75,6 +80,20 @@ export const BusinessScalarFieldEnum = {
   id: 'id',
   business: 'business',
   websiteUrl: 'websiteUrl',
+  google_drive_folder_url: 'google_drive_folder_url',
+  writer_411_document_url: 'writer_411_document_url',
+  discovery_packet_document_url: 'discovery_packet_document_url',
+  client_status: 'client_status',
+  created_at: 'created_at',
+  updated_at: 'updated_at',
+  subcategory: 'subcategory',
+  description: 'description',
+  writing_topics: 'writing_topics',
+  target_audience: 'target_audience',
+  business_category_id: 'business_category_id',
+  domain_rating: 'domain_rating',
+  related_category_ids: 'related_category_ids',
+  related_categories_reasoning: 'related_categories_reasoning',
   clientType: 'clientType'
 } as const
 
@@ -85,10 +104,76 @@ export const MatchScalarFieldEnum = {
   id: 'id',
   hostId: 'hostId',
   guestId: 'guestId',
-  status: 'status'
+  status: 'status',
+  interview_sent: 'interview_sent',
+  interview_published: 'interview_published',
+  partner_interview_received: 'partner_interview_received',
+  partner_interview_published: 'partner_interview_published',
+  notes: 'notes',
+  created_at: 'created_at'
 } as const
 
 export type MatchScalarFieldEnum = (typeof MatchScalarFieldEnum)[keyof typeof MatchScalarFieldEnum]
+
+
+export const Business_categoriesScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  sector_id: 'sector_id'
+} as const
+
+export type Business_categoriesScalarFieldEnum = (typeof Business_categoriesScalarFieldEnum)[keyof typeof Business_categoriesScalarFieldEnum]
+
+
+export const Client_detailsScalarFieldEnum = {
+  id: 'id',
+  business_id: 'business_id',
+  status: 'status',
+  google_drive_folder_url: 'google_drive_folder_url',
+  writer_411_document_url: 'writer_411_document_url',
+  discovery_packet_document_url: 'discovery_packet_document_url',
+  internal_notes: 'internal_notes',
+  updated_at: 'updated_at'
+} as const
+
+export type Client_detailsScalarFieldEnum = (typeof Client_detailsScalarFieldEnum)[keyof typeof Client_detailsScalarFieldEnum]
+
+
+export const Economic_sectorsScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description'
+} as const
+
+export type Economic_sectorsScalarFieldEnum = (typeof Economic_sectorsScalarFieldEnum)[keyof typeof Economic_sectorsScalarFieldEnum]
+
+
+export const PublicationsScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  target_keyword: 'target_keyword',
+  core_offer: 'core_offer',
+  template_url: 'template_url',
+  special_instructions: 'special_instructions',
+  general_notes: 'general_notes',
+  client_id: 'client_id',
+  user_id: 'user_id',
+  page_type: 'page_type'
+} as const
+
+export type PublicationsScalarFieldEnum = (typeof PublicationsScalarFieldEnum)[keyof typeof PublicationsScalarFieldEnum]
+
+
+export const UsersScalarFieldEnum = {
+  id: 'id',
+  first_name: 'first_name',
+  last_name: 'last_name',
+  full_name: 'full_name',
+  email: 'email',
+  google_chat_space_id: 'google_chat_space_id'
+} as const
+
+export type UsersScalarFieldEnum = (typeof UsersScalarFieldEnum)[keyof typeof UsersScalarFieldEnum]
 
 
 export const SortOrder = {

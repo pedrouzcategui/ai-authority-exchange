@@ -26,3 +26,33 @@ export const MatchStatus = {
 } as const
 
 export type MatchStatus = (typeof MatchStatus)[keyof typeof MatchStatus]
+
+
+export const client_status = {
+  active: 'active',
+  inactive: 'inactive'
+} as const
+
+export type client_status = (typeof client_status)[keyof typeof client_status]
+
+
+export const page_type = {
+  Location: 'Location',
+  Service: 'Service',
+  Industry: 'Industry',
+  Use_Case: 'Use_Case',
+  Product_Collection: 'Product_Collection',
+  Comparison_Blog: 'Comparison_Blog',
+  Blog_Guide: 'Blog_Guide',
+  Metrics_Data: 'Metrics_Data'
+} as const
+
+export type page_type = (typeof page_type)[keyof typeof page_type]
+
+
+export const publication_direction = {
+  subject_publishes_match: 'subject_publishes_match',
+  match_publishes_subject: 'match_publishes_subject'
+} as const
+
+export type publication_direction = (typeof publication_direction)[keyof typeof publication_direction]

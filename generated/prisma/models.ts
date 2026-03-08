@@ -10,4 +10,9 @@
  */
 export type * from './models/Business'
 export type * from './models/Match'
+export type * from './models/business_categories'
+export type * from './models/client_details'
+export type * from './models/economic_sectors'
+export type * from './models/publications'
+export type * from './models/users'
 export type * from './commonInputTypes'

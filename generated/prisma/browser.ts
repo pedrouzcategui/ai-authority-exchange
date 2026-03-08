@@ -27,3 +27,28 @@ export type Business = Prisma.BusinessModel
  * 
  */
 export type Match = Prisma.MatchModel
+/**
+ * Model business_categories
+ * 
+ */
+export type business_categories = Prisma.business_categoriesModel
+/**
+ * Model client_details
+ * 
+ */
+export type client_details = Prisma.client_detailsModel
+/**
+ * Model economic_sectors
+ * 
+ */
+export type economic_sectors = Prisma.economic_sectorsModel
+/**
+ * Model publications
+ * 
+ */
+export type publications = Prisma.publicationsModel
+/**
+ * Model users
+ * 
+ */
+export type users = Prisma.usersModel
