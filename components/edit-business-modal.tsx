@@ -4,10 +4,12 @@ import { useState, useTransition, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { ActionTooltip, EditBusinessIcon } from "@/components/action-icons";
 import type { BusinessOption } from "@/lib/matches";
 
 type EditBusinessModalProps = {
   business: BusinessOption;
+  triggerVariant?: "default" | "icon";
 };
 
 const roleOptions = [
@@ -29,7 +31,10 @@ function normalizeWebsiteInput(value: string) {
     : `https://${trimmedValue}`;
 }
 
-export function EditBusinessModal({ business }: EditBusinessModalProps) {
+export function EditBusinessModal({
+  business,
+  triggerVariant = "default",
+}: EditBusinessModalProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -103,13 +108,28 @@ export function EditBusinessModal({ business }: EditBusinessModalProps) {
 
   return (
     <>
-      <button
-        className="inline-flex items-center rounded-full border border-border bg-white/80 px-4 py-2.5 text-sm font-medium text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent"
-        onClick={openModal}
-        type="button"
-      >
-        Edit business
-      </button>
+      {triggerVariant === "icon" ? (
+        <span className="group relative inline-flex">
+          <button
+            aria-label="Edit business"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-white/80 text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
+            onClick={openModal}
+            type="button"
+          >
+            <EditBusinessIcon />
+          </button>
+          <ActionTooltip label="Edit business" />
+        </span>
+      ) : (
+        <button
+          aria-label="Edit business"
+          className="inline-flex items-center rounded-full border border-border bg-white/80 px-4 py-2.5 text-sm font-medium text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent"
+          onClick={openModal}
+          type="button"
+        >
+          Edit business
+        </button>
+      )}
 
       {portalTarget && isOpen
         ? createPortal(

@@ -10,6 +10,7 @@ import {
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { ActionTooltip, EditLinksIcon } from "@/components/action-icons";
 import { BusinessRoleBadge } from "@/components/business-role-badge";
 import type { BusinessOption } from "@/lib/matches";
 
@@ -18,6 +19,7 @@ type ManageBusinessRelationshipsModalProps = {
   businesses: BusinessOption[];
   publishedBy: BusinessOption[];
   publishedFor: BusinessOption[];
+  triggerVariant?: "default" | "icon";
 };
 
 type RelationshipSelectorProps = {
@@ -113,6 +115,7 @@ export function ManageBusinessRelationshipsModal({
   businesses,
   publishedBy,
   publishedFor,
+  triggerVariant = "default",
 }: ManageBusinessRelationshipsModalProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
@@ -230,13 +233,28 @@ export function ManageBusinessRelationshipsModal({
 
   return (
     <>
-      <button
-        className="inline-flex items-center rounded-full border border-border bg-white/80 px-4 py-2.5 text-sm font-medium text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent"
-        onClick={openModal}
-        type="button"
-      >
-        Edit links
-      </button>
+      {triggerVariant === "icon" ? (
+        <span className="group relative inline-flex">
+          <button
+            aria-label="Edit links"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-white/80 text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
+            onClick={openModal}
+            type="button"
+          >
+            <EditLinksIcon />
+          </button>
+          <ActionTooltip label="Edit links" />
+        </span>
+      ) : (
+        <button
+          aria-label="Edit links"
+          className="inline-flex items-center rounded-full border border-border bg-white/80 px-4 py-2.5 text-sm font-medium text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent"
+          onClick={openModal}
+          type="button"
+        >
+          Edit links
+        </button>
+      )}
 
       {portalTarget && isOpen
         ? createPortal(

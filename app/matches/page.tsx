@@ -1,4 +1,5 @@
 import { AddClientModal } from "@/components/add-client-modal";
+import { ActionTooltip, FindMatchesIcon } from "@/components/action-icons";
 import { BusinessRoleBadge } from "@/components/business-role-badge";
 import { EditBusinessModal } from "@/components/edit-business-modal";
 import { ManageBusinessRelationshipsModal } from "@/components/manage-business-relationships-modal";
@@ -123,8 +124,8 @@ function RelationshipPills({
           key={`${tone}-${business.id}`}
           className={
             tone === "accent"
-              ? "inline-flex items-center rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-sm font-medium text-accent-strong"
-              : "inline-flex items-center rounded-full border border-border bg-[#efe3d2]/45 px-3 py-1 text-sm font-medium text-foreground"
+              ? "inline-flex items-center rounded-full border border-accent/20 bg-accent/10 px-2.5 py-0.5 text-[13px] font-medium text-accent-strong"
+              : "inline-flex items-center rounded-full border border-border bg-[#efe3d2]/45 px-2.5 py-0.5 text-[13px] font-medium text-foreground"
           }
         >
           {business.business}
@@ -305,7 +306,9 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                   <th className="px-6 py-4 sm:px-8">Client Type</th>
                   <th className="px-6 py-4 sm:px-8">Published By</th>
                   <th className="px-6 py-4 sm:px-8">Published For</th>
-                  <th className="px-6 py-4 text-right sm:px-8">Actions</th>
+                  <th className="w-42 px-6 py-4 text-right sm:px-8">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -336,15 +339,19 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                         tone="accent"
                       />
                     </td>
-                    <td className="border-t border-border px-6 py-5 text-right sm:px-8">
-                      <div className="flex flex-wrap justify-end gap-2">
-                        <Link
-                          className="inline-flex min-h-11 items-center justify-center rounded-full border border-border bg-white/80 px-5 py-3 text-sm font-medium text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent"
-                          href={`/matches/${row.id}`}
-                          prefetch={false}
-                        >
-                          Find Matches
-                        </Link>
+                    <td className="w-42 border-t border-border px-6 py-5 text-right align-middle sm:px-8">
+                      <div className="flex flex-nowrap justify-end gap-2 whitespace-nowrap">
+                        <span className="group relative inline-flex">
+                          <Link
+                            aria-label="Find matches"
+                            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-white/80 text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
+                            href={`/matches/${row.id}`}
+                            prefetch={false}
+                          >
+                            <FindMatchesIcon />
+                          </Link>
+                          <ActionTooltip label="Find matches" />
+                        </span>
                         <EditBusinessModal
                           business={{
                             business: row.business,
@@ -352,6 +359,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                             id: row.id,
                             websiteUrl: row.websiteUrl,
                           }}
+                          triggerVariant="icon"
                         />
                         <ManageBusinessRelationshipsModal
                           business={{
@@ -363,6 +371,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                           businesses={businesses}
                           publishedBy={row.publishedBy}
                           publishedFor={row.publishedFor}
+                          triggerVariant="icon"
                         />
                       </div>
                     </td>
