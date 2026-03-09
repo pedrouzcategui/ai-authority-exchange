@@ -1,4 +1,6 @@
 import { cache } from "react";
+import type { MatchStatus } from "@/generated/prisma/client";
+import { getBusinessProfileSlug } from "@/lib/business-profile-route";
 import { prisma } from "@/lib/prisma";
 
 const businessSelection = {
@@ -20,6 +22,10 @@ function compareBusinessNames(
   return businessNameCollator.compare(left.business, right.business);
 }
 
+function normalizeBusinessIdentifier(value: string) {
+  return decodeURIComponent(value).trim().toLocaleLowerCase();
+}
+
 export const getBusinesses = cache(async () => {
   const businesses = await prisma.business.findMany({
     select: businessSelection,
@@ -37,6 +43,28 @@ export const getBusinessById = cache(async (businessId: number) => {
     },
     select: businessSelection,
   });
+});
+
+export const getBusinessByIdentifier = cache(async (identifier: string) => {
+  const normalizedIdentifier = normalizeBusinessIdentifier(identifier);
+  const requestedSlug = getBusinessProfileSlug(normalizedIdentifier);
+  const parsedId = Number.parseInt(normalizedIdentifier, 10);
+  const businesses = await getBusinesses();
+
+  return (
+    businesses.find((candidate) => candidate.business === identifier) ??
+    businesses.find(
+      (candidate) =>
+        candidate.business.toLocaleLowerCase() === normalizedIdentifier,
+    ) ??
+    businesses.find(
+      (candidate) => getBusinessProfileSlug(candidate.business) === requestedSlug,
+    ) ??
+    (Number.isInteger(parsedId) && parsedId > 0
+      ? businesses.find((candidate) => candidate.id === parsedId)
+      : undefined) ??
+    null
+  );
 });
 
 export const getMatches = cache(async (hostId?: number, guestId?: number) => {
@@ -74,6 +102,54 @@ export type BusinessRelationshipState = {
   publishedByIds: number[];
   publishedForIds: number[];
 };
+
+export type BusinessMatchBoardRow = {
+  counterpart: BusinessOption;
+  counterpartRole: "guest" | "host";
+  createdAt: Date | null;
+  id: number;
+  interviewPublished: boolean;
+  interviewSent: boolean;
+  status: MatchStatus | null;
+};
+
+export const getBusinessMatchBoard = cache(async (businessId: number) => {
+  const matches = await prisma.match.findMany({
+    include: {
+      guest: {
+        select: businessSelection,
+      },
+      host: {
+        select: businessSelection,
+      },
+    },
+    orderBy: [{ created_at: "desc" }, { id: "desc" }],
+    where: {
+      OR: [
+        {
+          hostId: businessId,
+        },
+        {
+          guestId: businessId,
+        },
+      ],
+    },
+  });
+
+  return matches.map((match) => {
+    const businessIsHost = match.hostId === businessId;
+
+    return {
+      counterpart: businessIsHost ? match.guest : match.host,
+      counterpartRole: businessIsHost ? "guest" : "host",
+      createdAt: match.created_at ?? null,
+      id: match.id,
+      interviewPublished: match.interview_published ?? false,
+      interviewSent: match.interview_sent ?? false,
+      status: match.status ?? null,
+    } satisfies BusinessMatchBoardRow;
+  });
+});
 
 export const getBusinessRelationshipRows = cache(
   async (hostId?: number, guestId?: number, businessId?: number) => {

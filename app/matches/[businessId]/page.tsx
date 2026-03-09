@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BusinessMatchAnalysisToast } from "@/components/business-match-analysis-toast";
+import { getBusinessProfileHref } from "@/lib/business-profile-route";
 import {
   findBusinessMatches,
   getLocalBusinessMatchCandidates,
@@ -168,7 +169,12 @@ function LocalShortlistTable({
               <tr key={`candidate-row-${candidate.id}`} className="align-top">
                 <td className="border-t border-border px-5 py-4 text-sm font-semibold text-foreground sm:px-6">
                   <div className="space-y-2">
-                    <span>{candidate.name}</span>
+                    <Link
+                      className="transition hover:text-accent"
+                      href={getBusinessProfileHref(candidate.id)}
+                    >
+                      {candidate.name}
+                    </Link>
                     {candidate.websiteUrl ? (
                       <a
                         className="block text-xs font-medium text-accent transition hover:text-accent-strong"

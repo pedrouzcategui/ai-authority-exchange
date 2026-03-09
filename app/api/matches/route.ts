@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { Prisma } from "@/generated/prisma/client";
+import { Prisma, type MatchStatus } from "@/generated/prisma/client";
 import { formatDatabaseError, withDatabaseRetry } from "@/lib/prisma";
 
 type CreateMatchPayload = {
@@ -7,6 +7,21 @@ type CreateMatchPayload = {
   guestId?: unknown;
   guestIds?: unknown;
 };
+
+type UpdateMatchPayload = {
+  interviewPublished?: unknown;
+  interviewSent?: unknown;
+  matchId?: unknown;
+  status?: unknown;
+};
+
+const matchStatusValues: MatchStatus[] = [
+  "Not_Started",
+  "In_Progress",
+  "Done",
+  "Leaving",
+  "Partner_Leaving",
+];
 
 function parseNumericId(value: unknown) {
   if (typeof value === "number" && Number.isInteger(value)) {
@@ -22,6 +37,32 @@ function parseNumericId(value: unknown) {
   }
 
   return null;
+}
+
+function parseOptionalBoolean(value: unknown) {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  return null;
+}
+
+function parseMatchStatus(value: unknown) {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (value === null) {
+    return null;
+  }
+
+  return typeof value === "string" && matchStatusValues.includes(value as MatchStatus)
+    ? (value as MatchStatus)
+    : null;
 }
 
 function parseNumericIdList(value: unknown) {
@@ -202,6 +243,103 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       { error: `The match could not be saved. ${formatDatabaseError(error)}` },
+      { status: 500 },
+    );
+  }
+}
+
+export async function PATCH(request: Request) {
+  let payload: UpdateMatchPayload;
+
+  try {
+    payload = (await request.json()) as UpdateMatchPayload;
+  } catch {
+    return NextResponse.json(
+      { error: "The request body could not be parsed." },
+      { status: 400 },
+    );
+  }
+
+  const matchId = parseNumericId(payload.matchId);
+  const interviewSent = parseOptionalBoolean(payload.interviewSent);
+  const interviewPublished = parseOptionalBoolean(payload.interviewPublished);
+  const status = parseMatchStatus(payload.status);
+
+  if (
+    matchId === null ||
+    interviewSent === null ||
+    interviewPublished === null ||
+    status === null
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "Please provide a valid match id, status, and boolean interview values.",
+      },
+      { status: 400 },
+    );
+  }
+
+  if (
+    interviewSent === undefined &&
+    interviewPublished === undefined &&
+    status === undefined
+  ) {
+    return NextResponse.json(
+      { error: "No match updates were provided." },
+      { status: 400 },
+    );
+  }
+
+  try {
+    const updatedMatch = await withDatabaseRetry((database) =>
+      database.match.update({
+        data: {
+          ...(interviewSent === undefined
+            ? {}
+            : { interview_sent: interviewSent }),
+          ...(interviewPublished === undefined
+            ? {}
+            : { interview_published: interviewPublished }),
+          ...(status === undefined ? {} : { status }),
+        },
+        select: {
+          id: true,
+          interview_published: true,
+          interview_sent: true,
+          status: true,
+        },
+        where: {
+          id: matchId,
+        },
+      }),
+    );
+
+    return NextResponse.json(
+      {
+        match: {
+          id: updatedMatch.id,
+          interviewPublished: updatedMatch.interview_published ?? false,
+          interviewSent: updatedMatch.interview_sent ?? false,
+          status: updatedMatch.status,
+        },
+        message: "Match updated successfully.",
+      },
+      { status: 200 },
+    );
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      return NextResponse.json(
+        { error: "The selected match does not exist." },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json(
+      { error: `The match could not be updated. ${formatDatabaseError(error)}` },
       { status: 500 },
     );
   }

@@ -5,6 +5,7 @@ import { ManageBusinessRelationshipsModal } from "@/components/manage-business-r
 import Link from "next/link";
 import { CreateMatchesModal } from "@/components/create-matches-modal";
 import { MatchesFilterControls } from "@/components/matches-filter-controls";
+import { getBusinessProfileHref } from "@/lib/business-profile-route";
 import {
   getBusinesses,
   getBusinessRelationshipRows,
@@ -311,9 +312,12 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                 {paginatedRows.map((row) => (
                   <tr key={row.id} className="bg-white/65 align-top">
                     <td className="border-t border-border px-6 py-5 sm:px-8">
-                      <p className="font-semibold text-foreground">
+                      <Link
+                        className="font-semibold text-foreground transition hover:text-accent"
+                        href={getBusinessProfileHref(row.id)}
+                      >
                         {row.business}
-                      </p>
+                      </Link>
                     </td>
                     <td className="border-t border-border px-6 py-5 sm:px-8">
                       <BusinessRoleBadge role={row.clientType} />
