@@ -44,10 +44,16 @@ const statusOptions: Array<{ label: string; value: MatchStatus }> = [
   { label: "Partner Leaving", value: "Partner_Leaving" },
 ];
 
-const statusOrder = new Map(statusOptions.map((option, index) => [option.value, index]));
+const statusOrder = new Map(
+  statusOptions.map((option, index) => [option.value, index]),
+);
 
 function getRoleLabel(role: BusinessMatchBoardRow["counterpartRole"]) {
   return role === "guest" ? "Guest" : "Host";
+}
+
+function formatDomainRating(domainRating: number | null) {
+  return domainRating === null ? "No DR" : `DR ${domainRating}`;
 }
 
 function getStatusSelectClassName(status: MatchStatus | null) {
@@ -92,7 +98,9 @@ function SortIcon({
   return (
     <svg
       aria-hidden="true"
-      className={active ? "h-3.5 w-3.5 text-accent" : "h-3.5 w-3.5 text-muted/60"}
+      className={
+        active ? "h-3.5 w-3.5 text-accent" : "h-3.5 w-3.5 text-muted/60"
+      }
       fill="none"
       stroke="currentColor"
       strokeLinecap="round"
@@ -100,7 +108,11 @@ function SortIcon({
       strokeWidth="1.8"
       viewBox="0 0 24 24"
     >
-      {direction === "asc" ? <path d="m7 14 5-5 5 5" /> : <path d="m7 10 5 5 5-5" />}
+      {direction === "asc" ? (
+        <path d="m7 14 5-5 5 5" />
+      ) : (
+        <path d="m7 10 5 5 5-5" />
+      )}
     </svg>
   );
 }
@@ -424,11 +436,14 @@ export function BusinessMatchesTable({
                       <td className="border-t border-border px-5 py-4 sm:px-6">
                         <div className="space-y-1.5">
                           <Link
-                            className="text-sm font-semibold text-foreground transition hover:text-accent"
+                            className="block text-sm font-semibold text-foreground transition hover:text-accent"
                             href={getBusinessProfileHref(row.counterpart.id)}
                           >
                             {row.counterpart.business}
                           </Link>
+                          <span className="inline-flex items-center rounded-full border border-border bg-brand-deep-soft/55 px-2.5 py-0.5 text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">
+                            {formatDomainRating(row.counterpart.domain_rating)}
+                          </span>
                           {row.counterpart.websiteUrl ? (
                             <a
                               className="block text-xs font-medium text-accent transition hover:text-accent-strong"
@@ -436,7 +451,10 @@ export function BusinessMatchesTable({
                               rel="noreferrer"
                               target="_blank"
                             >
-                              {row.counterpart.websiteUrl.replace(/^https?:\/\//, "")}
+                              {row.counterpart.websiteUrl.replace(
+                                /^https?:\/\//,
+                                "",
+                              )}
                             </a>
                           ) : null}
                         </div>
