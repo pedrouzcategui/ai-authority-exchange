@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BusinessExchangeParticipationToggle } from "@/components/business-exchange-participation-toggle";
 import { BusinessMatchesTable } from "@/components/business-matches-table";
 import { BusinessRoleBadge } from "@/components/business-role-badge";
 import { EditBusinessModal } from "@/components/edit-business-modal";
@@ -194,6 +195,12 @@ export default async function BusinessProfilePage({
           </p>
         </div>
       </section>
+
+      <BusinessExchangeParticipationToggle
+        businessId={business.id}
+        businessName={business.business}
+        initialStatus={business.aiAuthorityExchangeParticipationStatus}
+      />
 
       <section className="rounded-4xl border border-accent/15 bg-[linear-gradient(135deg,rgba(232,93,79,0.08),rgba(255,255,255,0.92))] p-6 shadow-(--shadow) backdrop-blur-md sm:p-8">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">

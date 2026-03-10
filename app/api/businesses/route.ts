@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { Prisma, type BusinessRoleType } from "@/generated/prisma/client";
 import type { ExchangeParticipationStatus } from "@/lib/ai-authority-exchange";
 import { requireLegacyUserSession } from "@/lib/auth-session";
+import { buildExchangeLifecycleFields } from "@/lib/business-exchange-lifecycle";
 import { prisma } from "@/lib/prisma";
 
 type CreateBusinessPayload = {
@@ -145,41 +146,6 @@ function parsePositiveInteger(value: unknown) {
   return parsedValue;
 }
 
-function buildExchangeLifecycleFields(params: {
-  currentJoinedAt?: Date | null;
-  retiredAt: Date | null;
-  retiredRoundBatchId: number | null;
-  status: ExchangeParticipationStatus;
-}) {
-  const { currentJoinedAt = null, retiredAt, retiredRoundBatchId, status } =
-    params;
-
-  if (status === "not-participating") {
-    return {
-      aiAuthorityExchangeJoinedAt: null,
-      aiAuthorityExchangeRetiredAt: null,
-      aiAuthorityExchangeRetiredInRoundBatchId: null,
-      isActiveOnAiAuthorityExchange: false,
-    };
-  }
-
-  if (status === "active") {
-    return {
-      aiAuthorityExchangeJoinedAt: currentJoinedAt ?? new Date(),
-      aiAuthorityExchangeRetiredAt: null,
-      aiAuthorityExchangeRetiredInRoundBatchId: null,
-      isActiveOnAiAuthorityExchange: true,
-    };
-  }
-
-  return {
-    aiAuthorityExchangeJoinedAt: currentJoinedAt ?? retiredAt,
-    aiAuthorityExchangeRetiredAt: retiredAt,
-    aiAuthorityExchangeRetiredInRoundBatchId: retiredRoundBatchId,
-    isActiveOnAiAuthorityExchange: false,
-  };
-}
-
 async function resolveRetiredRoundBatchId(sequenceNumber: number | null) {
   if (sequenceNumber === null) {
     return null;
@@ -264,10 +230,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (
-    exchangeParticipationStatus === "retired" &&
-    retiredAt.value === null
-  ) {
+  if (exchangeParticipationStatus === "retired" && retiredAt.value === null) {
     return NextResponse.json(
       {
         error:
@@ -409,10 +372,7 @@ export async function PATCH(request: Request) {
     );
   }
 
-  if (
-    exchangeParticipationStatus === "retired" &&
-    retiredAt.value === null
-  ) {
+  if (exchangeParticipationStatus === "retired" && retiredAt.value === null) {
     return NextResponse.json(
       {
         error:
