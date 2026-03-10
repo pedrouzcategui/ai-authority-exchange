@@ -8,7 +8,10 @@ import { ActionTooltip, CreateMatchIcon } from "@/components/action-icons";
 import { BusinessRoleBadge } from "@/components/business-role-badge";
 import type { BusinessOption } from "@/lib/matches";
 
-type MatchCreationBusiness = Pick<BusinessOption, "business" | "clientType" | "id">;
+type MatchCreationBusiness = Pick<
+  BusinessOption,
+  "business" | "clientType" | "id"
+>;
 
 type CreateSuggestedMatchModalProps = {
   parentBusiness: MatchCreationBusiness;
@@ -41,15 +44,17 @@ export function CreateSuggestedMatchModal({
 
   function selectedHostBusiness() {
     return (
-      selectableBusinesses.find((business) => business.id.toString() === hostId) ??
-      null
+      selectableBusinesses.find(
+        (business) => business.id.toString() === hostId,
+      ) ?? null
     );
   }
 
   function selectedGuestBusiness() {
     return (
-      selectableBusinesses.find((business) => business.id.toString() === guestId) ??
-      null
+      selectableBusinesses.find(
+        (business) => business.id.toString() === guestId,
+      ) ?? null
     );
   }
 
@@ -178,10 +183,13 @@ export function CreateSuggestedMatchModal({
                       Create Match
                     </p>
                     <h2 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-                      Match {suggestedBusiness.business} with {parentBusiness.business}
+                      Match {suggestedBusiness.business} with{" "}
+                      {parentBusiness.business}
                     </h2>
                     <p className="max-w-xl text-sm leading-7 text-muted sm:text-base">
-                      Choose which business should act as the host and which one should act as the guest. New matches created here start in In Progress automatically.
+                      Choose which business should act as the host and which one
+                      should act as the guest. New matches created here start in
+                      In Progress automatically.
                     </p>
                   </div>
 
@@ -220,7 +228,9 @@ export function CreateSuggestedMatchModal({
                       <select
                         className="min-h-12 w-full rounded-2xl border border-border bg-white/85 px-4 py-3 text-foreground outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
                         disabled={isPending}
-                        onChange={(event) => handleHostChange(event.target.value)}
+                        onChange={(event) =>
+                          handleHostChange(event.target.value)
+                        }
                         value={hostId}
                       >
                         {selectableBusinesses.map((business) => (
@@ -238,7 +248,9 @@ export function CreateSuggestedMatchModal({
                       <select
                         className="min-h-12 w-full rounded-2xl border border-border bg-white/85 px-4 py-3 text-foreground outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
                         disabled={isPending}
-                        onChange={(event) => handleGuestChange(event.target.value)}
+                        onChange={(event) =>
+                          handleGuestChange(event.target.value)
+                        }
                         value={guestId}
                       >
                         {selectableBusinesses.map((business) => (
@@ -251,22 +263,33 @@ export function CreateSuggestedMatchModal({
                   </div>
 
                   <div className="rounded-3xl border border-border bg-white/55 p-5 text-sm leading-7 text-muted">
-                    The new match will be created with status set to <span className="font-semibold text-foreground">In Progress</span> so it appears in the workflow table immediately.
+                    The new match will be created with status set to{" "}
+                    <span className="font-semibold text-foreground">
+                      In Progress
+                    </span>{" "}
+                    so it appears in the workflow table immediately.
                   </div>
 
                   <div className="rounded-3xl border border-border bg-white/55 p-5 text-sm leading-7 text-muted">
-                    Email drafts are created in the signed-in user&apos;s Gmail account. Because this workspace does not currently store company contact emails, the draft is created without recipients so you can review and address it before sending.
+                    Email drafts are created in the signed-in user&apos;s Gmail
+                    account. Because this workspace does not currently store
+                    company contact emails, the draft is created without
+                    recipients so you can review and address it before sending.
                   </div>
 
                   <div className="flex flex-col gap-4 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-sm leading-7 text-muted">
-                      Host: {selectedHostBusiness()?.business ?? "Not selected"}. Guest: {selectedGuestBusiness()?.business ?? "Not selected"}.
+                      Host: {selectedHostBusiness()?.business ?? "Not selected"}
+                      . Guest:{" "}
+                      {selectedGuestBusiness()?.business ?? "Not selected"}.
                     </p>
 
                     <div className="flex flex-wrap justify-end gap-3">
                       <button
                         className="inline-flex items-center justify-center rounded-full border border-border bg-white/80 px-6 py-3 text-sm font-medium text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-60"
-                        disabled={isPending || !hostId || !guestId || hostId === guestId}
+                        disabled={
+                          isPending || !hostId || !guestId || hostId === guestId
+                        }
                         onClick={() => handleAction("match-only")}
                         type="button"
                       >
@@ -274,11 +297,15 @@ export function CreateSuggestedMatchModal({
                       </button>
                       <button
                         className="inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-accent-strong disabled:cursor-not-allowed disabled:bg-accent/45"
-                        disabled={isPending || !hostId || !guestId || hostId === guestId}
+                        disabled={
+                          isPending || !hostId || !guestId || hostId === guestId
+                        }
                         onClick={() => handleAction("match-and-draft")}
                         type="button"
                       >
-                        {isPending ? "Creating..." : "Create match and create email draft"}
+                        {isPending
+                          ? "Creating..."
+                          : "Create match and create email draft"}
                       </button>
                     </div>
                   </div>

@@ -14,17 +14,20 @@ type ExchangeParticipationFieldsProps = {
 
 const statusOptions = [
   {
-    description: "The business stays outside round generation until you opt it in.",
+    description:
+      "The business stays outside round generation until you opt it in.",
     label: "Not participating",
     value: "not-participating",
   },
   {
-    description: "The business can appear in new AI Authority Exchange round drafts.",
+    description:
+      "The business can appear in new AI Authority Exchange round drafts.",
     label: "Active in the exchange",
     value: "active",
   },
   {
-    description: "The business has left the exchange and should be tracked historically.",
+    description:
+      "The business has left the exchange and should be tracked historically.",
     label: "Retired from the exchange",
     value: "retired",
   },

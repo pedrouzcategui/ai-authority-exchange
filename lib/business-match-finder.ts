@@ -282,35 +282,35 @@ function createWebhookRequest(
 export const getLocalBusinessMatchCandidates = cache(
   async (businessId: number, scope: MatchSearchScope) => {
     const [hostBusiness, existingMatches] = await Promise.all([
-    prisma.business.findUnique({
-      where: {
-        id: businessId,
-      },
-      select: {
-        business_categories: {
-          select: {
-            sector_id: true,
-          },
+      prisma.business.findUnique({
+        where: {
+          id: businessId,
         },
-        business_category_id: true,
-      },
-    }),
-    prisma.match.findMany({
-      where: {
-        OR: [
-          {
-            guestId: businessId,
+        select: {
+          business_categories: {
+            select: {
+              sector_id: true,
+            },
           },
-          {
-            hostId: businessId,
-          },
-        ],
-      },
-      select: {
-        guestId: true,
-        hostId: true,
-      },
-    }),
+          business_category_id: true,
+        },
+      }),
+      prisma.match.findMany({
+        where: {
+          OR: [
+            {
+              guestId: businessId,
+            },
+            {
+              hostId: businessId,
+            },
+          ],
+        },
+        select: {
+          guestId: true,
+          hostId: true,
+        },
+      }),
     ]);
 
     if (!hostBusiness || hostBusiness.business_category_id === null) {
@@ -391,7 +391,9 @@ export const getLocalBusinessMatchCandidates = cache(
     });
 
     const relatedCategoryIds = [
-      ...new Set(candidates.flatMap((candidate) => candidate.related_category_ids)),
+      ...new Set(
+        candidates.flatMap((candidate) => candidate.related_category_ids),
+      ),
     ];
     const relatedCategories =
       relatedCategoryIds.length === 0
@@ -408,7 +410,9 @@ export const getLocalBusinessMatchCandidates = cache(
             },
           });
     const relatedCategoryNameById = new Map(
-      relatedCategories.map((category) => [category.id, category.name] as const),
+      relatedCategories.map(
+        (category) => [category.id, category.name] as const,
+      ),
     );
 
     return candidates.map((candidate) => ({
@@ -420,7 +424,9 @@ export const getLocalBusinessMatchCandidates = cache(
       name: candidate.business,
       relatedCategoryNames: candidate.related_category_ids
         .map((categoryId) => relatedCategoryNameById.get(categoryId))
-        .filter((categoryName): categoryName is string => Boolean(categoryName)),
+        .filter((categoryName): categoryName is string =>
+          Boolean(categoryName),
+        ),
       sectorName: candidate.business_categories?.economic_sectors?.name ?? null,
       subcategoryName: candidate.subcategory,
       websiteUrl: candidate.websiteUrl,

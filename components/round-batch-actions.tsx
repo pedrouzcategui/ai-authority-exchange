@@ -83,7 +83,9 @@ export function RoundBatchActions({
       } | null;
 
       if (!response.ok) {
-        toast.error(payload?.error ?? "The round draft could not be generated.");
+        toast.error(
+          payload?.error ?? "The round draft could not be generated.",
+        );
         return;
       }
 
@@ -150,7 +152,9 @@ export function RoundBatchActions({
           } | null;
 
           if (!response.ok) {
-            toast.error(payload?.error ?? "The round draft could not be cleared.");
+            toast.error(
+              payload?.error ?? "The round draft could not be cleared.",
+            );
             return;
           }
 

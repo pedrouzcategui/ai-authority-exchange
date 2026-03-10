@@ -64,16 +64,19 @@ export function EditBusinessModal({
   );
   const [aiAuthorityExchangeRetiredAt, setAiAuthorityExchangeRetiredAt] =
     useState(formatDateInputValue(business.aiAuthorityExchangeRetiredAt));
-  const [aiAuthorityExchangeRetiredRoundSequenceNumber,
-    setAiAuthorityExchangeRetiredRoundSequenceNumber] = useState(
-      business.aiAuthorityExchangeRetiredInRoundSequenceNumber?.toString() ??
-        "",
-    );
+  const [
+    aiAuthorityExchangeRetiredRoundSequenceNumber,
+    setAiAuthorityExchangeRetiredRoundSequenceNumber,
+  ] = useState(
+    business.aiAuthorityExchangeRetiredInRoundSequenceNumber?.toString() ?? "",
+  );
   const [websiteUrl, setWebsiteUrl] = useState(business.websiteUrl ?? "");
   const portalTarget = typeof document === "undefined" ? null : document.body;
 
   function syncFormWithBusiness() {
-    setExchangeParticipationStatus(business.aiAuthorityExchangeParticipationStatus);
+    setExchangeParticipationStatus(
+      business.aiAuthorityExchangeParticipationStatus,
+    );
     setName(business.business);
     setRole(business.clientType ?? "partner");
     setAiAuthorityExchangeRetiredAt(

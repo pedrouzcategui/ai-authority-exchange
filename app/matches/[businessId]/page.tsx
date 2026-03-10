@@ -84,10 +84,7 @@ function parseMatchSearchScope(
     : "same-category";
 }
 
-function buildBusinessMatchesHref(
-  businessId: number,
-  scope: MatchSearchScope,
-) {
+function buildBusinessMatchesHref(businessId: number, scope: MatchSearchScope) {
   const searchParams = new URLSearchParams();
 
   if (scope !== "same-category") {
@@ -395,7 +392,9 @@ async function ResolvedAnalysisSection({
     localCandidates.map((candidate) => [candidate.id, candidate] as const),
   );
   const candidatesByName = new Map(
-    localCandidates.map((candidate) => [normalizeName(candidate.name), candidate] as const),
+    localCandidates.map(
+      (candidate) => [normalizeName(candidate.name), candidate] as const,
+    ),
   );
 
   return (
@@ -446,7 +445,8 @@ async function ResolvedAnalysisSection({
                       Workflow Transcript
                     </p>
                     <p className="mt-1 text-sm leading-6 text-muted">
-                      View the raw formatted text returned from the n8n workflow.
+                      View the raw formatted text returned from the n8n
+                      workflow.
                     </p>
                   </div>
                   <span className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-surface text-foreground transition group-open:rotate-180">
@@ -661,26 +661,31 @@ async function ResolvedAnalysisSection({
                         <div className="mt-3 grid gap-3">
                           {match.selectedPartnerId !== null ? (
                             <div className="flex items-center justify-between gap-3 rounded-2xl border border-border/70 bg-surface px-4 py-3">
-                              <span className="text-sm text-muted">Partner ID</span>
+                              <span className="text-sm text-muted">
+                                Partner ID
+                              </span>
                               <span className="text-sm font-semibold text-foreground">
                                 {match.selectedPartnerId}
                               </span>
                             </div>
                           ) : null}
-                          {candidate && candidate.relatedCategoryNames.length > 0 ? (
+                          {candidate &&
+                          candidate.relatedCategoryNames.length > 0 ? (
                             <div className="rounded-2xl border border-border/70 bg-surface px-4 py-3 text-sm leading-7 text-foreground">
                               <span className="block text-sm font-medium text-muted">
                                 Related Categories
                               </span>
                               <div className="mt-2 flex flex-wrap gap-2">
-                                {candidate.relatedCategoryNames.map((categoryName) => (
-                                  <span
-                                    key={`${candidate.id}-${categoryName}-related`}
-                                    className="inline-flex items-center rounded-full border border-accent/20 bg-white/85 px-3 py-1 text-sm font-medium text-accent-strong"
-                                  >
-                                    {categoryName}
-                                  </span>
-                                ))}
+                                {candidate.relatedCategoryNames.map(
+                                  (categoryName) => (
+                                    <span
+                                      key={`${candidate.id}-${categoryName}-related`}
+                                      className="inline-flex items-center rounded-full border border-accent/20 bg-white/85 px-3 py-1 text-sm font-medium text-accent-strong"
+                                    >
+                                      {categoryName}
+                                    </span>
+                                  ),
+                                )}
                               </div>
                             </div>
                           ) : null}
@@ -834,7 +839,8 @@ export default async function BusinessMatchesPage({
                   <p className="mt-2 max-w-3xl text-sm leading-7 text-muted sm:text-base">
                     {scope === "same-category"
                       ? "These candidates come directly from the database using the same-category and historical-blocklist rules."
-                      : "These candidates come directly from the database using the same-category-or-sector and historical-blocklist rules."} AI scoring and rationale load separately below.
+                      : "These candidates come directly from the database using the same-category-or-sector and historical-blocklist rules."}{" "}
+                    AI scoring and rationale load separately below.
                   </p>
                 </div>
                 <div className="inline-flex items-center gap-3 self-start rounded-full border border-accent/15 bg-white/85 px-4 py-2 text-sm font-semibold text-accent-strong">
@@ -853,7 +859,14 @@ export default async function BusinessMatchesPage({
         </div>
       </section>
 
-      <Suspense fallback={<PendingAnalysisSection localCandidates={localCandidates} scope={scope} />}>
+      <Suspense
+        fallback={
+          <PendingAnalysisSection
+            localCandidates={localCandidates}
+            scope={scope}
+          />
+        }
+      >
         <ResolvedAnalysisSection
           businessName={business.business}
           localCandidates={localCandidates}

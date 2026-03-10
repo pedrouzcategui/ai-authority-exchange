@@ -16,10 +16,7 @@ import type {
 } from "@/generated/prisma/client";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { getBusinessProfileHref } from "@/lib/business-profile-route";
-import type {
-  RoundDraftAssignmentRow,
-  RoundDraftOption,
-} from "@/lib/rounds";
+import type { RoundDraftAssignmentRow, RoundDraftOption } from "@/lib/rounds";
 
 type RoundDraftTableProps = {
   assignmentRows: RoundDraftAssignmentRow[];
@@ -88,7 +85,9 @@ export function RoundDraftTable({
     assignmentRows.map((row) => createEditableAssignmentRow(row)),
   );
   const businessById = new Map(
-    selectableBusinesses.map((business) => [business.businessId, business] as const),
+    selectableBusinesses.map(
+      (business) => [business.businessId, business] as const,
+    ),
   );
 
   useEffect(() => {
@@ -96,7 +95,9 @@ export function RoundDraftTable({
   }, [assignmentRows]);
 
   function getBusinessLabel(businessId: number) {
-    return businessById.get(businessId)?.businessName ?? `Business ${businessId}`;
+    return (
+      businessById.get(businessId)?.businessName ?? `Business ${businessId}`
+    );
   }
 
   function addRow() {
@@ -250,7 +251,8 @@ export function RoundDraftTable({
 
     if (
       otherRows.some(
-        (candidateRow) => parseSelectedId(candidateRow.hostBusinessId) === hostBusinessId,
+        (candidateRow) =>
+          parseSelectedId(candidateRow.hostBusinessId) === hostBusinessId,
       )
     ) {
       return `${getBusinessLabel(hostBusinessId)} is already used as Published By in another row.`;
@@ -258,7 +260,8 @@ export function RoundDraftTable({
 
     if (
       otherRows.some(
-        (candidateRow) => parseSelectedId(candidateRow.guestBusinessId) === guestBusinessId,
+        (candidateRow) =>
+          parseSelectedId(candidateRow.guestBusinessId) === guestBusinessId,
       )
     ) {
       return `${getBusinessLabel(guestBusinessId)} is already used as Published For in another row.`;
@@ -266,8 +269,12 @@ export function RoundDraftTable({
 
     if (
       otherRows.some((candidateRow) => {
-        const candidateHostBusinessId = parseSelectedId(candidateRow.hostBusinessId);
-        const candidateGuestBusinessId = parseSelectedId(candidateRow.guestBusinessId);
+        const candidateHostBusinessId = parseSelectedId(
+          candidateRow.hostBusinessId,
+        );
+        const candidateGuestBusinessId = parseSelectedId(
+          candidateRow.guestBusinessId,
+        );
 
         return (
           candidateHostBusinessId === hostBusinessId &&
@@ -280,8 +287,12 @@ export function RoundDraftTable({
 
     if (
       otherRows.some((candidateRow) => {
-        const candidateHostBusinessId = parseSelectedId(candidateRow.hostBusinessId);
-        const candidateGuestBusinessId = parseSelectedId(candidateRow.guestBusinessId);
+        const candidateHostBusinessId = parseSelectedId(
+          candidateRow.hostBusinessId,
+        );
+        const candidateGuestBusinessId = parseSelectedId(
+          candidateRow.guestBusinessId,
+        );
 
         return (
           candidateHostBusinessId === guestBusinessId &&
@@ -318,18 +329,21 @@ export function RoundDraftTable({
     setActiveRowId(row.clientId);
     startTransition(async () => {
       try {
-        const response = await fetch(`/api/rounds/${roundBatchId}/assignments`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
+        const response = await fetch(
+          `/api/rounds/${roundBatchId}/assignments`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              action: "upsertRow",
+              assignmentId: row.assignmentId,
+              guestBusinessId,
+              hostBusinessId,
+            }),
           },
-          body: JSON.stringify({
-            action: "upsertRow",
-            assignmentId: row.assignmentId,
-            guestBusinessId,
-            hostBusinessId,
-          }),
-        });
+        );
 
         const payload = (await response.json().catch(() => null)) as {
           error?: string;
@@ -369,7 +383,8 @@ export function RoundDraftTable({
     }
 
     const row = draftRows.find(
-      (candidateRow) => candidateRow.clientId === deleteConfirmationState.clientId,
+      (candidateRow) =>
+        candidateRow.clientId === deleteConfirmationState.clientId,
     );
 
     if (!row || row.assignmentId === null) {
@@ -382,16 +397,19 @@ export function RoundDraftTable({
     setActiveRowId(row.clientId);
     startTransition(async () => {
       try {
-        const response = await fetch(`/api/rounds/${roundBatchId}/assignments`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
+        const response = await fetch(
+          `/api/rounds/${roundBatchId}/assignments`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              action: "deleteRow",
+              assignmentId: row.assignmentId,
+            }),
           },
-          body: JSON.stringify({
-            action: "deleteRow",
-            assignmentId: row.assignmentId,
-          }),
-        });
+        );
 
         const payload = (await response.json().catch(() => null)) as {
           error?: string;
@@ -415,13 +433,21 @@ export function RoundDraftTable({
     const parsedBusinessId = parseSelectedId(businessId);
 
     if (parsedBusinessId === null) {
-      return <p className="text-xs leading-6 text-center text-muted">No business selected yet.</p>;
+      return (
+        <p className="text-xs leading-6 text-center text-muted">
+          No business selected yet.
+        </p>
+      );
     }
 
     const business = businessById.get(parsedBusinessId);
 
     if (!business) {
-      return <p className="text-xs leading-6 text-center text-muted">Business not found.</p>;
+      return (
+        <p className="text-xs leading-6 text-center text-muted">
+          Business not found.
+        </p>
+      );
     }
 
     return (
@@ -446,10 +472,10 @@ export function RoundDraftTable({
                 Draft Assignment Table
               </p>
               <p className="max-w-3xl text-sm leading-7 text-muted sm:text-base">
-                Treat this like a lightweight Notion-style round table: add a row,
-                edit either side, or delete a row. The app still enforces one-way
-                directionality, one host slot, one guest slot, and no duplicate or
-                reversed pair inside the same draft.
+                Treat this like a lightweight Notion-style round table: add a
+                row, edit either side, or delete a row. The app still enforces
+                one-way directionality, one host slot, one guest slot, and no
+                duplicate or reversed pair inside the same draft.
               </p>
             </div>
 
@@ -508,9 +534,15 @@ export function RoundDraftTable({
             <table className="min-w-full border-separate border-spacing-0 text-center">
               <thead>
                 <tr className="bg-brand-deep-soft/75 text-left text-xs font-semibold tracking-[0.16em] text-muted uppercase">
-                  <th className="px-5 py-4 text-center sm:px-6">Business Name</th>
-                  <th className="px-5 py-4 text-center sm:px-6">Published By</th>
-                  <th className="px-5 py-4 text-center sm:px-6">Published For</th>
+                  <th className="px-5 py-4 text-center sm:px-6">
+                    Business Name
+                  </th>
+                  <th className="px-5 py-4 text-center sm:px-6">
+                    Published By
+                  </th>
+                  <th className="px-5 py-4 text-center sm:px-6">
+                    Published For
+                  </th>
                   <th className="px-5 py-4 text-center sm:px-6">Source</th>
                   <th className="px-5 py-4 text-center sm:px-6">Actions</th>
                 </tr>
@@ -520,8 +552,12 @@ export function RoundDraftTable({
                   const validationMessage = isDraft
                     ? getLocalValidationMessage(row)
                     : null;
-                  const hostOptions = isDraft ? getHostOptions(row) : selectableBusinesses;
-                  const guestOptions = isDraft ? getGuestOptions(row) : selectableBusinesses;
+                  const hostOptions = isDraft
+                    ? getHostOptions(row)
+                    : selectableBusinesses;
+                  const guestOptions = isDraft
+                    ? getGuestOptions(row)
+                    : selectableBusinesses;
                   const rowIsBusy = isPending && activeRowId === row.clientId;
 
                   return (
@@ -547,7 +583,9 @@ export function RoundDraftTable({
                               }
                               value={row.hostBusinessId}
                             >
-                              <option value="">Select publishing business</option>
+                              <option value="">
+                                Select publishing business
+                              </option>
                               {hostOptions.map((business) => (
                                 <option
                                   key={`${row.clientId}-host-${business.businessId}`}
@@ -580,7 +618,9 @@ export function RoundDraftTable({
                               }
                               value={row.guestBusinessId}
                             >
-                              <option value="">Select receiving business</option>
+                              <option value="">
+                                Select receiving business
+                              </option>
                               {guestOptions.map((business) => (
                                 <option
                                   key={`${row.clientId}-guest-${business.businessId}`}
@@ -609,7 +649,11 @@ export function RoundDraftTable({
                             <div className="flex flex-wrap items-center justify-center gap-3">
                               <div className="group relative">
                                 <button
-                                  aria-label={row.assignmentId === null ? "Add row" : "Save row"}
+                                  aria-label={
+                                    row.assignmentId === null
+                                      ? "Add row"
+                                      : "Save row"
+                                  }
                                   className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-white/80 text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-60"
                                   disabled={isPending}
                                   onClick={() => saveRow(row)}
@@ -638,7 +682,9 @@ export function RoundDraftTable({
                                   <TrashIcon className="h-4 w-4" />
                                 </button>
                                 <ActionTooltip
-                                  label={rowIsBusy ? "Deleting row" : "Delete row"}
+                                  label={
+                                    rowIsBusy ? "Deleting row" : "Delete row"
+                                  }
                                 />
                               </div>
                             </div>

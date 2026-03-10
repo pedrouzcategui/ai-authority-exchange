@@ -36,8 +36,10 @@ export function AddClientModal() {
     useState<(typeof roleOptions)[number]["value"]>("partner");
   const [aiAuthorityExchangeRetiredAt, setAiAuthorityExchangeRetiredAt] =
     useState("");
-  const [aiAuthorityExchangeRetiredRoundSequenceNumber,
-    setAiAuthorityExchangeRetiredRoundSequenceNumber] = useState("");
+  const [
+    aiAuthorityExchangeRetiredRoundSequenceNumber,
+    setAiAuthorityExchangeRetiredRoundSequenceNumber,
+  ] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
 
   function resetForm() {

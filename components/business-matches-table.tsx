@@ -358,8 +358,8 @@ export function BusinessMatchesTable({
           </p>
           <p className="max-w-3xl text-sm leading-7 text-muted sm:text-base">
             Review every saved match connected to {businessName}. Filter to only
-            guests or hosts, sort any column directly from the table header,
-            and assign each match to the round where it belongs.
+            guests or hosts, sort any column directly from the table header, and
+            assign each match to the round where it belongs.
           </p>
         </div>
 

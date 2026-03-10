@@ -108,9 +108,9 @@ export async function PATCH(request: Request, context: RouteContext) {
         ? "deleted"
         : payload.action === "generate"
           ? "generated"
-        : payload.action === "clear"
-          ? "cleared"
-          : "applied";
+          : payload.action === "clear"
+            ? "cleared"
+            : "applied";
 
     return NextResponse.json(
       { error: `The round could not be ${actionLabel}. ${message}` },

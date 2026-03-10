@@ -4,7 +4,10 @@ import path from "node:path";
 import process from "node:process";
 import { parse } from "csv-parse/sync";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient, type RoundBatchStatus } from "../generated/prisma/client";
+import {
+  PrismaClient,
+  type RoundBatchStatus,
+} from "../generated/prisma/client";
 import { getNormalizedDatabaseUrl } from "../lib/database-url";
 
 type CliOptions = {
@@ -217,7 +220,9 @@ function parseArgs(argv: string[]): CliOptions {
     publishedByColumn: optionValues.get("--published-by-column"),
     publishedByWebsiteColumn: optionValues.get("--published-by-website-column"),
     publishedForColumn: optionValues.get("--published-for-column"),
-    publishedForWebsiteColumn: optionValues.get("--published-for-website-column"),
+    publishedForWebsiteColumn: optionValues.get(
+      "--published-for-website-column",
+    ),
     roundSequenceNumber: parseRoundSequenceNumber(optionValues.get("--round")),
     status: parseRoundStatus(optionValues.get("--status")),
     statusColumn: optionValues.get("--status-column"),
@@ -269,9 +274,11 @@ function resolveBusiness(
 
   const referenceDescription = reference.websiteUrl
     ? `${reference.label ?? "(no name provided)"} [${reference.websiteUrl}]`
-    : reference.label ?? "(empty value)";
+    : (reference.label ?? "(empty value)");
 
-  throw new Error(`Could not resolve ${contextLabel}: ${referenceDescription}.`);
+  throw new Error(
+    `Could not resolve ${contextLabel}: ${referenceDescription}.`,
+  );
 }
 
 function buildImportedAssignments(
@@ -310,7 +317,9 @@ function buildImportedAssignments(
       );
     }
 
-    const existingGuestAssignment = guestAssignmentByBusinessId.get(guestBusiness.id);
+    const existingGuestAssignment = guestAssignmentByBusinessId.get(
+      guestBusiness.id,
+    );
 
     if (existingGuestAssignment) {
       throw new Error(
@@ -318,7 +327,9 @@ function buildImportedAssignments(
       );
     }
 
-    const existingHostAssignment = hostAssignmentByBusinessId.get(hostBusiness.id);
+    const existingHostAssignment = hostAssignmentByBusinessId.get(
+      hostBusiness.id,
+    );
 
     if (existingHostAssignment) {
       throw new Error(

@@ -26,8 +26,6 @@ export function getExchangeParticipationStatus(
   return "not-participating";
 }
 
-export function isExchangeParticipationActive(
-  record: ExchangeLifecycleRecord,
-) {
+export function isExchangeParticipationActive(record: ExchangeLifecycleRecord) {
   return getExchangeParticipationStatus(record) === "active";
 }

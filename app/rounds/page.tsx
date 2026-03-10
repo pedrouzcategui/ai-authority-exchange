@@ -20,7 +20,9 @@ function parseBatchId(value: string | string[] | undefined) {
   }
 
   const parsedValue = Number.parseInt(candidate, 10);
-  return Number.isInteger(parsedValue) && parsedValue > 0 ? parsedValue : undefined;
+  return Number.isInteger(parsedValue) && parsedValue > 0
+    ? parsedValue
+    : undefined;
 }
 
 function formatBatchTimestamp(value: string) {
@@ -113,8 +115,8 @@ export default async function RoundsPage({ searchParams }: RoundsPageProps) {
                 Available Batches
               </p>
               <p className="mt-2 text-sm leading-7 text-muted sm:text-base">
-                Use the picker for the full round history, then rely on the quick
-                buttons for the most recent batches.
+                Use the picker for the full round history, then rely on the
+                quick buttons for the most recent batches.
               </p>
             </div>
             <RoundBatchPicker
@@ -126,11 +128,19 @@ export default async function RoundsPage({ searchParams }: RoundsPageProps) {
           {roundBatchView.batch ? (
             <div className="mt-5 rounded-3xl border border-border bg-white/70 p-5 text-sm leading-7 text-muted">
               <p>
-                Batch status: <span className="font-semibold text-foreground">{roundBatchView.batch.status}</span>
+                Batch status:{" "}
+                <span className="font-semibold text-foreground">
+                  {roundBatchView.batch.status}
+                </span>
               </p>
-              <p>Created: {formatBatchTimestamp(roundBatchView.batch.createdAt)}</p>
+              <p>
+                Created: {formatBatchTimestamp(roundBatchView.batch.createdAt)}
+              </p>
               {roundBatchView.batch.appliedAt ? (
-                <p>Applied: {formatBatchTimestamp(roundBatchView.batch.appliedAt)}</p>
+                <p>
+                  Applied:{" "}
+                  {formatBatchTimestamp(roundBatchView.batch.appliedAt)}
+                </p>
               ) : null}
             </div>
           ) : null}

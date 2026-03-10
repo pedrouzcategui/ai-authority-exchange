@@ -96,7 +96,9 @@ export const getBusinesses = cache(async () => {
     select: businessSelection,
   });
 
-  return businesses.map((business) => toBusinessOption(business)).toSorted(compareBusinessNames);
+  return businesses
+    .map((business) => toBusinessOption(business))
+    .toSorted(compareBusinessNames);
 });
 
 export const getExplicitlyActiveExchangeBusinesses = cache(async () => {
@@ -266,7 +268,9 @@ export const getBusinessMatchBoard = cache(async (businessId: number) => {
     },
   });
 
-  const normalizedMatches = matches.map((match) => toMatchWithBusinesses(match));
+  const normalizedMatches = matches.map((match) =>
+    toMatchWithBusinesses(match),
+  );
 
   return normalizedMatches.map((match) => {
     const businessIsHost = match.hostId === businessId;
@@ -322,14 +326,16 @@ export const getBusinessRelationshipRows = cache(
           },
         }),
       ]);
-      const activeBusinessIds = new Set(businesses.map((business) => business.id));
-      const normalizedMatches = matches.map((match) =>
-        toMatchWithBusinesses(match),
-      ).filter(
-        (match) =>
-          activeBusinessIds.has(match.host.id) &&
-          activeBusinessIds.has(match.guest.id),
+      const activeBusinessIds = new Set(
+        businesses.map((business) => business.id),
       );
+      const normalizedMatches = matches
+        .map((match) => toMatchWithBusinesses(match))
+        .filter(
+          (match) =>
+            activeBusinessIds.has(match.host.id) &&
+            activeBusinessIds.has(match.guest.id),
+        );
       const business = businesses.find(
         (candidate) => candidate.id === businessId,
       );
@@ -364,7 +370,9 @@ export const getBusinessRelationshipRows = cache(
       getExplicitlyActiveExchangeBusinesses(),
       getMatches(),
     ]);
-    const activeBusinessIds = new Set(businesses.map((business) => business.id));
+    const activeBusinessIds = new Set(
+      businesses.map((business) => business.id),
+    );
     const activeMatches = matches.filter(
       (match) =>
         activeBusinessIds.has(match.host.id) &&

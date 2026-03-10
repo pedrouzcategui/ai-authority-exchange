@@ -433,8 +433,8 @@ export async function PATCH(request: Request) {
         }
       }
 
-      const previousAssignment = !shouldSyncRoundAssignment ||
-        existingMatch.roundBatchId === null
+      const previousAssignment =
+        !shouldSyncRoundAssignment || existingMatch.roundBatchId === null
           ? null
           : await database.roundAssignment.findFirst({
               select: {
@@ -477,7 +477,9 @@ export async function PATCH(request: Request) {
         const excludedAssignmentIds = [
           previousAssignment?.id,
           targetPairAssignment?.id,
-        ].filter((assignmentId): assignmentId is number => assignmentId !== undefined);
+        ].filter(
+          (assignmentId): assignmentId is number => assignmentId !== undefined,
+        );
 
         const [hostConflict, guestConflict] = await Promise.all([
           database.roundAssignment.findFirst({
@@ -529,7 +531,9 @@ export async function PATCH(request: Request) {
             ? {}
             : { roundBatchId: nextRoundBatchId }),
           ...(status === undefined ? {} : { status }),
-          ...(nextHostId === existingMatch.hostId ? {} : { hostId: nextHostId }),
+          ...(nextHostId === existingMatch.hostId
+            ? {}
+            : { hostId: nextHostId }),
           ...(nextGuestId === existingMatch.guestId
             ? {}
             : { guestId: nextGuestId }),
@@ -637,7 +641,6 @@ export async function PATCH(request: Request) {
         { status: 404 },
       );
     }
-
 
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&

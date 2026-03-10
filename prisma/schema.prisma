@@ -8,36 +8,36 @@ datasource db {
 }
 
 model Business {
-  id                            Int                  @id(map: "clients_pkey") @default(autoincrement()) @map("id")
-  business                      String               @unique(map: "clients_name_unique_idx") @map("name")
-  websiteUrl                    String?              @unique @map("website_url")
-  isActiveOnAiAuthorityExchange Boolean              @default(false) @map("is_active_on_ai_authority_exchange")
-  aiAuthorityExchangeJoinedAt   DateTime?            @map("ai_authority_exchange_joined_at") @db.Timestamp(6)
-  aiAuthorityExchangeRetiredAt  DateTime?            @map("ai_authority_exchange_retired_at") @db.Timestamp(6)
-  aiAuthorityExchangeRetiredInRoundBatchId Int?      @map("ai_authority_exchange_retired_in_round_batch_id")
-  google_drive_folder_url       String?
-  writer_411_document_url       String?
-  discovery_packet_document_url String?
-  client_status                 client_status        @default(active)
-  created_at                    DateTime             @default(now()) @db.Date
-  updated_at                    DateTime             @default(now()) @db.Date
-  subcategory                   String?              @db.VarChar
-  description                   String?
-  writing_topics                String[]
-  target_audience               String?
-  business_category_id          Int?
-  domain_rating                 Int?
-  related_category_ids          Int[]
-  related_categories_reasoning  String?
-  clientType                    BusinessRoleType?    @default(partner) @map("role")
-  guestMatches                  Match[]              @relation("GuestBusiness")
-  hostedMatches                 Match[]              @relation("HostBusiness")
-  aiAuthorityExchangeRetiredInRoundBatch RoundBatch? @relation("RetiredBusinesses", fields: [aiAuthorityExchangeRetiredInRoundBatchId], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  incomingRoundAssignments      RoundAssignment[]    @relation("RoundAssignmentGuestBusiness")
-  outgoingRoundAssignments      RoundAssignment[]    @relation("RoundAssignmentHostBusiness")
-  business_categories           business_categories? @relation(fields: [business_category_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "business_category_id")
-  client_details                client_details?
-  publications                  publications[]
+  id                                       Int                  @id(map: "clients_pkey") @default(autoincrement()) @map("id")
+  business                                 String               @unique(map: "clients_name_unique_idx") @map("name")
+  websiteUrl                               String?              @unique @map("website_url")
+  isActiveOnAiAuthorityExchange            Boolean              @default(false) @map("is_active_on_ai_authority_exchange")
+  aiAuthorityExchangeJoinedAt              DateTime?            @map("ai_authority_exchange_joined_at") @db.Timestamp(6)
+  aiAuthorityExchangeRetiredAt             DateTime?            @map("ai_authority_exchange_retired_at") @db.Timestamp(6)
+  aiAuthorityExchangeRetiredInRoundBatchId Int?                 @map("ai_authority_exchange_retired_in_round_batch_id")
+  google_drive_folder_url                  String?
+  writer_411_document_url                  String?
+  discovery_packet_document_url            String?
+  client_status                            client_status        @default(active)
+  created_at                               DateTime             @default(now()) @db.Date
+  updated_at                               DateTime             @default(now()) @db.Date
+  subcategory                              String?              @db.VarChar
+  description                              String?
+  writing_topics                           String[]
+  target_audience                          String?
+  business_category_id                     Int?
+  domain_rating                            Int?
+  related_category_ids                     Int[]
+  related_categories_reasoning             String?
+  clientType                               BusinessRoleType?    @default(partner) @map("role")
+  guestMatches                             Match[]              @relation("GuestBusiness")
+  hostedMatches                            Match[]              @relation("HostBusiness")
+  aiAuthorityExchangeRetiredInRoundBatch   RoundBatch?          @relation("RetiredBusinesses", fields: [aiAuthorityExchangeRetiredInRoundBatchId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  incomingRoundAssignments                 RoundAssignment[]    @relation("RoundAssignmentGuestBusiness")
+  outgoingRoundAssignments                 RoundAssignment[]    @relation("RoundAssignmentHostBusiness")
+  business_categories                      business_categories? @relation(fields: [business_category_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "business_category_id")
+  client_details                           client_details?
+  publications                             publications[]
 
   @@index([aiAuthorityExchangeRetiredInRoundBatchId], map: "idx_businesses_retired_round_batch_id")
   @@index([related_category_ids], map: "idx_clients_related_categories", type: Gin)
@@ -67,30 +67,30 @@ model Match {
 }
 
 model RoundBatch {
-  id             Int              @id @default(autoincrement())
-  sequenceNumber Int              @unique @map("sequence_number")
-  status         RoundBatchStatus @default(draft)
-  appliedAt      DateTime?        @map("applied_at") @db.Timestamp(6)
-  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt      DateTime         @updatedAt @map("updated_at") @db.Timestamp(6)
-  assignments    RoundAssignment[]
-  matches        Match[]
-  retiredBusinesses Business[]    @relation("RetiredBusinesses")
+  id                Int               @id @default(autoincrement())
+  sequenceNumber    Int               @unique @map("sequence_number")
+  status            RoundBatchStatus  @default(draft)
+  appliedAt         DateTime?         @map("applied_at") @db.Timestamp(6)
+  createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt         DateTime          @updatedAt @map("updated_at") @db.Timestamp(6)
+  assignments       RoundAssignment[]
+  matches           Match[]
+  retiredBusinesses Business[]        @relation("RetiredBusinesses")
 
   @@map("ai_authority_exchange_round_batches")
 }
 
 model RoundAssignment {
-  id             Int                   @id @default(autoincrement())
-  roundBatchId   Int                   @map("round_batch_id")
-  hostBusinessId Int                   @map("host_business_id")
-  guestBusinessId Int                  @map("guest_business_id")
-  source         RoundAssignmentSource @default(auto)
-  createdAt      DateTime              @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt      DateTime              @updatedAt @map("updated_at") @db.Timestamp(6)
-  guestBusiness  Business              @relation("RoundAssignmentGuestBusiness", fields: [guestBusinessId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  hostBusiness   Business              @relation("RoundAssignmentHostBusiness", fields: [hostBusinessId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  roundBatch     RoundBatch            @relation(fields: [roundBatchId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id              Int                   @id @default(autoincrement())
+  roundBatchId    Int                   @map("round_batch_id")
+  hostBusinessId  Int                   @map("host_business_id")
+  guestBusinessId Int                   @map("guest_business_id")
+  source          RoundAssignmentSource @default(auto)
+  createdAt       DateTime              @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt       DateTime              @updatedAt @map("updated_at") @db.Timestamp(6)
+  guestBusiness   Business              @relation("RoundAssignmentGuestBusiness", fields: [guestBusinessId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  hostBusiness    Business              @relation("RoundAssignmentHostBusiness", fields: [hostBusinessId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  roundBatch      RoundBatch            @relation(fields: [roundBatchId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@unique([roundBatchId, hostBusinessId], map: "unique_round_assignment_host")
   @@unique([roundBatchId, guestBusinessId], map: "unique_round_assignment_guest")

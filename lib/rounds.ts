@@ -231,7 +231,10 @@ type DeleteRoundAssignmentRowParams = {
   roundBatchId: number;
 };
 
-function compareBusinesses(left: { business: string }, right: { business: string }) {
+function compareBusinesses(
+  left: { business: string },
+  right: { business: string },
+) {
   return businessNameCollator.compare(left.business, right.business);
 }
 
@@ -239,7 +242,9 @@ function pairKey(hostBusinessId: number, guestBusinessId: number) {
   return `${hostBusinessId}:${guestBusinessId}`;
 }
 
-function formatRoundBatchSummary(batch: RoundBatchSummaryRecord): RoundBatchSummary {
+function formatRoundBatchSummary(
+  batch: RoundBatchSummaryRecord,
+): RoundBatchSummary {
   return {
     appliedAt: batch.appliedAt?.toISOString() ?? null,
     assignmentCount: batch._count.assignments,
@@ -250,7 +255,10 @@ function formatRoundBatchSummary(batch: RoundBatchSummaryRecord): RoundBatchSumm
   };
 }
 
-function getCategoryRelation(hostBusiness: RoundBusiness, guestBusiness: RoundBusiness) {
+function getCategoryRelation(
+  hostBusiness: RoundBusiness,
+  guestBusiness: RoundBusiness,
+) {
   if (
     hostBusiness.business_category_id !== null &&
     hostBusiness.business_category_id === guestBusiness.business_category_id
@@ -318,9 +326,16 @@ function getDraftCandidateScore(
   );
   const relevanceScore = categoryRelation === "same-category" ? 100 : 60;
   const domainRatingScore = hostContribution === null ? 0 : 5;
-  const proximityScore = hostContribution === null ? 0 : -Math.abs(hostContribution) / 100;
+  const proximityScore =
+    hostContribution === null ? 0 : -Math.abs(hostContribution) / 100;
 
-  return relevanceScore + hostImprovement * 2 + guestImprovement * 2 + domainRatingScore + proximityScore;
+  return (
+    relevanceScore +
+    hostImprovement * 2 +
+    guestImprovement * 2 +
+    domainRatingScore +
+    proximityScore
+  );
 }
 
 function buildHistoricalContext(
@@ -342,7 +357,10 @@ function buildHistoricalContext(
     pairedBusinessIdsByBusinessId.get(match.hostId)?.add(match.guestId);
     pairedBusinessIdsByBusinessId.get(match.guestId)?.add(match.hostId);
 
-    if (match.host.domain_rating !== null && match.guest.domain_rating !== null) {
+    if (
+      match.host.domain_rating !== null &&
+      match.guest.domain_rating !== null
+    ) {
       if (balanceByBusinessId.has(match.hostId)) {
         balanceByBusinessId.set(
           match.hostId,
@@ -367,20 +385,29 @@ function buildHistoricalContext(
   };
 }
 
-function buildRoundDraftState(assignments: RoundAssignmentRecord[]): RoundDraftState {
+function buildRoundDraftState(
+  assignments: RoundAssignmentRecord[],
+): RoundDraftState {
   return {
     assignments,
     assignmentByGuestId: new Map(
-      assignments.map((assignment) => [assignment.guestBusinessId, assignment] as const),
+      assignments.map(
+        (assignment) => [assignment.guestBusinessId, assignment] as const,
+      ),
     ),
     assignmentByHostId: new Map(
-      assignments.map((assignment) => [assignment.hostBusinessId, assignment] as const),
+      assignments.map(
+        (assignment) => [assignment.hostBusinessId, assignment] as const,
+      ),
     ),
     assignmentByPairKey: new Map(
-      assignments.map((assignment) => [
-        pairKey(assignment.hostBusinessId, assignment.guestBusinessId),
-        assignment,
-      ] as const),
+      assignments.map(
+        (assignment) =>
+          [
+            pairKey(assignment.hostBusinessId, assignment.guestBusinessId),
+            assignment,
+          ] as const,
+      ),
     ),
   };
 }
@@ -435,7 +462,8 @@ function isDirectedAssignmentEligible(params: {
     }
   }
 
-  const existingHostAssignment = draftState.assignmentByHostId.get(hostBusinessId);
+  const existingHostAssignment =
+    draftState.assignmentByHostId.get(hostBusinessId);
 
   if (
     existingHostAssignment &&
@@ -444,7 +472,8 @@ function isDirectedAssignmentEligible(params: {
     return false;
   }
 
-  const existingGuestAssignment = draftState.assignmentByGuestId.get(guestBusinessId);
+  const existingGuestAssignment =
+    draftState.assignmentByGuestId.get(guestBusinessId);
 
   if (
     existingGuestAssignment &&
@@ -477,8 +506,11 @@ function buildAutomaticRoundAssignments(params: {
   balanceByBusinessId: Map<number, number | null>;
   pairedBusinessIdsByBusinessId: Map<number, Set<number>>;
 }) {
-  const { activeBusinesses, balanceByBusinessId, pairedBusinessIdsByBusinessId } =
-    params;
+  const {
+    activeBusinesses,
+    balanceByBusinessId,
+    pairedBusinessIdsByBusinessId,
+  } = params;
   const roundBusinessesById = new Map(
     activeBusinesses.map((business) => [business.id, business] as const),
   );
@@ -520,7 +552,10 @@ function buildAutomaticRoundAssignments(params: {
 
     const leftHostBusiness = roundBusinessesById.get(left.hostBusinessId)!;
     const rightHostBusiness = roundBusinessesById.get(right.hostBusinessId)!;
-    const hostComparison = compareBusinesses(leftHostBusiness, rightHostBusiness);
+    const hostComparison = compareBusinesses(
+      leftHostBusiness,
+      rightHostBusiness,
+    );
 
     if (hostComparison !== 0) {
       return hostComparison;
@@ -547,8 +582,12 @@ function buildAutomaticRoundAssignments(params: {
       continue;
     }
 
-    const hostBusiness = roundBusinessesById.get(candidateAssignment.hostBusinessId)!;
-    const guestBusiness = roundBusinessesById.get(candidateAssignment.guestBusinessId)!;
+    const hostBusiness = roundBusinessesById.get(
+      candidateAssignment.hostBusinessId,
+    )!;
+    const guestBusiness = roundBusinessesById.get(
+      candidateAssignment.guestBusinessId,
+    )!;
     const nextAssignment = {
       createdAt: new Date(0),
       guestBusiness,
@@ -563,8 +602,14 @@ function buildAutomaticRoundAssignments(params: {
 
     selectedAssignments.push(nextAssignment);
     selectedState.assignments.push(nextAssignment);
-    selectedState.assignmentByHostId.set(nextAssignment.hostBusinessId, nextAssignment);
-    selectedState.assignmentByGuestId.set(nextAssignment.guestBusinessId, nextAssignment);
+    selectedState.assignmentByHostId.set(
+      nextAssignment.hostBusinessId,
+      nextAssignment,
+    );
+    selectedState.assignmentByGuestId.set(
+      nextAssignment.guestBusinessId,
+      nextAssignment,
+    );
     selectedState.assignmentByPairKey.set(
       pairKey(nextAssignment.hostBusinessId, nextAssignment.guestBusinessId),
       nextAssignment,
@@ -591,7 +636,9 @@ function toRoundDraftCell(
   direction: "publishedBy" | "publishedFor",
 ): RoundDraftCell {
   const counterpartBusiness =
-    direction === "publishedBy" ? assignment.hostBusiness : assignment.guestBusiness;
+    direction === "publishedBy"
+      ? assignment.hostBusiness
+      : assignment.guestBusiness;
 
   return {
     assignmentId: assignment.id,
@@ -626,7 +673,9 @@ function getBusinessesRepresentedInAssignments(
   return Array.from(businessesById.values()).toSorted(compareBusinesses);
 }
 
-async function getActiveRoundBusinessesFromDatabase(database: PrismaClient = prisma) {
+async function getActiveRoundBusinessesFromDatabase(
+  database: PrismaClient = prisma,
+) {
   const businesses = await database.business.findMany({
     select: roundBusinessSelect,
     where: {
@@ -645,7 +694,9 @@ async function getActiveRoundBusinessesFromDatabase(database: PrismaClient = pri
     },
   });
 
-  return businesses.map((business) => toRoundBusiness(business)).toSorted(compareBusinesses);
+  return businesses
+    .map((business) => toRoundBusiness(business))
+    .toSorted(compareBusinesses);
 }
 
 async function getSelectableRoundBusinessesFromDatabase(
@@ -655,7 +706,9 @@ async function getSelectableRoundBusinessesFromDatabase(
     select: roundBusinessSelect,
   });
 
-  return businesses.map((business) => toRoundBusiness(business)).toSorted(compareBusinesses);
+  return businesses
+    .map((business) => toRoundBusiness(business))
+    .toSorted(compareBusinesses);
 }
 
 async function getHistoricalMatchesForBusinesses(
@@ -706,28 +759,29 @@ async function getRoundManagementContext(
   roundBatchId: number,
   database: PrismaClient = prisma,
 ) {
-  const [batch, activeBusinesses, selectableBusinesses, assignments] = await Promise.all([
-    database.roundBatch.findUnique({
-      select: {
-        appliedAt: true,
-        createdAt: true,
-        id: true,
-        sequenceNumber: true,
-        status: true,
-      },
-      where: {
-        id: roundBatchId,
-      },
-    }),
-    getActiveRoundBusinessesFromDatabase(database),
-    getSelectableRoundBusinessesFromDatabase(database),
-    database.roundAssignment.findMany({
-      select: roundAssignmentSelect,
-      where: {
-        roundBatchId,
-      },
-    }),
-  ]);
+  const [batch, activeBusinesses, selectableBusinesses, assignments] =
+    await Promise.all([
+      database.roundBatch.findUnique({
+        select: {
+          appliedAt: true,
+          createdAt: true,
+          id: true,
+          sequenceNumber: true,
+          status: true,
+        },
+        where: {
+          id: roundBatchId,
+        },
+      }),
+      getActiveRoundBusinessesFromDatabase(database),
+      getSelectableRoundBusinessesFromDatabase(database),
+      database.roundAssignment.findMany({
+        select: roundAssignmentSelect,
+        where: {
+          roundBatchId,
+        },
+      }),
+    ]);
 
   if (!batch) {
     throw new Error("The selected round draft does not exist.");
@@ -737,7 +791,10 @@ async function getRoundManagementContext(
     database,
     activeBusinesses.map((business) => business.id),
   );
-  const historicalContext = buildHistoricalContext(activeBusinesses, historicalMatches);
+  const historicalContext = buildHistoricalContext(
+    activeBusinesses,
+    historicalMatches,
+  );
 
   return {
     activeBusinesses,
@@ -833,8 +890,10 @@ export const getRoundBatchView = cache(async (requestedBatchId?: number) => {
     })
     .map((assignment) => toRoundDraftAssignmentRow(assignment));
   const rows = displayedBusinesses.map((business) => {
-    const publishedByAssignment = draftState.assignmentByGuestId.get(business.id) ?? null;
-    const publishedForAssignment = draftState.assignmentByHostId.get(business.id) ?? null;
+    const publishedByAssignment =
+      draftState.assignmentByGuestId.get(business.id) ?? null;
+    const publishedForAssignment =
+      draftState.assignmentByHostId.get(business.id) ?? null;
     const publishedByOptions =
       selectedBatch.status === "draft"
         ? selectableBusinesses
@@ -963,7 +1022,8 @@ export async function generateRoundDraftForBatch(roundBatchId: number) {
       );
     }
 
-    const activeBusinesses = await getActiveRoundBusinessesFromDatabase(database);
+    const activeBusinesses =
+      await getActiveRoundBusinessesFromDatabase(database);
 
     if (activeBusinesses.length === 0) {
       throw new Error(
@@ -1030,8 +1090,8 @@ export async function updateRoundAssignment(
     const draftState = buildRoundDraftState(assignments);
     const currentAssignment =
       direction === "publishedFor"
-        ? draftState.assignmentByHostId.get(businessId) ?? null
-        : draftState.assignmentByGuestId.get(businessId) ?? null;
+        ? (draftState.assignmentByHostId.get(businessId) ?? null)
+        : (draftState.assignmentByGuestId.get(businessId) ?? null);
 
     if (counterpartBusinessId === null) {
       if (!currentAssignment) {
@@ -1109,7 +1169,8 @@ export async function updateRoundAssignment(
 export async function upsertRoundAssignmentRow(
   params: UpsertRoundAssignmentRowParams,
 ) {
-  const { assignmentId, guestBusinessId, hostBusinessId, roundBatchId } = params;
+  const { assignmentId, guestBusinessId, hostBusinessId, roundBatchId } =
+    params;
 
   return withDatabaseRetry(async (database) => {
     const { assignments, batch, historicalContext, selectableBusinesses } =
@@ -1134,9 +1195,14 @@ export async function upsertRoundAssignmentRow(
     const currentAssignment =
       assignmentId === undefined || assignmentId === null
         ? null
-        : assignments.find((assignment) => assignment.id === assignmentId) ?? null;
+        : (assignments.find((assignment) => assignment.id === assignmentId) ??
+          null);
 
-    if (assignmentId !== undefined && assignmentId !== null && !currentAssignment) {
+    if (
+      assignmentId !== undefined &&
+      assignmentId !== null &&
+      !currentAssignment
+    ) {
       throw new Error("The selected round row does not exist.");
     }
 
@@ -1348,7 +1414,9 @@ export async function applyRoundBatch(roundBatchId: number) {
     }
 
     if (assignments.length === 0) {
-      throw new Error("The round draft does not contain any assignments to apply.");
+      throw new Error(
+        "The round draft does not contain any assignments to apply.",
+      );
     }
 
     const pairWhereClauses = assignments.flatMap((assignment) => [
