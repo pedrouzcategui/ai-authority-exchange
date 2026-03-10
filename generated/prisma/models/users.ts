@@ -224,6 +224,7 @@ export type usersWhereInput = {
   full_name?: Prisma.StringNullableFilter<"users"> | string | null
   email?: Prisma.StringNullableFilter<"users"> | string | null
   google_chat_space_id?: Prisma.StringNullableFilter<"users"> | string | null
+  authUser?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   publications?: Prisma.PublicationsListRelationFilter
 }
 
@@ -234,6 +235,7 @@ export type usersOrderByWithRelationInput = {
   full_name?: Prisma.SortOrderInput | Prisma.SortOrder
   email?: Prisma.SortOrderInput | Prisma.SortOrder
   google_chat_space_id?: Prisma.SortOrderInput | Prisma.SortOrder
+  authUser?: Prisma.UserOrderByWithRelationInput
   publications?: Prisma.publicationsOrderByRelationAggregateInput
 }
 
@@ -247,6 +249,7 @@ export type usersWhereUniqueInput = Prisma.AtLeast<{
   last_name?: Prisma.StringNullableFilter<"users"> | string | null
   full_name?: Prisma.StringNullableFilter<"users"> | string | null
   google_chat_space_id?: Prisma.StringNullableFilter<"users"> | string | null
+  authUser?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   publications?: Prisma.PublicationsListRelationFilter
 }, "id" | "email">
 
@@ -282,6 +285,7 @@ export type usersCreateInput = {
   full_name?: string | null
   email?: string | null
   google_chat_space_id?: string | null
+  authUser?: Prisma.UserCreateNestedOneWithoutLegacyUserInput
   publications?: Prisma.publicationsCreateNestedManyWithoutUsersInput
 }
 
@@ -292,6 +296,7 @@ export type usersUncheckedCreateInput = {
   full_name?: string | null
   email?: string | null
   google_chat_space_id?: string | null
+  authUser?: Prisma.UserUncheckedCreateNestedOneWithoutLegacyUserInput
   publications?: Prisma.publicationsUncheckedCreateNestedManyWithoutUsersInput
 }
 
@@ -301,6 +306,7 @@ export type usersUpdateInput = {
   full_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   google_chat_space_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  authUser?: Prisma.UserUpdateOneWithoutLegacyUserNestedInput
   publications?: Prisma.publicationsUpdateManyWithoutUsersNestedInput
 }
 
@@ -311,6 +317,7 @@ export type usersUncheckedUpdateInput = {
   full_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   google_chat_space_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  authUser?: Prisma.UserUncheckedUpdateOneWithoutLegacyUserNestedInput
   publications?: Prisma.publicationsUncheckedUpdateManyWithoutUsersNestedInput
 }
 
@@ -394,12 +401,27 @@ export type usersUpdateOneRequiredWithoutPublicationsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.usersUpdateToOneWithWhereWithoutPublicationsInput, Prisma.usersUpdateWithoutPublicationsInput>, Prisma.usersUncheckedUpdateWithoutPublicationsInput>
 }
 
+export type usersCreateNestedOneWithoutAuthUserInput = {
+  create?: Prisma.XOR<Prisma.usersCreateWithoutAuthUserInput, Prisma.usersUncheckedCreateWithoutAuthUserInput>
+  connectOrCreate?: Prisma.usersCreateOrConnectWithoutAuthUserInput
+  connect?: Prisma.usersWhereUniqueInput
+}
+
+export type usersUpdateOneRequiredWithoutAuthUserNestedInput = {
+  create?: Prisma.XOR<Prisma.usersCreateWithoutAuthUserInput, Prisma.usersUncheckedCreateWithoutAuthUserInput>
+  connectOrCreate?: Prisma.usersCreateOrConnectWithoutAuthUserInput
+  upsert?: Prisma.usersUpsertWithoutAuthUserInput
+  connect?: Prisma.usersWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.usersUpdateToOneWithWhereWithoutAuthUserInput, Prisma.usersUpdateWithoutAuthUserInput>, Prisma.usersUncheckedUpdateWithoutAuthUserInput>
+}
+
 export type usersCreateWithoutPublicationsInput = {
   first_name?: string | null
   last_name?: string | null
   full_name?: string | null
   email?: string | null
   google_chat_space_id?: string | null
+  authUser?: Prisma.UserCreateNestedOneWithoutLegacyUserInput
 }
 
 export type usersUncheckedCreateWithoutPublicationsInput = {
@@ -409,6 +431,7 @@ export type usersUncheckedCreateWithoutPublicationsInput = {
   full_name?: string | null
   email?: string | null
   google_chat_space_id?: string | null
+  authUser?: Prisma.UserUncheckedCreateNestedOneWithoutLegacyUserInput
 }
 
 export type usersCreateOrConnectWithoutPublicationsInput = {
@@ -433,6 +456,7 @@ export type usersUpdateWithoutPublicationsInput = {
   full_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   google_chat_space_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  authUser?: Prisma.UserUpdateOneWithoutLegacyUserNestedInput
 }
 
 export type usersUncheckedUpdateWithoutPublicationsInput = {
@@ -442,6 +466,61 @@ export type usersUncheckedUpdateWithoutPublicationsInput = {
   full_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   google_chat_space_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  authUser?: Prisma.UserUncheckedUpdateOneWithoutLegacyUserNestedInput
+}
+
+export type usersCreateWithoutAuthUserInput = {
+  first_name?: string | null
+  last_name?: string | null
+  full_name?: string | null
+  email?: string | null
+  google_chat_space_id?: string | null
+  publications?: Prisma.publicationsCreateNestedManyWithoutUsersInput
+}
+
+export type usersUncheckedCreateWithoutAuthUserInput = {
+  id?: number
+  first_name?: string | null
+  last_name?: string | null
+  full_name?: string | null
+  email?: string | null
+  google_chat_space_id?: string | null
+  publications?: Prisma.publicationsUncheckedCreateNestedManyWithoutUsersInput
+}
+
+export type usersCreateOrConnectWithoutAuthUserInput = {
+  where: Prisma.usersWhereUniqueInput
+  create: Prisma.XOR<Prisma.usersCreateWithoutAuthUserInput, Prisma.usersUncheckedCreateWithoutAuthUserInput>
+}
+
+export type usersUpsertWithoutAuthUserInput = {
+  update: Prisma.XOR<Prisma.usersUpdateWithoutAuthUserInput, Prisma.usersUncheckedUpdateWithoutAuthUserInput>
+  create: Prisma.XOR<Prisma.usersCreateWithoutAuthUserInput, Prisma.usersUncheckedCreateWithoutAuthUserInput>
+  where?: Prisma.usersWhereInput
+}
+
+export type usersUpdateToOneWithWhereWithoutAuthUserInput = {
+  where?: Prisma.usersWhereInput
+  data: Prisma.XOR<Prisma.usersUpdateWithoutAuthUserInput, Prisma.usersUncheckedUpdateWithoutAuthUserInput>
+}
+
+export type usersUpdateWithoutAuthUserInput = {
+  first_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  last_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  full_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  google_chat_space_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publications?: Prisma.publicationsUpdateManyWithoutUsersNestedInput
+}
+
+export type usersUncheckedUpdateWithoutAuthUserInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  first_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  last_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  full_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  google_chat_space_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publications?: Prisma.publicationsUncheckedUpdateManyWithoutUsersNestedInput
 }
 
 
@@ -482,6 +561,7 @@ export type usersSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   full_name?: boolean
   email?: boolean
   google_chat_space_id?: boolean
+  authUser?: boolean | Prisma.users$authUserArgs<ExtArgs>
   publications?: boolean | Prisma.users$publicationsArgs<ExtArgs>
   _count?: boolean | Prisma.UsersCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["users"]>
@@ -515,6 +595,7 @@ export type usersSelectScalar = {
 
 export type usersOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "first_name" | "last_name" | "full_name" | "email" | "google_chat_space_id", ExtArgs["result"]["users"]>
 export type usersInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  authUser?: boolean | Prisma.users$authUserArgs<ExtArgs>
   publications?: boolean | Prisma.users$publicationsArgs<ExtArgs>
   _count?: boolean | Prisma.UsersCountOutputTypeDefaultArgs<ExtArgs>
 }
@@ -524,6 +605,7 @@ export type usersIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extens
 export type $usersPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "users"
   objects: {
+    authUser: Prisma.$UserPayload<ExtArgs> | null
     publications: Prisma.$publicationsPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
@@ -927,6 +1009,7 @@ readonly fields: usersFieldRefs;
  */
 export interface Prisma__usersClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  authUser<T extends Prisma.users$authUserArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.users$authUserArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   publications<T extends Prisma.users$publicationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.users$publicationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$publicationsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -1348,6 +1431,25 @@ export type usersDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Interna
    * Limit how many users to delete.
    */
   limit?: number
+}
+
+/**
+ * users.authUser
+ */
+export type users$authUserArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the User
+   */
+  select?: Prisma.UserSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the User
+   */
+  omit?: Prisma.UserOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserInclude<ExtArgs> | null
+  where?: Prisma.UserWhereInput
 }
 
 /**
