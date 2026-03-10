@@ -231,7 +231,6 @@ function LocalShortlistTable({
                         business: candidate.name,
                         clientType: candidate.clientType,
                         id: candidate.id,
-                        websiteUrl: candidate.websiteUrl,
                       }}
                     />
                   </div>

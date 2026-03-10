@@ -4,6 +4,7 @@ import { BusinessMatchesTable } from "@/components/business-matches-table";
 import { BusinessRoleBadge } from "@/components/business-role-badge";
 import { EditBusinessModal } from "@/components/edit-business-modal";
 import { getBusinessByIdentifier, getBusinessMatchBoard } from "@/lib/matches";
+import { getRoundBatchSummaries } from "@/lib/rounds";
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +40,10 @@ export default async function BusinessProfilePage({
     notFound();
   }
 
-  const rows = await getBusinessMatchBoard(business.id);
+  const [rows, roundBatches] = await Promise.all([
+    getBusinessMatchBoard(business.id),
+    getRoundBatchSummaries(),
+  ]);
   const businessDomainRating = business.domain_rating;
   const guestCount = rows.filter(
     (row) => row.counterpartRole === "guest",
@@ -94,7 +98,7 @@ export default async function BusinessProfilePage({
         : `Based on ${comparableRows.length} of ${rows.length} matched ${rows.length === 1 ? "business" : "businesses"} with DR data.`;
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-8 px-6 py-10 sm:px-10 lg:px-12 lg:py-14">
+    <main className="mx-auto flex min-h-screen w-full max-w-8xl flex-col gap-8 px-6 py-10 sm:px-10 lg:px-12 lg:py-14">
       <section className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-4">
           <Link
@@ -242,7 +246,15 @@ export default async function BusinessProfilePage({
       </section>
 
       <section className="rounded-4xl border border-border bg-surface p-6 shadow-(--shadow) backdrop-blur-md sm:p-8">
-        <BusinessMatchesTable business={business} rows={rows} />
+        <BusinessMatchesTable
+          business={business}
+          roundBatches={roundBatches.map((batch) => ({
+            id: batch.id,
+            sequenceNumber: batch.sequenceNumber,
+            status: batch.status,
+          }))}
+          rows={rows}
+        />
       </section>
     </main>
   );

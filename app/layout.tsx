@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AuthControls } from "@/components/auth-controls";
+import { HeaderNavigation } from "@/components/header-navigation";
 import { authOptions } from "@/lib/auth";
 import { AppToaster } from "@/components/toaster";
 import "./globals.css";
@@ -38,7 +39,7 @@ export default async function RootLayout({
       >
         <div className="relative min-h-screen">
           <header className="sticky top-0 z-40 border-b border-border bg-white/84 backdrop-blur-xl">
-            <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-4 sm:px-10 lg:flex-row lg:items-center lg:justify-between lg:px-12">
+            <div className="mx-auto grid w-full max-w-8xl gap-4 px-6 py-4 sm:px-10 lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:items-center lg:px-12">
               <div className="space-y-1">
                 <Link
                   className="inline-flex text-lg font-semibold tracking-tight text-foreground transition hover:text-accent"
@@ -50,6 +51,10 @@ export default async function RootLayout({
                   Internal match workflow with approved Google access.
                 </p>
               </div>
+
+              <HeaderNavigation
+                isAuthenticated={Boolean(session?.user?.legacyUserId)}
+              />
 
               <AuthControls user={session?.user ?? null} />
             </div>

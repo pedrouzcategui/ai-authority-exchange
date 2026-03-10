@@ -5,12 +5,19 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { CreateEmailDraftButton } from "@/components/create-email-draft-button";
-import type { MatchStatus } from "@/generated/prisma/client";
+import type { MatchStatus, RoundBatchStatus } from "@/generated/prisma/client";
 import { getBusinessProfileHref } from "@/lib/business-profile-route";
 import type { BusinessMatchBoardRow, BusinessOption } from "@/lib/matches";
 
+type BusinessMatchesTableRoundBatch = {
+  id: number;
+  sequenceNumber: number;
+  status: RoundBatchStatus;
+};
+
 type BusinessMatchesTableProps = {
   business: BusinessOption;
+  roundBatches: BusinessMatchesTableRoundBatch[];
   rows: BusinessMatchBoardRow[];
 };
 
@@ -54,6 +61,19 @@ function getRoleLabel(role: BusinessMatchBoardRow["counterpartRole"]) {
 
 function formatDomainRating(domainRating: number | null) {
   return domainRating === null ? "No DR" : `DR ${domainRating}`;
+}
+
+function formatRoundBatchLabel(roundBatch: BusinessMatchesTableRoundBatch) {
+  return `Round ${roundBatch.sequenceNumber} (${roundBatch.status === "draft" ? "Draft" : "Applied"})`;
+}
+
+function parseSelectedRoundBatchId(value: string) {
+  if (!value) {
+    return null;
+  }
+
+  const parsedValue = Number.parseInt(value, 10);
+  return Number.isInteger(parsedValue) && parsedValue > 0 ? parsedValue : null;
 }
 
 function getStatusSelectClassName(status: MatchStatus | null) {
@@ -146,6 +166,7 @@ function SortHeaderButton({
 
 export function BusinessMatchesTable({
   business,
+  roundBatches,
   rows,
 }: BusinessMatchesTableProps) {
   const businessName = business.business;
@@ -177,7 +198,11 @@ export function BusinessMatchesTable({
     updates: Partial<
       Pick<
         BusinessMatchBoardRow,
-        "counterpartRole" | "interviewPublished" | "interviewSent" | "status"
+        | "counterpartRole"
+        | "interviewPublished"
+        | "interviewSent"
+        | "roundBatchId"
+        | "status"
       >
     >,
   ) {
@@ -193,6 +218,7 @@ export function BusinessMatchesTable({
       interviewPublished?: boolean;
       interviewSent?: boolean;
       matchId: number;
+      roundBatchId?: number | null;
       status?: MatchStatus | null;
     } = {
       matchId,
@@ -208,6 +234,10 @@ export function BusinessMatchesTable({
 
     if (updates.status !== undefined) {
       requestBody.status = updates.status;
+    }
+
+    if (updates.roundBatchId !== undefined) {
+      requestBody.roundBatchId = updates.roundBatchId;
     }
 
     if (updates.counterpartRole !== undefined) {
@@ -242,6 +272,9 @@ export function BusinessMatchesTable({
           counterpartRole?: BusinessMatchBoardRow["counterpartRole"];
           interviewPublished: boolean;
           interviewSent: boolean;
+          roundBatchId: number | null;
+          roundSequenceNumber: number | null;
+          roundStatus: RoundBatchStatus | null;
           status: MatchStatus | null;
         };
       } | null;
@@ -325,7 +358,8 @@ export function BusinessMatchesTable({
           </p>
           <p className="max-w-3xl text-sm leading-7 text-muted sm:text-base">
             Review every saved match connected to {businessName}. Filter to only
-            guests or hosts, and sort any column directly from the table header.
+            guests or hosts, sort any column directly from the table header,
+            and assign each match to the round where it belongs.
           </p>
         </div>
 
@@ -387,6 +421,9 @@ export function BusinessMatchesTable({
                       onSort={handleSort}
                       sortKey="companyName"
                     />
+                  </th>
+                  <th className="px-5 py-4 sm:px-6">
+                    <span>Round</span>
                   </th>
                   <th className="px-5 py-4 sm:px-6">
                     <SortHeaderButton
@@ -457,6 +494,50 @@ export function BusinessMatchesTable({
                               )}
                             </a>
                           ) : null}
+                        </div>
+                      </td>
+                      <td className="border-t border-border px-5 py-4 sm:px-6">
+                        <div className="relative inline-flex">
+                          <select
+                            aria-busy={isPending}
+                            className="min-h-10 min-w-44 appearance-none rounded-full border border-border bg-white/85 px-4 pr-10 pl-4 text-sm font-semibold text-foreground outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-60"
+                            disabled={isPending}
+                            onChange={(event) =>
+                              updateMatch(row.id, {
+                                roundBatchId: parseSelectedRoundBatchId(
+                                  event.target.value,
+                                ),
+                              })
+                            }
+                            value={
+                              row.roundBatchId === null
+                                ? ""
+                                : row.roundBatchId.toString()
+                            }
+                          >
+                            <option value="">
+                              {roundBatches.length === 0
+                                ? "No rounds available"
+                                : "No round"}
+                            </option>
+                            {roundBatches.map((roundBatch) => (
+                              <option key={roundBatch.id} value={roundBatch.id}>
+                                {formatRoundBatchLabel(roundBatch)}
+                              </option>
+                            ))}
+                          </select>
+                          <svg
+                            aria-hidden="true"
+                            className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 text-current"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="1.8"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="m7 10 5 5 5-5" />
+                          </svg>
                         </div>
                       </td>
                       <td className="border-t border-border px-5 py-4 sm:px-6">

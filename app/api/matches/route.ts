@@ -16,8 +16,15 @@ type UpdateMatchPayload = {
   interviewPublished?: unknown;
   interviewSent?: unknown;
   matchId?: unknown;
+  roundBatchId?: unknown;
   status?: unknown;
 };
+
+const invalidOptionalNumericId = Symbol("invalidOptionalNumericId");
+
+const roundNotFoundErrorMessage = "The selected round does not exist.";
+const roundConflictErrorMessage =
+  "That round already uses one of these businesses in a different pairing.";
 
 const matchStatusValues: MatchStatus[] = [
   "Not_Started",
@@ -41,6 +48,21 @@ function parseNumericId(value: unknown) {
   }
 
   return null;
+}
+
+function parseOptionalNumericId(
+  value: unknown,
+): number | null | undefined | typeof invalidOptionalNumericId {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (value === null || value === "") {
+    return null;
+  }
+
+  const parsedValue = parseNumericId(value);
+  return parsedValue === null ? invalidOptionalNumericId : parsedValue;
 }
 
 function parseOptionalBoolean(value: unknown) {
@@ -293,35 +315,39 @@ export async function PATCH(request: Request) {
   }
 
   const matchId = parseNumericId(payload.matchId);
-  const businessId = parseNumericId(payload.businessId);
+  const businessId = parseOptionalNumericId(payload.businessId);
   const counterpartRole = parseCounterpartRole(payload.counterpartRole);
   const interviewSent = parseOptionalBoolean(payload.interviewSent);
   const interviewPublished = parseOptionalBoolean(payload.interviewPublished);
+  const roundBatchId = parseOptionalNumericId(payload.roundBatchId);
   const status = parseMatchStatus(payload.status);
 
   if (
     matchId === null ||
-    businessId === null ||
+    businessId === invalidOptionalNumericId ||
     counterpartRole === null ||
     interviewSent === null ||
     interviewPublished === null ||
+    roundBatchId === invalidOptionalNumericId ||
     status === null
   ) {
     return NextResponse.json(
       {
         error:
-          "Please provide a valid match id, status, and boolean interview values.",
+          "Please provide a valid match id, round, status, and boolean interview values.",
       },
       { status: 400 },
     );
   }
 
   if (
-    counterpartRole !== undefined && businessId === undefined ||
-    interviewSent === undefined &&
-    interviewPublished === undefined &&
-    status === undefined &&
-    counterpartRole === undefined
+    (counterpartRole !== undefined &&
+      (businessId === undefined || businessId === null)) ||
+    (interviewSent === undefined &&
+      interviewPublished === undefined &&
+      status === undefined &&
+      counterpartRole === undefined &&
+      roundBatchId === undefined)
   ) {
     return NextResponse.json(
       { error: "No match updates were provided." },
@@ -336,6 +362,7 @@ export async function PATCH(request: Request) {
           guestId: true,
           hostId: true,
           id: true,
+          roundBatchId: true,
         },
         where: {
           id: matchId,
@@ -354,10 +381,15 @@ export async function PATCH(request: Request) {
 
       let nextHostId = existingMatch.hostId;
       let nextGuestId = existingMatch.guestId;
+      const nextRoundBatchId =
+        roundBatchId === undefined ? existingMatch.roundBatchId : roundBatchId;
+      const shouldSyncRoundAssignment =
+        roundBatchId !== undefined || counterpartRole !== undefined;
 
       if (counterpartRole !== undefined) {
         if (
           businessId === undefined ||
+          businessId === null ||
           (existingMatch.hostId !== businessId &&
             existingMatch.guestId !== businessId)
         ) {
@@ -401,7 +433,91 @@ export async function PATCH(request: Request) {
         }
       }
 
-      return database.match.update({
+      const previousAssignment = !shouldSyncRoundAssignment ||
+        existingMatch.roundBatchId === null
+          ? null
+          : await database.roundAssignment.findFirst({
+              select: {
+                id: true,
+              },
+              where: {
+                guestBusinessId: existingMatch.guestId,
+                hostBusinessId: existingMatch.hostId,
+                roundBatchId: existingMatch.roundBatchId,
+              },
+            });
+
+      let targetPairAssignment: { id: number } | null = null;
+
+      if (shouldSyncRoundAssignment && nextRoundBatchId !== null) {
+        const targetBatch = await database.roundBatch.findUnique({
+          select: {
+            id: true,
+          },
+          where: {
+            id: nextRoundBatchId,
+          },
+        });
+
+        if (!targetBatch) {
+          throw new Error(roundNotFoundErrorMessage);
+        }
+
+        targetPairAssignment = await database.roundAssignment.findFirst({
+          select: {
+            id: true,
+          },
+          where: {
+            guestBusinessId: nextGuestId,
+            hostBusinessId: nextHostId,
+            roundBatchId: nextRoundBatchId,
+          },
+        });
+
+        const excludedAssignmentIds = [
+          previousAssignment?.id,
+          targetPairAssignment?.id,
+        ].filter((assignmentId): assignmentId is number => assignmentId !== undefined);
+
+        const [hostConflict, guestConflict] = await Promise.all([
+          database.roundAssignment.findFirst({
+            select: {
+              id: true,
+            },
+            where: {
+              hostBusinessId: nextHostId,
+              id:
+                excludedAssignmentIds.length === 0
+                  ? undefined
+                  : {
+                      notIn: excludedAssignmentIds,
+                    },
+              roundBatchId: nextRoundBatchId,
+            },
+          }),
+          database.roundAssignment.findFirst({
+            select: {
+              id: true,
+            },
+            where: {
+              guestBusinessId: nextGuestId,
+              id:
+                excludedAssignmentIds.length === 0
+                  ? undefined
+                  : {
+                      notIn: excludedAssignmentIds,
+                    },
+              roundBatchId: nextRoundBatchId,
+            },
+          }),
+        ]);
+
+        if (hostConflict || guestConflict) {
+          throw new Error(roundConflictErrorMessage);
+        }
+      }
+
+      const updatedMatch = await database.match.update({
         data: {
           ...(interviewSent === undefined
             ? {}
@@ -409,6 +525,9 @@ export async function PATCH(request: Request) {
           ...(interviewPublished === undefined
             ? {}
             : { interview_published: interviewPublished }),
+          ...(roundBatchId === undefined
+            ? {}
+            : { roundBatchId: nextRoundBatchId }),
           ...(status === undefined ? {} : { status }),
           ...(nextHostId === existingMatch.hostId ? {} : { hostId: nextHostId }),
           ...(nextGuestId === existingMatch.guestId
@@ -421,12 +540,61 @@ export async function PATCH(request: Request) {
           id: true,
           interview_published: true,
           interview_sent: true,
+          roundBatch: {
+            select: {
+              id: true,
+              sequenceNumber: true,
+              status: true,
+            },
+          },
+          roundBatchId: true,
           status: true,
         },
         where: {
           id: matchId,
         },
       });
+
+      const roundAssignmentNeedsSync =
+        existingMatch.roundBatchId !== nextRoundBatchId ||
+        existingMatch.hostId !== nextHostId ||
+        existingMatch.guestId !== nextGuestId;
+
+      if (
+        shouldSyncRoundAssignment &&
+        previousAssignment &&
+        (nextRoundBatchId === null || roundAssignmentNeedsSync)
+      ) {
+        await database.roundAssignment.delete({
+          where: {
+            id: previousAssignment.id,
+          },
+        });
+      }
+
+      if (shouldSyncRoundAssignment && nextRoundBatchId !== null) {
+        if (targetPairAssignment) {
+          await database.roundAssignment.update({
+            data: {
+              source: "manual",
+            },
+            where: {
+              id: targetPairAssignment.id,
+            },
+          });
+        } else {
+          await database.roundAssignment.create({
+            data: {
+              guestBusinessId: nextGuestId,
+              hostBusinessId: nextHostId,
+              roundBatchId: nextRoundBatchId,
+              source: "manual",
+            },
+          });
+        }
+      }
+
+      return updatedMatch;
     });
 
     if (updatedMatch === null) {
@@ -442,7 +610,7 @@ export async function PATCH(request: Request) {
       {
         match: {
           counterpartRole:
-            businessId === undefined
+            businessId === undefined || businessId === null
               ? undefined
               : updatedMatch.hostId === businessId
                 ? "guest"
@@ -450,6 +618,9 @@ export async function PATCH(request: Request) {
           id: updatedMatch.id,
           interviewPublished: updatedMatch.interview_published ?? false,
           interviewSent: updatedMatch.interview_sent ?? false,
+          roundBatchId: updatedMatch.roundBatchId,
+          roundSequenceNumber: updatedMatch.roundBatch?.sequenceNumber ?? null,
+          roundStatus: updatedMatch.roundBatch?.status ?? null,
           status: updatedMatch.status,
         },
         message: "Match updated successfully.",
@@ -480,6 +651,21 @@ export async function PATCH(request: Request) {
         { status: 409 },
       );
     }
+
+    if (error instanceof Error && error.message === roundNotFoundErrorMessage) {
+      return NextResponse.json(
+        { error: roundNotFoundErrorMessage },
+        { status: 404 },
+      );
+    }
+
+    if (error instanceof Error && error.message === roundConflictErrorMessage) {
+      return NextResponse.json(
+        { error: roundConflictErrorMessage },
+        { status: 409 },
+      );
+    }
+
     return NextResponse.json(
       {
         error: `The match could not be updated. ${formatDatabaseError(error)}`,

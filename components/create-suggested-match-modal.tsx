@@ -8,9 +8,11 @@ import { ActionTooltip, CreateMatchIcon } from "@/components/action-icons";
 import { BusinessRoleBadge } from "@/components/business-role-badge";
 import type { BusinessOption } from "@/lib/matches";
 
+type MatchCreationBusiness = Pick<BusinessOption, "business" | "clientType" | "id">;
+
 type CreateSuggestedMatchModalProps = {
-  parentBusiness: BusinessOption;
-  suggestedBusiness: BusinessOption;
+  parentBusiness: MatchCreationBusiness;
+  suggestedBusiness: MatchCreationBusiness;
 };
 
 function getOtherBusinessId(

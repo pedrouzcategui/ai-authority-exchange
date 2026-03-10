@@ -196,3 +196,61 @@ export function EditLinksIcon({ className }: ActionIconProps) {
     </svg>
   );
 }
+
+export function PlusIcon({ className }: ActionIconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      className={getIconClassName(className)}
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.8"
+      viewBox="0 0 24 24"
+    >
+      <path d="M12 5v14" />
+      <path d="M5 12h14" />
+    </svg>
+  );
+}
+
+export function SaveIcon({ className }: ActionIconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      className={getIconClassName(className)}
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.8"
+      viewBox="0 0 24 24"
+    >
+      <path d="M5 6.5A1.5 1.5 0 0 1 6.5 5h9.9a1.5 1.5 0 0 1 1.06.44l1.1 1.1A1.5 1.5 0 0 1 19 7.6v9.9a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 17.5v-11Z" />
+      <path d="M8 5.5v4h7v-4" />
+      <path d="M8 19v-5.5h8V19" />
+    </svg>
+  );
+}
+
+export function TrashIcon({ className }: ActionIconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      className={getIconClassName(className)}
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.8"
+      viewBox="0 0 24 24"
+    >
+      <path d="M4.5 7h15" />
+      <path d="M9.5 4.5h5" />
+      <path d="M8 7v10.5A1.5 1.5 0 0 0 9.5 19h5a1.5 1.5 0 0 0 1.5-1.5V7" />
+      <path d="M10 10.5v5" />
+      <path d="M14 10.5v5" />
+    </svg>
+  );
+}
