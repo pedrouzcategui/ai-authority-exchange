@@ -11,6 +11,10 @@ model Business {
   id                            Int                  @id(map: "clients_pkey") @default(autoincrement()) @map("id")
   business                      String               @unique(map: "clients_name_unique_idx") @map("name")
   websiteUrl                    String?              @unique @map("website_url")
+  isActiveOnAiAuthorityExchange Boolean              @default(false) @map("is_active_on_ai_authority_exchange")
+  aiAuthorityExchangeJoinedAt   DateTime?            @map("ai_authority_exchange_joined_at") @db.Timestamp(6)
+  aiAuthorityExchangeRetiredAt  DateTime?            @map("ai_authority_exchange_retired_at") @db.Timestamp(6)
+  aiAuthorityExchangeRetiredInRoundBatchId Int?      @map("ai_authority_exchange_retired_in_round_batch_id")
   google_drive_folder_url       String?
   writer_411_document_url       String?
   discovery_packet_document_url String?
@@ -28,10 +32,14 @@ model Business {
   clientType                    BusinessRoleType?    @default(partner) @map("role")
   guestMatches                  Match[]              @relation("GuestBusiness")
   hostedMatches                 Match[]              @relation("HostBusiness")
+  aiAuthorityExchangeRetiredInRoundBatch RoundBatch? @relation("RetiredBusinesses", fields: [aiAuthorityExchangeRetiredInRoundBatchId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  incomingRoundAssignments      RoundAssignment[]    @relation("RoundAssignmentGuestBusiness")
+  outgoingRoundAssignments      RoundAssignment[]    @relation("RoundAssignmentHostBusiness")
   business_categories           business_categories? @relation(fields: [business_category_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "business_category_id")
   client_details                client_details?
   publications                  publications[]
 
+  @@index([aiAuthorityExchangeRetiredInRoundBatchId], map: "idx_businesses_retired_round_batch_id")
   @@index([related_category_ids], map: "idx_clients_related_categories", type: Gin)
   @@index([writing_topics], map: "idx_clients_writing_topics", type: Gin)
   @@map("businesses")
@@ -41,6 +49,7 @@ model Match {
   id                          Int          @id(map: "matches_pkey") @default(autoincrement()) @map("id")
   hostId                      Int          @map("publisher_id")
   guestId                     Int          @map("guest_id")
+  roundBatchId                Int?         @map("round_batch_id")
   status                      MatchStatus? @default(Not_Started) @map("status")
   interview_sent              Boolean?     @default(false)
   interview_published         Boolean?     @default(false)
@@ -50,9 +59,44 @@ model Match {
   created_at                  DateTime?    @default(now()) @db.Timestamp(6)
   guest                       Business     @relation("GuestBusiness", fields: [guestId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "matches_matched_id_fkey")
   host                        Business     @relation("HostBusiness", fields: [hostId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "matches_subject_id_fkey")
+  roundBatch                  RoundBatch?  @relation(fields: [roundBatchId], references: [id], onDelete: SetNull, onUpdate: NoAction)
 
   @@unique([hostId, guestId], map: "unique_match_pair")
+  @@index([roundBatchId], map: "idx_matches_round_batch_id")
   @@map("ai_authority_exchange_matches")
+}
+
+model RoundBatch {
+  id             Int              @id @default(autoincrement())
+  sequenceNumber Int              @unique @map("sequence_number")
+  status         RoundBatchStatus @default(draft)
+  appliedAt      DateTime?        @map("applied_at") @db.Timestamp(6)
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt      DateTime         @updatedAt @map("updated_at") @db.Timestamp(6)
+  assignments    RoundAssignment[]
+  matches        Match[]
+  retiredBusinesses Business[]    @relation("RetiredBusinesses")
+
+  @@map("ai_authority_exchange_round_batches")
+}
+
+model RoundAssignment {
+  id             Int                   @id @default(autoincrement())
+  roundBatchId   Int                   @map("round_batch_id")
+  hostBusinessId Int                   @map("host_business_id")
+  guestBusinessId Int                  @map("guest_business_id")
+  source         RoundAssignmentSource @default(auto)
+  createdAt      DateTime              @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt      DateTime              @updatedAt @map("updated_at") @db.Timestamp(6)
+  guestBusiness  Business              @relation("RoundAssignmentGuestBusiness", fields: [guestBusinessId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  hostBusiness   Business              @relation("RoundAssignmentHostBusiness", fields: [hostBusinessId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  roundBatch     RoundBatch            @relation(fields: [roundBatchId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([roundBatchId, hostBusinessId], map: "unique_round_assignment_host")
+  @@unique([roundBatchId, guestBusinessId], map: "unique_round_assignment_guest")
+  @@unique([roundBatchId, hostBusinessId, guestBusinessId], map: "unique_round_assignment_pair")
+  @@index([roundBatchId], map: "idx_round_assignments_round_batch_id")
+  @@map("ai_authority_exchange_round_assignments")
 }
 
 model business_categories {
@@ -204,4 +248,14 @@ enum page_type {
 enum publication_direction {
   subject_publishes_match
   match_publishes_subject
+}
+
+enum RoundBatchStatus {
+  draft
+  applied
+}
+
+enum RoundAssignmentSource {
+  auto
+  manual
 }

@@ -28,6 +28,16 @@ export type Business = Prisma.BusinessModel
  */
 export type Match = Prisma.MatchModel
 /**
+ * Model RoundBatch
+ * 
+ */
+export type RoundBatch = Prisma.RoundBatchModel
+/**
+ * Model RoundAssignment
+ * 
+ */
+export type RoundAssignment = Prisma.RoundAssignmentModel
+/**
  * Model business_categories
  * 
  */

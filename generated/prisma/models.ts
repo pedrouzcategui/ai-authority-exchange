@@ -10,6 +10,8 @@
  */
 export type * from './models/Business'
 export type * from './models/Match'
+export type * from './models/RoundBatch'
+export type * from './models/RoundAssignment'
 export type * from './models/business_categories'
 export type * from './models/client_details'
 export type * from './models/economic_sectors'

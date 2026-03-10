@@ -53,6 +53,8 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   Business: 'Business',
   Match: 'Match',
+  RoundBatch: 'RoundBatch',
+  RoundAssignment: 'RoundAssignment',
   business_categories: 'business_categories',
   client_details: 'client_details',
   economic_sectors: 'economic_sectors',
@@ -84,6 +86,10 @@ export const BusinessScalarFieldEnum = {
   id: 'id',
   business: 'business',
   websiteUrl: 'websiteUrl',
+  isActiveOnAiAuthorityExchange: 'isActiveOnAiAuthorityExchange',
+  aiAuthorityExchangeJoinedAt: 'aiAuthorityExchangeJoinedAt',
+  aiAuthorityExchangeRetiredAt: 'aiAuthorityExchangeRetiredAt',
+  aiAuthorityExchangeRetiredInRoundBatchId: 'aiAuthorityExchangeRetiredInRoundBatchId',
   google_drive_folder_url: 'google_drive_folder_url',
   writer_411_document_url: 'writer_411_document_url',
   discovery_packet_document_url: 'discovery_packet_document_url',
@@ -108,6 +114,7 @@ export const MatchScalarFieldEnum = {
   id: 'id',
   hostId: 'hostId',
   guestId: 'guestId',
+  roundBatchId: 'roundBatchId',
   status: 'status',
   interview_sent: 'interview_sent',
   interview_published: 'interview_published',
@@ -118,6 +125,31 @@ export const MatchScalarFieldEnum = {
 } as const
 
 export type MatchScalarFieldEnum = (typeof MatchScalarFieldEnum)[keyof typeof MatchScalarFieldEnum]
+
+
+export const RoundBatchScalarFieldEnum = {
+  id: 'id',
+  sequenceNumber: 'sequenceNumber',
+  status: 'status',
+  appliedAt: 'appliedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type RoundBatchScalarFieldEnum = (typeof RoundBatchScalarFieldEnum)[keyof typeof RoundBatchScalarFieldEnum]
+
+
+export const RoundAssignmentScalarFieldEnum = {
+  id: 'id',
+  roundBatchId: 'roundBatchId',
+  hostBusinessId: 'hostBusinessId',
+  guestBusinessId: 'guestBusinessId',
+  source: 'source',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type RoundAssignmentScalarFieldEnum = (typeof RoundAssignmentScalarFieldEnum)[keyof typeof RoundAssignmentScalarFieldEnum]
 
 
 export const Business_categoriesScalarFieldEnum = {

@@ -30,18 +30,21 @@ export type MatchAvgAggregateOutputType = {
   id: number | null
   hostId: number | null
   guestId: number | null
+  roundBatchId: number | null
 }
 
 export type MatchSumAggregateOutputType = {
   id: number | null
   hostId: number | null
   guestId: number | null
+  roundBatchId: number | null
 }
 
 export type MatchMinAggregateOutputType = {
   id: number | null
   hostId: number | null
   guestId: number | null
+  roundBatchId: number | null
   status: $Enums.MatchStatus | null
   interview_sent: boolean | null
   interview_published: boolean | null
@@ -55,6 +58,7 @@ export type MatchMaxAggregateOutputType = {
   id: number | null
   hostId: number | null
   guestId: number | null
+  roundBatchId: number | null
   status: $Enums.MatchStatus | null
   interview_sent: boolean | null
   interview_published: boolean | null
@@ -68,6 +72,7 @@ export type MatchCountAggregateOutputType = {
   id: number
   hostId: number
   guestId: number
+  roundBatchId: number
   status: number
   interview_sent: number
   interview_published: number
@@ -83,18 +88,21 @@ export type MatchAvgAggregateInputType = {
   id?: true
   hostId?: true
   guestId?: true
+  roundBatchId?: true
 }
 
 export type MatchSumAggregateInputType = {
   id?: true
   hostId?: true
   guestId?: true
+  roundBatchId?: true
 }
 
 export type MatchMinAggregateInputType = {
   id?: true
   hostId?: true
   guestId?: true
+  roundBatchId?: true
   status?: true
   interview_sent?: true
   interview_published?: true
@@ -108,6 +116,7 @@ export type MatchMaxAggregateInputType = {
   id?: true
   hostId?: true
   guestId?: true
+  roundBatchId?: true
   status?: true
   interview_sent?: true
   interview_published?: true
@@ -121,6 +130,7 @@ export type MatchCountAggregateInputType = {
   id?: true
   hostId?: true
   guestId?: true
+  roundBatchId?: true
   status?: true
   interview_sent?: true
   interview_published?: true
@@ -221,6 +231,7 @@ export type MatchGroupByOutputType = {
   id: number
   hostId: number
   guestId: number
+  roundBatchId: number | null
   status: $Enums.MatchStatus | null
   interview_sent: boolean | null
   interview_published: boolean | null
@@ -257,6 +268,7 @@ export type MatchWhereInput = {
   id?: Prisma.IntFilter<"Match"> | number
   hostId?: Prisma.IntFilter<"Match"> | number
   guestId?: Prisma.IntFilter<"Match"> | number
+  roundBatchId?: Prisma.IntNullableFilter<"Match"> | number | null
   status?: Prisma.EnumMatchStatusNullableFilter<"Match"> | $Enums.MatchStatus | null
   interview_sent?: Prisma.BoolNullableFilter<"Match"> | boolean | null
   interview_published?: Prisma.BoolNullableFilter<"Match"> | boolean | null
@@ -266,12 +278,14 @@ export type MatchWhereInput = {
   created_at?: Prisma.DateTimeNullableFilter<"Match"> | Date | string | null
   guest?: Prisma.XOR<Prisma.BusinessScalarRelationFilter, Prisma.BusinessWhereInput>
   host?: Prisma.XOR<Prisma.BusinessScalarRelationFilter, Prisma.BusinessWhereInput>
+  roundBatch?: Prisma.XOR<Prisma.RoundBatchNullableScalarRelationFilter, Prisma.RoundBatchWhereInput> | null
 }
 
 export type MatchOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   hostId?: Prisma.SortOrder
   guestId?: Prisma.SortOrder
+  roundBatchId?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrderInput | Prisma.SortOrder
   interview_sent?: Prisma.SortOrderInput | Prisma.SortOrder
   interview_published?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -281,6 +295,7 @@ export type MatchOrderByWithRelationInput = {
   created_at?: Prisma.SortOrderInput | Prisma.SortOrder
   guest?: Prisma.BusinessOrderByWithRelationInput
   host?: Prisma.BusinessOrderByWithRelationInput
+  roundBatch?: Prisma.RoundBatchOrderByWithRelationInput
 }
 
 export type MatchWhereUniqueInput = Prisma.AtLeast<{
@@ -291,6 +306,7 @@ export type MatchWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.MatchWhereInput | Prisma.MatchWhereInput[]
   hostId?: Prisma.IntFilter<"Match"> | number
   guestId?: Prisma.IntFilter<"Match"> | number
+  roundBatchId?: Prisma.IntNullableFilter<"Match"> | number | null
   status?: Prisma.EnumMatchStatusNullableFilter<"Match"> | $Enums.MatchStatus | null
   interview_sent?: Prisma.BoolNullableFilter<"Match"> | boolean | null
   interview_published?: Prisma.BoolNullableFilter<"Match"> | boolean | null
@@ -300,12 +316,14 @@ export type MatchWhereUniqueInput = Prisma.AtLeast<{
   created_at?: Prisma.DateTimeNullableFilter<"Match"> | Date | string | null
   guest?: Prisma.XOR<Prisma.BusinessScalarRelationFilter, Prisma.BusinessWhereInput>
   host?: Prisma.XOR<Prisma.BusinessScalarRelationFilter, Prisma.BusinessWhereInput>
+  roundBatch?: Prisma.XOR<Prisma.RoundBatchNullableScalarRelationFilter, Prisma.RoundBatchWhereInput> | null
 }, "id" | "hostId_guestId">
 
 export type MatchOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   hostId?: Prisma.SortOrder
   guestId?: Prisma.SortOrder
+  roundBatchId?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrderInput | Prisma.SortOrder
   interview_sent?: Prisma.SortOrderInput | Prisma.SortOrder
   interview_published?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -327,6 +345,7 @@ export type MatchScalarWhereWithAggregatesInput = {
   id?: Prisma.IntWithAggregatesFilter<"Match"> | number
   hostId?: Prisma.IntWithAggregatesFilter<"Match"> | number
   guestId?: Prisma.IntWithAggregatesFilter<"Match"> | number
+  roundBatchId?: Prisma.IntNullableWithAggregatesFilter<"Match"> | number | null
   status?: Prisma.EnumMatchStatusNullableWithAggregatesFilter<"Match"> | $Enums.MatchStatus | null
   interview_sent?: Prisma.BoolNullableWithAggregatesFilter<"Match"> | boolean | null
   interview_published?: Prisma.BoolNullableWithAggregatesFilter<"Match"> | boolean | null
@@ -346,12 +365,14 @@ export type MatchCreateInput = {
   created_at?: Date | string | null
   guest: Prisma.BusinessCreateNestedOneWithoutGuestMatchesInput
   host: Prisma.BusinessCreateNestedOneWithoutHostedMatchesInput
+  roundBatch?: Prisma.RoundBatchCreateNestedOneWithoutMatchesInput
 }
 
 export type MatchUncheckedCreateInput = {
   id?: number
   hostId: number
   guestId: number
+  roundBatchId?: number | null
   status?: $Enums.MatchStatus | null
   interview_sent?: boolean | null
   interview_published?: boolean | null
@@ -371,12 +392,14 @@ export type MatchUpdateInput = {
   created_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   guest?: Prisma.BusinessUpdateOneRequiredWithoutGuestMatchesNestedInput
   host?: Prisma.BusinessUpdateOneRequiredWithoutHostedMatchesNestedInput
+  roundBatch?: Prisma.RoundBatchUpdateOneWithoutMatchesNestedInput
 }
 
 export type MatchUncheckedUpdateInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   hostId?: Prisma.IntFieldUpdateOperationsInput | number
   guestId?: Prisma.IntFieldUpdateOperationsInput | number
+  roundBatchId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   status?: Prisma.NullableEnumMatchStatusFieldUpdateOperationsInput | $Enums.MatchStatus | null
   interview_sent?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   interview_published?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -390,6 +413,7 @@ export type MatchCreateManyInput = {
   id?: number
   hostId: number
   guestId: number
+  roundBatchId?: number | null
   status?: $Enums.MatchStatus | null
   interview_sent?: boolean | null
   interview_published?: boolean | null
@@ -413,6 +437,7 @@ export type MatchUncheckedUpdateManyInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   hostId?: Prisma.IntFieldUpdateOperationsInput | number
   guestId?: Prisma.IntFieldUpdateOperationsInput | number
+  roundBatchId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   status?: Prisma.NullableEnumMatchStatusFieldUpdateOperationsInput | $Enums.MatchStatus | null
   interview_sent?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   interview_published?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -441,6 +466,7 @@ export type MatchCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   hostId?: Prisma.SortOrder
   guestId?: Prisma.SortOrder
+  roundBatchId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   interview_sent?: Prisma.SortOrder
   interview_published?: Prisma.SortOrder
@@ -454,12 +480,14 @@ export type MatchAvgOrderByAggregateInput = {
   id?: Prisma.SortOrder
   hostId?: Prisma.SortOrder
   guestId?: Prisma.SortOrder
+  roundBatchId?: Prisma.SortOrder
 }
 
 export type MatchMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   hostId?: Prisma.SortOrder
   guestId?: Prisma.SortOrder
+  roundBatchId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   interview_sent?: Prisma.SortOrder
   interview_published?: Prisma.SortOrder
@@ -473,6 +501,7 @@ export type MatchMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   hostId?: Prisma.SortOrder
   guestId?: Prisma.SortOrder
+  roundBatchId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   interview_sent?: Prisma.SortOrder
   interview_published?: Prisma.SortOrder
@@ -486,6 +515,7 @@ export type MatchSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
   hostId?: Prisma.SortOrder
   guestId?: Prisma.SortOrder
+  roundBatchId?: Prisma.SortOrder
 }
 
 export type MatchCreateNestedManyWithoutGuestInput = {
@@ -580,8 +610,46 @@ export type NullableBoolFieldUpdateOperationsInput = {
   set?: boolean | null
 }
 
-export type NullableDateTimeFieldUpdateOperationsInput = {
-  set?: Date | string | null
+export type MatchCreateNestedManyWithoutRoundBatchInput = {
+  create?: Prisma.XOR<Prisma.MatchCreateWithoutRoundBatchInput, Prisma.MatchUncheckedCreateWithoutRoundBatchInput> | Prisma.MatchCreateWithoutRoundBatchInput[] | Prisma.MatchUncheckedCreateWithoutRoundBatchInput[]
+  connectOrCreate?: Prisma.MatchCreateOrConnectWithoutRoundBatchInput | Prisma.MatchCreateOrConnectWithoutRoundBatchInput[]
+  createMany?: Prisma.MatchCreateManyRoundBatchInputEnvelope
+  connect?: Prisma.MatchWhereUniqueInput | Prisma.MatchWhereUniqueInput[]
+}
+
+export type MatchUncheckedCreateNestedManyWithoutRoundBatchInput = {
+  create?: Prisma.XOR<Prisma.MatchCreateWithoutRoundBatchInput, Prisma.MatchUncheckedCreateWithoutRoundBatchInput> | Prisma.MatchCreateWithoutRoundBatchInput[] | Prisma.MatchUncheckedCreateWithoutRoundBatchInput[]
+  connectOrCreate?: Prisma.MatchCreateOrConnectWithoutRoundBatchInput | Prisma.MatchCreateOrConnectWithoutRoundBatchInput[]
+  createMany?: Prisma.MatchCreateManyRoundBatchInputEnvelope
+  connect?: Prisma.MatchWhereUniqueInput | Prisma.MatchWhereUniqueInput[]
+}
+
+export type MatchUpdateManyWithoutRoundBatchNestedInput = {
+  create?: Prisma.XOR<Prisma.MatchCreateWithoutRoundBatchInput, Prisma.MatchUncheckedCreateWithoutRoundBatchInput> | Prisma.MatchCreateWithoutRoundBatchInput[] | Prisma.MatchUncheckedCreateWithoutRoundBatchInput[]
+  connectOrCreate?: Prisma.MatchCreateOrConnectWithoutRoundBatchInput | Prisma.MatchCreateOrConnectWithoutRoundBatchInput[]
+  upsert?: Prisma.MatchUpsertWithWhereUniqueWithoutRoundBatchInput | Prisma.MatchUpsertWithWhereUniqueWithoutRoundBatchInput[]
+  createMany?: Prisma.MatchCreateManyRoundBatchInputEnvelope
+  set?: Prisma.MatchWhereUniqueInput | Prisma.MatchWhereUniqueInput[]
+  disconnect?: Prisma.MatchWhereUniqueInput | Prisma.MatchWhereUniqueInput[]
+  delete?: Prisma.MatchWhereUniqueInput | Prisma.MatchWhereUniqueInput[]
+  connect?: Prisma.MatchWhereUniqueInput | Prisma.MatchWhereUniqueInput[]
+  update?: Prisma.MatchUpdateWithWhereUniqueWithoutRoundBatchInput | Prisma.MatchUpdateWithWhereUniqueWithoutRoundBatchInput[]
+  updateMany?: Prisma.MatchUpdateManyWithWhereWithoutRoundBatchInput | Prisma.MatchUpdateManyWithWhereWithoutRoundBatchInput[]
+  deleteMany?: Prisma.MatchScalarWhereInput | Prisma.MatchScalarWhereInput[]
+}
+
+export type MatchUncheckedUpdateManyWithoutRoundBatchNestedInput = {
+  create?: Prisma.XOR<Prisma.MatchCreateWithoutRoundBatchInput, Prisma.MatchUncheckedCreateWithoutRoundBatchInput> | Prisma.MatchCreateWithoutRoundBatchInput[] | Prisma.MatchUncheckedCreateWithoutRoundBatchInput[]
+  connectOrCreate?: Prisma.MatchCreateOrConnectWithoutRoundBatchInput | Prisma.MatchCreateOrConnectWithoutRoundBatchInput[]
+  upsert?: Prisma.MatchUpsertWithWhereUniqueWithoutRoundBatchInput | Prisma.MatchUpsertWithWhereUniqueWithoutRoundBatchInput[]
+  createMany?: Prisma.MatchCreateManyRoundBatchInputEnvelope
+  set?: Prisma.MatchWhereUniqueInput | Prisma.MatchWhereUniqueInput[]
+  disconnect?: Prisma.MatchWhereUniqueInput | Prisma.MatchWhereUniqueInput[]
+  delete?: Prisma.MatchWhereUniqueInput | Prisma.MatchWhereUniqueInput[]
+  connect?: Prisma.MatchWhereUniqueInput | Prisma.MatchWhereUniqueInput[]
+  update?: Prisma.MatchUpdateWithWhereUniqueWithoutRoundBatchInput | Prisma.MatchUpdateWithWhereUniqueWithoutRoundBatchInput[]
+  updateMany?: Prisma.MatchUpdateManyWithWhereWithoutRoundBatchInput | Prisma.MatchUpdateManyWithWhereWithoutRoundBatchInput[]
+  deleteMany?: Prisma.MatchScalarWhereInput | Prisma.MatchScalarWhereInput[]
 }
 
 export type MatchCreateWithoutGuestInput = {
@@ -593,11 +661,13 @@ export type MatchCreateWithoutGuestInput = {
   notes?: string | null
   created_at?: Date | string | null
   host: Prisma.BusinessCreateNestedOneWithoutHostedMatchesInput
+  roundBatch?: Prisma.RoundBatchCreateNestedOneWithoutMatchesInput
 }
 
 export type MatchUncheckedCreateWithoutGuestInput = {
   id?: number
   hostId: number
+  roundBatchId?: number | null
   status?: $Enums.MatchStatus | null
   interview_sent?: boolean | null
   interview_published?: boolean | null
@@ -626,11 +696,13 @@ export type MatchCreateWithoutHostInput = {
   notes?: string | null
   created_at?: Date | string | null
   guest: Prisma.BusinessCreateNestedOneWithoutGuestMatchesInput
+  roundBatch?: Prisma.RoundBatchCreateNestedOneWithoutMatchesInput
 }
 
 export type MatchUncheckedCreateWithoutHostInput = {
   id?: number
   guestId: number
+  roundBatchId?: number | null
   status?: $Enums.MatchStatus | null
   interview_sent?: boolean | null
   interview_published?: boolean | null
@@ -673,6 +745,7 @@ export type MatchScalarWhereInput = {
   id?: Prisma.IntFilter<"Match"> | number
   hostId?: Prisma.IntFilter<"Match"> | number
   guestId?: Prisma.IntFilter<"Match"> | number
+  roundBatchId?: Prisma.IntNullableFilter<"Match"> | number | null
   status?: Prisma.EnumMatchStatusNullableFilter<"Match"> | $Enums.MatchStatus | null
   interview_sent?: Prisma.BoolNullableFilter<"Match"> | boolean | null
   interview_published?: Prisma.BoolNullableFilter<"Match"> | boolean | null
@@ -698,9 +771,61 @@ export type MatchUpdateManyWithWhereWithoutHostInput = {
   data: Prisma.XOR<Prisma.MatchUpdateManyMutationInput, Prisma.MatchUncheckedUpdateManyWithoutHostInput>
 }
 
+export type MatchCreateWithoutRoundBatchInput = {
+  status?: $Enums.MatchStatus | null
+  interview_sent?: boolean | null
+  interview_published?: boolean | null
+  partner_interview_received?: boolean | null
+  partner_interview_published?: boolean | null
+  notes?: string | null
+  created_at?: Date | string | null
+  guest: Prisma.BusinessCreateNestedOneWithoutGuestMatchesInput
+  host: Prisma.BusinessCreateNestedOneWithoutHostedMatchesInput
+}
+
+export type MatchUncheckedCreateWithoutRoundBatchInput = {
+  id?: number
+  hostId: number
+  guestId: number
+  status?: $Enums.MatchStatus | null
+  interview_sent?: boolean | null
+  interview_published?: boolean | null
+  partner_interview_received?: boolean | null
+  partner_interview_published?: boolean | null
+  notes?: string | null
+  created_at?: Date | string | null
+}
+
+export type MatchCreateOrConnectWithoutRoundBatchInput = {
+  where: Prisma.MatchWhereUniqueInput
+  create: Prisma.XOR<Prisma.MatchCreateWithoutRoundBatchInput, Prisma.MatchUncheckedCreateWithoutRoundBatchInput>
+}
+
+export type MatchCreateManyRoundBatchInputEnvelope = {
+  data: Prisma.MatchCreateManyRoundBatchInput | Prisma.MatchCreateManyRoundBatchInput[]
+  skipDuplicates?: boolean
+}
+
+export type MatchUpsertWithWhereUniqueWithoutRoundBatchInput = {
+  where: Prisma.MatchWhereUniqueInput
+  update: Prisma.XOR<Prisma.MatchUpdateWithoutRoundBatchInput, Prisma.MatchUncheckedUpdateWithoutRoundBatchInput>
+  create: Prisma.XOR<Prisma.MatchCreateWithoutRoundBatchInput, Prisma.MatchUncheckedCreateWithoutRoundBatchInput>
+}
+
+export type MatchUpdateWithWhereUniqueWithoutRoundBatchInput = {
+  where: Prisma.MatchWhereUniqueInput
+  data: Prisma.XOR<Prisma.MatchUpdateWithoutRoundBatchInput, Prisma.MatchUncheckedUpdateWithoutRoundBatchInput>
+}
+
+export type MatchUpdateManyWithWhereWithoutRoundBatchInput = {
+  where: Prisma.MatchScalarWhereInput
+  data: Prisma.XOR<Prisma.MatchUpdateManyMutationInput, Prisma.MatchUncheckedUpdateManyWithoutRoundBatchInput>
+}
+
 export type MatchCreateManyGuestInput = {
   id?: number
   hostId: number
+  roundBatchId?: number | null
   status?: $Enums.MatchStatus | null
   interview_sent?: boolean | null
   interview_published?: boolean | null
@@ -713,6 +838,7 @@ export type MatchCreateManyGuestInput = {
 export type MatchCreateManyHostInput = {
   id?: number
   guestId: number
+  roundBatchId?: number | null
   status?: $Enums.MatchStatus | null
   interview_sent?: boolean | null
   interview_published?: boolean | null
@@ -731,11 +857,13 @@ export type MatchUpdateWithoutGuestInput = {
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   host?: Prisma.BusinessUpdateOneRequiredWithoutHostedMatchesNestedInput
+  roundBatch?: Prisma.RoundBatchUpdateOneWithoutMatchesNestedInput
 }
 
 export type MatchUncheckedUpdateWithoutGuestInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   hostId?: Prisma.IntFieldUpdateOperationsInput | number
+  roundBatchId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   status?: Prisma.NullableEnumMatchStatusFieldUpdateOperationsInput | $Enums.MatchStatus | null
   interview_sent?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   interview_published?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -748,6 +876,7 @@ export type MatchUncheckedUpdateWithoutGuestInput = {
 export type MatchUncheckedUpdateManyWithoutGuestInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   hostId?: Prisma.IntFieldUpdateOperationsInput | number
+  roundBatchId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   status?: Prisma.NullableEnumMatchStatusFieldUpdateOperationsInput | $Enums.MatchStatus | null
   interview_sent?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   interview_published?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -766,11 +895,13 @@ export type MatchUpdateWithoutHostInput = {
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   guest?: Prisma.BusinessUpdateOneRequiredWithoutGuestMatchesNestedInput
+  roundBatch?: Prisma.RoundBatchUpdateOneWithoutMatchesNestedInput
 }
 
 export type MatchUncheckedUpdateWithoutHostInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   guestId?: Prisma.IntFieldUpdateOperationsInput | number
+  roundBatchId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   status?: Prisma.NullableEnumMatchStatusFieldUpdateOperationsInput | $Enums.MatchStatus | null
   interview_sent?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   interview_published?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -782,6 +913,58 @@ export type MatchUncheckedUpdateWithoutHostInput = {
 
 export type MatchUncheckedUpdateManyWithoutHostInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  guestId?: Prisma.IntFieldUpdateOperationsInput | number
+  roundBatchId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.NullableEnumMatchStatusFieldUpdateOperationsInput | $Enums.MatchStatus | null
+  interview_sent?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  interview_published?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  partner_interview_received?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  partner_interview_published?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+}
+
+export type MatchCreateManyRoundBatchInput = {
+  id?: number
+  hostId: number
+  guestId: number
+  status?: $Enums.MatchStatus | null
+  interview_sent?: boolean | null
+  interview_published?: boolean | null
+  partner_interview_received?: boolean | null
+  partner_interview_published?: boolean | null
+  notes?: string | null
+  created_at?: Date | string | null
+}
+
+export type MatchUpdateWithoutRoundBatchInput = {
+  status?: Prisma.NullableEnumMatchStatusFieldUpdateOperationsInput | $Enums.MatchStatus | null
+  interview_sent?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  interview_published?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  partner_interview_received?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  partner_interview_published?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  guest?: Prisma.BusinessUpdateOneRequiredWithoutGuestMatchesNestedInput
+  host?: Prisma.BusinessUpdateOneRequiredWithoutHostedMatchesNestedInput
+}
+
+export type MatchUncheckedUpdateWithoutRoundBatchInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  hostId?: Prisma.IntFieldUpdateOperationsInput | number
+  guestId?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.NullableEnumMatchStatusFieldUpdateOperationsInput | $Enums.MatchStatus | null
+  interview_sent?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  interview_published?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  partner_interview_received?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  partner_interview_published?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+}
+
+export type MatchUncheckedUpdateManyWithoutRoundBatchInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  hostId?: Prisma.IntFieldUpdateOperationsInput | number
   guestId?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.NullableEnumMatchStatusFieldUpdateOperationsInput | $Enums.MatchStatus | null
   interview_sent?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -798,6 +981,7 @@ export type MatchSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   id?: boolean
   hostId?: boolean
   guestId?: boolean
+  roundBatchId?: boolean
   status?: boolean
   interview_sent?: boolean
   interview_published?: boolean
@@ -807,12 +991,14 @@ export type MatchSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   created_at?: boolean
   guest?: boolean | Prisma.BusinessDefaultArgs<ExtArgs>
   host?: boolean | Prisma.BusinessDefaultArgs<ExtArgs>
+  roundBatch?: boolean | Prisma.Match$roundBatchArgs<ExtArgs>
 }, ExtArgs["result"]["match"]>
 
 export type MatchSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   hostId?: boolean
   guestId?: boolean
+  roundBatchId?: boolean
   status?: boolean
   interview_sent?: boolean
   interview_published?: boolean
@@ -822,12 +1008,14 @@ export type MatchSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   created_at?: boolean
   guest?: boolean | Prisma.BusinessDefaultArgs<ExtArgs>
   host?: boolean | Prisma.BusinessDefaultArgs<ExtArgs>
+  roundBatch?: boolean | Prisma.Match$roundBatchArgs<ExtArgs>
 }, ExtArgs["result"]["match"]>
 
 export type MatchSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   hostId?: boolean
   guestId?: boolean
+  roundBatchId?: boolean
   status?: boolean
   interview_sent?: boolean
   interview_published?: boolean
@@ -837,12 +1025,14 @@ export type MatchSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   created_at?: boolean
   guest?: boolean | Prisma.BusinessDefaultArgs<ExtArgs>
   host?: boolean | Prisma.BusinessDefaultArgs<ExtArgs>
+  roundBatch?: boolean | Prisma.Match$roundBatchArgs<ExtArgs>
 }, ExtArgs["result"]["match"]>
 
 export type MatchSelectScalar = {
   id?: boolean
   hostId?: boolean
   guestId?: boolean
+  roundBatchId?: boolean
   status?: boolean
   interview_sent?: boolean
   interview_published?: boolean
@@ -852,18 +1042,21 @@ export type MatchSelectScalar = {
   created_at?: boolean
 }
 
-export type MatchOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "hostId" | "guestId" | "status" | "interview_sent" | "interview_published" | "partner_interview_received" | "partner_interview_published" | "notes" | "created_at", ExtArgs["result"]["match"]>
+export type MatchOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "hostId" | "guestId" | "roundBatchId" | "status" | "interview_sent" | "interview_published" | "partner_interview_received" | "partner_interview_published" | "notes" | "created_at", ExtArgs["result"]["match"]>
 export type MatchInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   guest?: boolean | Prisma.BusinessDefaultArgs<ExtArgs>
   host?: boolean | Prisma.BusinessDefaultArgs<ExtArgs>
+  roundBatch?: boolean | Prisma.Match$roundBatchArgs<ExtArgs>
 }
 export type MatchIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   guest?: boolean | Prisma.BusinessDefaultArgs<ExtArgs>
   host?: boolean | Prisma.BusinessDefaultArgs<ExtArgs>
+  roundBatch?: boolean | Prisma.Match$roundBatchArgs<ExtArgs>
 }
 export type MatchIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   guest?: boolean | Prisma.BusinessDefaultArgs<ExtArgs>
   host?: boolean | Prisma.BusinessDefaultArgs<ExtArgs>
+  roundBatch?: boolean | Prisma.Match$roundBatchArgs<ExtArgs>
 }
 
 export type $MatchPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -871,11 +1064,13 @@ export type $MatchPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   objects: {
     guest: Prisma.$BusinessPayload<ExtArgs>
     host: Prisma.$BusinessPayload<ExtArgs>
+    roundBatch: Prisma.$RoundBatchPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
     hostId: number
     guestId: number
+    roundBatchId: number | null
     status: $Enums.MatchStatus | null
     interview_sent: boolean | null
     interview_published: boolean | null
@@ -1279,6 +1474,7 @@ export interface Prisma__MatchClient<T, Null = never, ExtArgs extends runtime.Ty
   readonly [Symbol.toStringTag]: "PrismaPromise"
   guest<T extends Prisma.BusinessDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.BusinessDefaultArgs<ExtArgs>>): Prisma.Prisma__BusinessClient<runtime.Types.Result.GetResult<Prisma.$BusinessPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   host<T extends Prisma.BusinessDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.BusinessDefaultArgs<ExtArgs>>): Prisma.Prisma__BusinessClient<runtime.Types.Result.GetResult<Prisma.$BusinessPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  roundBatch<T extends Prisma.Match$roundBatchArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Match$roundBatchArgs<ExtArgs>>): Prisma.Prisma__RoundBatchClient<runtime.Types.Result.GetResult<Prisma.$RoundBatchPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1311,6 +1507,7 @@ export interface MatchFieldRefs {
   readonly id: Prisma.FieldRef<"Match", 'Int'>
   readonly hostId: Prisma.FieldRef<"Match", 'Int'>
   readonly guestId: Prisma.FieldRef<"Match", 'Int'>
+  readonly roundBatchId: Prisma.FieldRef<"Match", 'Int'>
   readonly status: Prisma.FieldRef<"Match", 'MatchStatus'>
   readonly interview_sent: Prisma.FieldRef<"Match", 'Boolean'>
   readonly interview_published: Prisma.FieldRef<"Match", 'Boolean'>
@@ -1711,6 +1908,25 @@ export type MatchDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Interna
    * Limit how many Matches to delete.
    */
   limit?: number
+}
+
+/**
+ * Match.roundBatch
+ */
+export type Match$roundBatchArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the RoundBatch
+   */
+  select?: Prisma.RoundBatchSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the RoundBatch
+   */
+  omit?: Prisma.RoundBatchOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.RoundBatchInclude<ExtArgs> | null
+  where?: Prisma.RoundBatchWhereInput
 }
 
 /**

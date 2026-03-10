@@ -386,6 +386,8 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 export const ModelName = {
   Business: 'Business',
   Match: 'Match',
+  RoundBatch: 'RoundBatch',
+  RoundAssignment: 'RoundAssignment',
   business_categories: 'business_categories',
   client_details: 'client_details',
   economic_sectors: 'economic_sectors',
@@ -410,7 +412,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "business" | "match" | "business_categories" | "client_details" | "economic_sectors" | "publications" | "users" | "user" | "account" | "session" | "verificationToken"
+    modelProps: "business" | "match" | "roundBatch" | "roundAssignment" | "business_categories" | "client_details" | "economic_sectors" | "publications" | "users" | "user" | "account" | "session" | "verificationToken"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -559,6 +561,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.MatchCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.MatchCountAggregateOutputType> | number
+        }
+      }
+    }
+    RoundBatch: {
+      payload: Prisma.$RoundBatchPayload<ExtArgs>
+      fields: Prisma.RoundBatchFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.RoundBatchFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RoundBatchPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.RoundBatchFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RoundBatchPayload>
+        }
+        findFirst: {
+          args: Prisma.RoundBatchFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RoundBatchPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.RoundBatchFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RoundBatchPayload>
+        }
+        findMany: {
+          args: Prisma.RoundBatchFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RoundBatchPayload>[]
+        }
+        create: {
+          args: Prisma.RoundBatchCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RoundBatchPayload>
+        }
+        createMany: {
+          args: Prisma.RoundBatchCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.RoundBatchCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RoundBatchPayload>[]
+        }
+        delete: {
+          args: Prisma.RoundBatchDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RoundBatchPayload>
+        }
+        update: {
+          args: Prisma.RoundBatchUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RoundBatchPayload>
+        }
+        deleteMany: {
+          args: Prisma.RoundBatchDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.RoundBatchUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.RoundBatchUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RoundBatchPayload>[]
+        }
+        upsert: {
+          args: Prisma.RoundBatchUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RoundBatchPayload>
+        }
+        aggregate: {
+          args: Prisma.RoundBatchAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateRoundBatch>
+        }
+        groupBy: {
+          args: Prisma.RoundBatchGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.RoundBatchGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.RoundBatchCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.RoundBatchCountAggregateOutputType> | number
+        }
+      }
+    }
+    RoundAssignment: {
+      payload: Prisma.$RoundAssignmentPayload<ExtArgs>
+      fields: Prisma.RoundAssignmentFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.RoundAssignmentFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RoundAssignmentPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.RoundAssignmentFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RoundAssignmentPayload>
+        }
+        findFirst: {
+          args: Prisma.RoundAssignmentFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RoundAssignmentPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.RoundAssignmentFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RoundAssignmentPayload>
+        }
+        findMany: {
+          args: Prisma.RoundAssignmentFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RoundAssignmentPayload>[]
+        }
+        create: {
+          args: Prisma.RoundAssignmentCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RoundAssignmentPayload>
+        }
+        createMany: {
+          args: Prisma.RoundAssignmentCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.RoundAssignmentCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RoundAssignmentPayload>[]
+        }
+        delete: {
+          args: Prisma.RoundAssignmentDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RoundAssignmentPayload>
+        }
+        update: {
+          args: Prisma.RoundAssignmentUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RoundAssignmentPayload>
+        }
+        deleteMany: {
+          args: Prisma.RoundAssignmentDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.RoundAssignmentUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.RoundAssignmentUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RoundAssignmentPayload>[]
+        }
+        upsert: {
+          args: Prisma.RoundAssignmentUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RoundAssignmentPayload>
+        }
+        aggregate: {
+          args: Prisma.RoundAssignmentAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateRoundAssignment>
+        }
+        groupBy: {
+          args: Prisma.RoundAssignmentGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.RoundAssignmentGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.RoundAssignmentCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.RoundAssignmentCountAggregateOutputType> | number
         }
       }
     }
@@ -1271,6 +1421,10 @@ export const BusinessScalarFieldEnum = {
   id: 'id',
   business: 'business',
   websiteUrl: 'websiteUrl',
+  isActiveOnAiAuthorityExchange: 'isActiveOnAiAuthorityExchange',
+  aiAuthorityExchangeJoinedAt: 'aiAuthorityExchangeJoinedAt',
+  aiAuthorityExchangeRetiredAt: 'aiAuthorityExchangeRetiredAt',
+  aiAuthorityExchangeRetiredInRoundBatchId: 'aiAuthorityExchangeRetiredInRoundBatchId',
   google_drive_folder_url: 'google_drive_folder_url',
   writer_411_document_url: 'writer_411_document_url',
   discovery_packet_document_url: 'discovery_packet_document_url',
@@ -1295,6 +1449,7 @@ export const MatchScalarFieldEnum = {
   id: 'id',
   hostId: 'hostId',
   guestId: 'guestId',
+  roundBatchId: 'roundBatchId',
   status: 'status',
   interview_sent: 'interview_sent',
   interview_published: 'interview_published',
@@ -1305,6 +1460,31 @@ export const MatchScalarFieldEnum = {
 } as const
 
 export type MatchScalarFieldEnum = (typeof MatchScalarFieldEnum)[keyof typeof MatchScalarFieldEnum]
+
+
+export const RoundBatchScalarFieldEnum = {
+  id: 'id',
+  sequenceNumber: 'sequenceNumber',
+  status: 'status',
+  appliedAt: 'appliedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type RoundBatchScalarFieldEnum = (typeof RoundBatchScalarFieldEnum)[keyof typeof RoundBatchScalarFieldEnum]
+
+
+export const RoundAssignmentScalarFieldEnum = {
+  id: 'id',
+  roundBatchId: 'roundBatchId',
+  hostBusinessId: 'hostBusinessId',
+  guestBusinessId: 'guestBusinessId',
+  source: 'source',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type RoundAssignmentScalarFieldEnum = (typeof RoundAssignmentScalarFieldEnum)[keyof typeof RoundAssignmentScalarFieldEnum]
 
 
 export const Business_categoriesScalarFieldEnum = {
@@ -1481,16 +1661,9 @@ export type ListStringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaMod
 
 
 /**
- * Reference to a field of type 'client_status'
+ * Reference to a field of type 'Boolean'
  */
-export type Enumclient_statusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'client_status'>
-    
-
-
-/**
- * Reference to a field of type 'client_status[]'
- */
-export type ListEnumclient_statusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'client_status[]'>
+export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
 
 
@@ -1505,6 +1678,20 @@ export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel
  * Reference to a field of type 'DateTime[]'
  */
 export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
+    
+
+
+/**
+ * Reference to a field of type 'client_status'
+ */
+export type Enumclient_statusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'client_status'>
+    
+
+
+/**
+ * Reference to a field of type 'client_status[]'
+ */
+export type ListEnumclient_statusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'client_status[]'>
     
 
 
@@ -1537,9 +1724,30 @@ export type ListEnumMatchStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$
 
 
 /**
- * Reference to a field of type 'Boolean'
+ * Reference to a field of type 'RoundBatchStatus'
  */
-export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+export type EnumRoundBatchStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RoundBatchStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'RoundBatchStatus[]'
+ */
+export type ListEnumRoundBatchStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RoundBatchStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'RoundAssignmentSource'
+ */
+export type EnumRoundAssignmentSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RoundAssignmentSource'>
+    
+
+
+/**
+ * Reference to a field of type 'RoundAssignmentSource[]'
+ */
+export type ListEnumRoundAssignmentSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RoundAssignmentSource[]'>
     
 
 
@@ -1667,6 +1875,8 @@ export type PrismaClientOptions = ({
 export type GlobalOmitConfig = {
   business?: Prisma.BusinessOmit
   match?: Prisma.MatchOmit
+  roundBatch?: Prisma.RoundBatchOmit
+  roundAssignment?: Prisma.RoundAssignmentOmit
   business_categories?: Prisma.business_categoriesOmit
   client_details?: Prisma.client_detailsOmit
   economic_sectors?: Prisma.economic_sectorsOmit

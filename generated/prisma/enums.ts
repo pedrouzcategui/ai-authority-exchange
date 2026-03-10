@@ -56,3 +56,19 @@ export const publication_direction = {
 } as const
 
 export type publication_direction = (typeof publication_direction)[keyof typeof publication_direction]
+
+
+export const RoundBatchStatus = {
+  draft: 'draft',
+  applied: 'applied'
+} as const
+
+export type RoundBatchStatus = (typeof RoundBatchStatus)[keyof typeof RoundBatchStatus]
+
+
+export const RoundAssignmentSource = {
+  auto: 'auto',
+  manual: 'manual'
+} as const
+
+export type RoundAssignmentSource = (typeof RoundAssignmentSource)[keyof typeof RoundAssignmentSource]

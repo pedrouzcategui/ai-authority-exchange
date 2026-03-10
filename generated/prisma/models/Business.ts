@@ -28,6 +28,7 @@ export type AggregateBusiness = {
 
 export type BusinessAvgAggregateOutputType = {
   id: number | null
+  aiAuthorityExchangeRetiredInRoundBatchId: number | null
   business_category_id: number | null
   domain_rating: number | null
   related_category_ids: number | null
@@ -35,6 +36,7 @@ export type BusinessAvgAggregateOutputType = {
 
 export type BusinessSumAggregateOutputType = {
   id: number | null
+  aiAuthorityExchangeRetiredInRoundBatchId: number | null
   business_category_id: number | null
   domain_rating: number | null
   related_category_ids: number[]
@@ -44,6 +46,10 @@ export type BusinessMinAggregateOutputType = {
   id: number | null
   business: string | null
   websiteUrl: string | null
+  isActiveOnAiAuthorityExchange: boolean | null
+  aiAuthorityExchangeJoinedAt: Date | null
+  aiAuthorityExchangeRetiredAt: Date | null
+  aiAuthorityExchangeRetiredInRoundBatchId: number | null
   google_drive_folder_url: string | null
   writer_411_document_url: string | null
   discovery_packet_document_url: string | null
@@ -63,6 +69,10 @@ export type BusinessMaxAggregateOutputType = {
   id: number | null
   business: string | null
   websiteUrl: string | null
+  isActiveOnAiAuthorityExchange: boolean | null
+  aiAuthorityExchangeJoinedAt: Date | null
+  aiAuthorityExchangeRetiredAt: Date | null
+  aiAuthorityExchangeRetiredInRoundBatchId: number | null
   google_drive_folder_url: string | null
   writer_411_document_url: string | null
   discovery_packet_document_url: string | null
@@ -82,6 +92,10 @@ export type BusinessCountAggregateOutputType = {
   id: number
   business: number
   websiteUrl: number
+  isActiveOnAiAuthorityExchange: number
+  aiAuthorityExchangeJoinedAt: number
+  aiAuthorityExchangeRetiredAt: number
+  aiAuthorityExchangeRetiredInRoundBatchId: number
   google_drive_folder_url: number
   writer_411_document_url: number
   discovery_packet_document_url: number
@@ -103,6 +117,7 @@ export type BusinessCountAggregateOutputType = {
 
 export type BusinessAvgAggregateInputType = {
   id?: true
+  aiAuthorityExchangeRetiredInRoundBatchId?: true
   business_category_id?: true
   domain_rating?: true
   related_category_ids?: true
@@ -110,6 +125,7 @@ export type BusinessAvgAggregateInputType = {
 
 export type BusinessSumAggregateInputType = {
   id?: true
+  aiAuthorityExchangeRetiredInRoundBatchId?: true
   business_category_id?: true
   domain_rating?: true
   related_category_ids?: true
@@ -119,6 +135,10 @@ export type BusinessMinAggregateInputType = {
   id?: true
   business?: true
   websiteUrl?: true
+  isActiveOnAiAuthorityExchange?: true
+  aiAuthorityExchangeJoinedAt?: true
+  aiAuthorityExchangeRetiredAt?: true
+  aiAuthorityExchangeRetiredInRoundBatchId?: true
   google_drive_folder_url?: true
   writer_411_document_url?: true
   discovery_packet_document_url?: true
@@ -138,6 +158,10 @@ export type BusinessMaxAggregateInputType = {
   id?: true
   business?: true
   websiteUrl?: true
+  isActiveOnAiAuthorityExchange?: true
+  aiAuthorityExchangeJoinedAt?: true
+  aiAuthorityExchangeRetiredAt?: true
+  aiAuthorityExchangeRetiredInRoundBatchId?: true
   google_drive_folder_url?: true
   writer_411_document_url?: true
   discovery_packet_document_url?: true
@@ -157,6 +181,10 @@ export type BusinessCountAggregateInputType = {
   id?: true
   business?: true
   websiteUrl?: true
+  isActiveOnAiAuthorityExchange?: true
+  aiAuthorityExchangeJoinedAt?: true
+  aiAuthorityExchangeRetiredAt?: true
+  aiAuthorityExchangeRetiredInRoundBatchId?: true
   google_drive_folder_url?: true
   writer_411_document_url?: true
   discovery_packet_document_url?: true
@@ -265,6 +293,10 @@ export type BusinessGroupByOutputType = {
   id: number
   business: string
   websiteUrl: string | null
+  isActiveOnAiAuthorityExchange: boolean
+  aiAuthorityExchangeJoinedAt: Date | null
+  aiAuthorityExchangeRetiredAt: Date | null
+  aiAuthorityExchangeRetiredInRoundBatchId: number | null
   google_drive_folder_url: string | null
   writer_411_document_url: string | null
   discovery_packet_document_url: string | null
@@ -309,6 +341,10 @@ export type BusinessWhereInput = {
   id?: Prisma.IntFilter<"Business"> | number
   business?: Prisma.StringFilter<"Business"> | string
   websiteUrl?: Prisma.StringNullableFilter<"Business"> | string | null
+  isActiveOnAiAuthorityExchange?: Prisma.BoolFilter<"Business"> | boolean
+  aiAuthorityExchangeJoinedAt?: Prisma.DateTimeNullableFilter<"Business"> | Date | string | null
+  aiAuthorityExchangeRetiredAt?: Prisma.DateTimeNullableFilter<"Business"> | Date | string | null
+  aiAuthorityExchangeRetiredInRoundBatchId?: Prisma.IntNullableFilter<"Business"> | number | null
   google_drive_folder_url?: Prisma.StringNullableFilter<"Business"> | string | null
   writer_411_document_url?: Prisma.StringNullableFilter<"Business"> | string | null
   discovery_packet_document_url?: Prisma.StringNullableFilter<"Business"> | string | null
@@ -326,6 +362,9 @@ export type BusinessWhereInput = {
   clientType?: Prisma.EnumBusinessRoleTypeNullableFilter<"Business"> | $Enums.BusinessRoleType | null
   guestMatches?: Prisma.MatchListRelationFilter
   hostedMatches?: Prisma.MatchListRelationFilter
+  aiAuthorityExchangeRetiredInRoundBatch?: Prisma.XOR<Prisma.RoundBatchNullableScalarRelationFilter, Prisma.RoundBatchWhereInput> | null
+  incomingRoundAssignments?: Prisma.RoundAssignmentListRelationFilter
+  outgoingRoundAssignments?: Prisma.RoundAssignmentListRelationFilter
   business_categories?: Prisma.XOR<Prisma.Business_categoriesNullableScalarRelationFilter, Prisma.business_categoriesWhereInput> | null
   client_details?: Prisma.XOR<Prisma.Client_detailsNullableScalarRelationFilter, Prisma.client_detailsWhereInput> | null
   publications?: Prisma.PublicationsListRelationFilter
@@ -335,6 +374,10 @@ export type BusinessOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   business?: Prisma.SortOrder
   websiteUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  isActiveOnAiAuthorityExchange?: Prisma.SortOrder
+  aiAuthorityExchangeJoinedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiAuthorityExchangeRetiredAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiAuthorityExchangeRetiredInRoundBatchId?: Prisma.SortOrderInput | Prisma.SortOrder
   google_drive_folder_url?: Prisma.SortOrderInput | Prisma.SortOrder
   writer_411_document_url?: Prisma.SortOrderInput | Prisma.SortOrder
   discovery_packet_document_url?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -352,6 +395,9 @@ export type BusinessOrderByWithRelationInput = {
   clientType?: Prisma.SortOrderInput | Prisma.SortOrder
   guestMatches?: Prisma.MatchOrderByRelationAggregateInput
   hostedMatches?: Prisma.MatchOrderByRelationAggregateInput
+  aiAuthorityExchangeRetiredInRoundBatch?: Prisma.RoundBatchOrderByWithRelationInput
+  incomingRoundAssignments?: Prisma.RoundAssignmentOrderByRelationAggregateInput
+  outgoingRoundAssignments?: Prisma.RoundAssignmentOrderByRelationAggregateInput
   business_categories?: Prisma.business_categoriesOrderByWithRelationInput
   client_details?: Prisma.client_detailsOrderByWithRelationInput
   publications?: Prisma.publicationsOrderByRelationAggregateInput
@@ -364,6 +410,10 @@ export type BusinessWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.BusinessWhereInput | Prisma.BusinessWhereInput[]
   OR?: Prisma.BusinessWhereInput[]
   NOT?: Prisma.BusinessWhereInput | Prisma.BusinessWhereInput[]
+  isActiveOnAiAuthorityExchange?: Prisma.BoolFilter<"Business"> | boolean
+  aiAuthorityExchangeJoinedAt?: Prisma.DateTimeNullableFilter<"Business"> | Date | string | null
+  aiAuthorityExchangeRetiredAt?: Prisma.DateTimeNullableFilter<"Business"> | Date | string | null
+  aiAuthorityExchangeRetiredInRoundBatchId?: Prisma.IntNullableFilter<"Business"> | number | null
   google_drive_folder_url?: Prisma.StringNullableFilter<"Business"> | string | null
   writer_411_document_url?: Prisma.StringNullableFilter<"Business"> | string | null
   discovery_packet_document_url?: Prisma.StringNullableFilter<"Business"> | string | null
@@ -381,6 +431,9 @@ export type BusinessWhereUniqueInput = Prisma.AtLeast<{
   clientType?: Prisma.EnumBusinessRoleTypeNullableFilter<"Business"> | $Enums.BusinessRoleType | null
   guestMatches?: Prisma.MatchListRelationFilter
   hostedMatches?: Prisma.MatchListRelationFilter
+  aiAuthorityExchangeRetiredInRoundBatch?: Prisma.XOR<Prisma.RoundBatchNullableScalarRelationFilter, Prisma.RoundBatchWhereInput> | null
+  incomingRoundAssignments?: Prisma.RoundAssignmentListRelationFilter
+  outgoingRoundAssignments?: Prisma.RoundAssignmentListRelationFilter
   business_categories?: Prisma.XOR<Prisma.Business_categoriesNullableScalarRelationFilter, Prisma.business_categoriesWhereInput> | null
   client_details?: Prisma.XOR<Prisma.Client_detailsNullableScalarRelationFilter, Prisma.client_detailsWhereInput> | null
   publications?: Prisma.PublicationsListRelationFilter
@@ -390,6 +443,10 @@ export type BusinessOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   business?: Prisma.SortOrder
   websiteUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  isActiveOnAiAuthorityExchange?: Prisma.SortOrder
+  aiAuthorityExchangeJoinedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiAuthorityExchangeRetiredAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiAuthorityExchangeRetiredInRoundBatchId?: Prisma.SortOrderInput | Prisma.SortOrder
   google_drive_folder_url?: Prisma.SortOrderInput | Prisma.SortOrder
   writer_411_document_url?: Prisma.SortOrderInput | Prisma.SortOrder
   discovery_packet_document_url?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -419,6 +476,10 @@ export type BusinessScalarWhereWithAggregatesInput = {
   id?: Prisma.IntWithAggregatesFilter<"Business"> | number
   business?: Prisma.StringWithAggregatesFilter<"Business"> | string
   websiteUrl?: Prisma.StringNullableWithAggregatesFilter<"Business"> | string | null
+  isActiveOnAiAuthorityExchange?: Prisma.BoolWithAggregatesFilter<"Business"> | boolean
+  aiAuthorityExchangeJoinedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Business"> | Date | string | null
+  aiAuthorityExchangeRetiredAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Business"> | Date | string | null
+  aiAuthorityExchangeRetiredInRoundBatchId?: Prisma.IntNullableWithAggregatesFilter<"Business"> | number | null
   google_drive_folder_url?: Prisma.StringNullableWithAggregatesFilter<"Business"> | string | null
   writer_411_document_url?: Prisma.StringNullableWithAggregatesFilter<"Business"> | string | null
   discovery_packet_document_url?: Prisma.StringNullableWithAggregatesFilter<"Business"> | string | null
@@ -439,6 +500,9 @@ export type BusinessScalarWhereWithAggregatesInput = {
 export type BusinessCreateInput = {
   business: string
   websiteUrl?: string | null
+  isActiveOnAiAuthorityExchange?: boolean
+  aiAuthorityExchangeJoinedAt?: Date | string | null
+  aiAuthorityExchangeRetiredAt?: Date | string | null
   google_drive_folder_url?: string | null
   writer_411_document_url?: string | null
   discovery_packet_document_url?: string | null
@@ -455,6 +519,9 @@ export type BusinessCreateInput = {
   clientType?: $Enums.BusinessRoleType | null
   guestMatches?: Prisma.MatchCreateNestedManyWithoutGuestInput
   hostedMatches?: Prisma.MatchCreateNestedManyWithoutHostInput
+  aiAuthorityExchangeRetiredInRoundBatch?: Prisma.RoundBatchCreateNestedOneWithoutRetiredBusinessesInput
+  incomingRoundAssignments?: Prisma.RoundAssignmentCreateNestedManyWithoutGuestBusinessInput
+  outgoingRoundAssignments?: Prisma.RoundAssignmentCreateNestedManyWithoutHostBusinessInput
   business_categories?: Prisma.business_categoriesCreateNestedOneWithoutBusinessesInput
   client_details?: Prisma.client_detailsCreateNestedOneWithoutBusinessesInput
   publications?: Prisma.publicationsCreateNestedManyWithoutBusinessesInput
@@ -464,6 +531,10 @@ export type BusinessUncheckedCreateInput = {
   id?: number
   business: string
   websiteUrl?: string | null
+  isActiveOnAiAuthorityExchange?: boolean
+  aiAuthorityExchangeJoinedAt?: Date | string | null
+  aiAuthorityExchangeRetiredAt?: Date | string | null
+  aiAuthorityExchangeRetiredInRoundBatchId?: number | null
   google_drive_folder_url?: string | null
   writer_411_document_url?: string | null
   discovery_packet_document_url?: string | null
@@ -481,6 +552,8 @@ export type BusinessUncheckedCreateInput = {
   clientType?: $Enums.BusinessRoleType | null
   guestMatches?: Prisma.MatchUncheckedCreateNestedManyWithoutGuestInput
   hostedMatches?: Prisma.MatchUncheckedCreateNestedManyWithoutHostInput
+  incomingRoundAssignments?: Prisma.RoundAssignmentUncheckedCreateNestedManyWithoutGuestBusinessInput
+  outgoingRoundAssignments?: Prisma.RoundAssignmentUncheckedCreateNestedManyWithoutHostBusinessInput
   client_details?: Prisma.client_detailsUncheckedCreateNestedOneWithoutBusinessesInput
   publications?: Prisma.publicationsUncheckedCreateNestedManyWithoutBusinessesInput
 }
@@ -488,6 +561,9 @@ export type BusinessUncheckedCreateInput = {
 export type BusinessUpdateInput = {
   business?: Prisma.StringFieldUpdateOperationsInput | string
   websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActiveOnAiAuthorityExchange?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  aiAuthorityExchangeJoinedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  aiAuthorityExchangeRetiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -504,6 +580,9 @@ export type BusinessUpdateInput = {
   clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
   guestMatches?: Prisma.MatchUpdateManyWithoutGuestNestedInput
   hostedMatches?: Prisma.MatchUpdateManyWithoutHostNestedInput
+  aiAuthorityExchangeRetiredInRoundBatch?: Prisma.RoundBatchUpdateOneWithoutRetiredBusinessesNestedInput
+  incomingRoundAssignments?: Prisma.RoundAssignmentUpdateManyWithoutGuestBusinessNestedInput
+  outgoingRoundAssignments?: Prisma.RoundAssignmentUpdateManyWithoutHostBusinessNestedInput
   business_categories?: Prisma.business_categoriesUpdateOneWithoutBusinessesNestedInput
   client_details?: Prisma.client_detailsUpdateOneWithoutBusinessesNestedInput
   publications?: Prisma.publicationsUpdateManyWithoutBusinessesNestedInput
@@ -513,6 +592,10 @@ export type BusinessUncheckedUpdateInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   business?: Prisma.StringFieldUpdateOperationsInput | string
   websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActiveOnAiAuthorityExchange?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  aiAuthorityExchangeJoinedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  aiAuthorityExchangeRetiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  aiAuthorityExchangeRetiredInRoundBatchId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -530,6 +613,8 @@ export type BusinessUncheckedUpdateInput = {
   clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
   guestMatches?: Prisma.MatchUncheckedUpdateManyWithoutGuestNestedInput
   hostedMatches?: Prisma.MatchUncheckedUpdateManyWithoutHostNestedInput
+  incomingRoundAssignments?: Prisma.RoundAssignmentUncheckedUpdateManyWithoutGuestBusinessNestedInput
+  outgoingRoundAssignments?: Prisma.RoundAssignmentUncheckedUpdateManyWithoutHostBusinessNestedInput
   client_details?: Prisma.client_detailsUncheckedUpdateOneWithoutBusinessesNestedInput
   publications?: Prisma.publicationsUncheckedUpdateManyWithoutBusinessesNestedInput
 }
@@ -538,6 +623,10 @@ export type BusinessCreateManyInput = {
   id?: number
   business: string
   websiteUrl?: string | null
+  isActiveOnAiAuthorityExchange?: boolean
+  aiAuthorityExchangeJoinedAt?: Date | string | null
+  aiAuthorityExchangeRetiredAt?: Date | string | null
+  aiAuthorityExchangeRetiredInRoundBatchId?: number | null
   google_drive_folder_url?: string | null
   writer_411_document_url?: string | null
   discovery_packet_document_url?: string | null
@@ -558,6 +647,9 @@ export type BusinessCreateManyInput = {
 export type BusinessUpdateManyMutationInput = {
   business?: Prisma.StringFieldUpdateOperationsInput | string
   websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActiveOnAiAuthorityExchange?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  aiAuthorityExchangeJoinedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  aiAuthorityExchangeRetiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -578,6 +670,10 @@ export type BusinessUncheckedUpdateManyInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   business?: Prisma.StringFieldUpdateOperationsInput | string
   websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActiveOnAiAuthorityExchange?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  aiAuthorityExchangeJoinedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  aiAuthorityExchangeRetiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  aiAuthorityExchangeRetiredInRoundBatchId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -615,6 +711,10 @@ export type BusinessCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   business?: Prisma.SortOrder
   websiteUrl?: Prisma.SortOrder
+  isActiveOnAiAuthorityExchange?: Prisma.SortOrder
+  aiAuthorityExchangeJoinedAt?: Prisma.SortOrder
+  aiAuthorityExchangeRetiredAt?: Prisma.SortOrder
+  aiAuthorityExchangeRetiredInRoundBatchId?: Prisma.SortOrder
   google_drive_folder_url?: Prisma.SortOrder
   writer_411_document_url?: Prisma.SortOrder
   discovery_packet_document_url?: Prisma.SortOrder
@@ -634,6 +734,7 @@ export type BusinessCountOrderByAggregateInput = {
 
 export type BusinessAvgOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  aiAuthorityExchangeRetiredInRoundBatchId?: Prisma.SortOrder
   business_category_id?: Prisma.SortOrder
   domain_rating?: Prisma.SortOrder
   related_category_ids?: Prisma.SortOrder
@@ -643,6 +744,10 @@ export type BusinessMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   business?: Prisma.SortOrder
   websiteUrl?: Prisma.SortOrder
+  isActiveOnAiAuthorityExchange?: Prisma.SortOrder
+  aiAuthorityExchangeJoinedAt?: Prisma.SortOrder
+  aiAuthorityExchangeRetiredAt?: Prisma.SortOrder
+  aiAuthorityExchangeRetiredInRoundBatchId?: Prisma.SortOrder
   google_drive_folder_url?: Prisma.SortOrder
   writer_411_document_url?: Prisma.SortOrder
   discovery_packet_document_url?: Prisma.SortOrder
@@ -662,6 +767,10 @@ export type BusinessMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   business?: Prisma.SortOrder
   websiteUrl?: Prisma.SortOrder
+  isActiveOnAiAuthorityExchange?: Prisma.SortOrder
+  aiAuthorityExchangeJoinedAt?: Prisma.SortOrder
+  aiAuthorityExchangeRetiredAt?: Prisma.SortOrder
+  aiAuthorityExchangeRetiredInRoundBatchId?: Prisma.SortOrder
   google_drive_folder_url?: Prisma.SortOrder
   writer_411_document_url?: Prisma.SortOrder
   discovery_packet_document_url?: Prisma.SortOrder
@@ -679,6 +788,7 @@ export type BusinessMinOrderByAggregateInput = {
 
 export type BusinessSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  aiAuthorityExchangeRetiredInRoundBatchId?: Prisma.SortOrder
   business_category_id?: Prisma.SortOrder
   domain_rating?: Prisma.SortOrder
   related_category_ids?: Prisma.SortOrder
@@ -713,6 +823,14 @@ export type StringFieldUpdateOperationsInput = {
 
 export type NullableStringFieldUpdateOperationsInput = {
   set?: string | null
+}
+
+export type BoolFieldUpdateOperationsInput = {
+  set?: boolean
+}
+
+export type NullableDateTimeFieldUpdateOperationsInput = {
+  set?: Date | string | null
 }
 
 export type Enumclient_statusFieldUpdateOperationsInput = {
@@ -779,6 +897,76 @@ export type BusinessUpdateOneRequiredWithoutHostedMatchesNestedInput = {
   upsert?: Prisma.BusinessUpsertWithoutHostedMatchesInput
   connect?: Prisma.BusinessWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.BusinessUpdateToOneWithWhereWithoutHostedMatchesInput, Prisma.BusinessUpdateWithoutHostedMatchesInput>, Prisma.BusinessUncheckedUpdateWithoutHostedMatchesInput>
+}
+
+export type BusinessCreateNestedManyWithoutAiAuthorityExchangeRetiredInRoundBatchInput = {
+  create?: Prisma.XOR<Prisma.BusinessCreateWithoutAiAuthorityExchangeRetiredInRoundBatchInput, Prisma.BusinessUncheckedCreateWithoutAiAuthorityExchangeRetiredInRoundBatchInput> | Prisma.BusinessCreateWithoutAiAuthorityExchangeRetiredInRoundBatchInput[] | Prisma.BusinessUncheckedCreateWithoutAiAuthorityExchangeRetiredInRoundBatchInput[]
+  connectOrCreate?: Prisma.BusinessCreateOrConnectWithoutAiAuthorityExchangeRetiredInRoundBatchInput | Prisma.BusinessCreateOrConnectWithoutAiAuthorityExchangeRetiredInRoundBatchInput[]
+  createMany?: Prisma.BusinessCreateManyAiAuthorityExchangeRetiredInRoundBatchInputEnvelope
+  connect?: Prisma.BusinessWhereUniqueInput | Prisma.BusinessWhereUniqueInput[]
+}
+
+export type BusinessUncheckedCreateNestedManyWithoutAiAuthorityExchangeRetiredInRoundBatchInput = {
+  create?: Prisma.XOR<Prisma.BusinessCreateWithoutAiAuthorityExchangeRetiredInRoundBatchInput, Prisma.BusinessUncheckedCreateWithoutAiAuthorityExchangeRetiredInRoundBatchInput> | Prisma.BusinessCreateWithoutAiAuthorityExchangeRetiredInRoundBatchInput[] | Prisma.BusinessUncheckedCreateWithoutAiAuthorityExchangeRetiredInRoundBatchInput[]
+  connectOrCreate?: Prisma.BusinessCreateOrConnectWithoutAiAuthorityExchangeRetiredInRoundBatchInput | Prisma.BusinessCreateOrConnectWithoutAiAuthorityExchangeRetiredInRoundBatchInput[]
+  createMany?: Prisma.BusinessCreateManyAiAuthorityExchangeRetiredInRoundBatchInputEnvelope
+  connect?: Prisma.BusinessWhereUniqueInput | Prisma.BusinessWhereUniqueInput[]
+}
+
+export type BusinessUpdateManyWithoutAiAuthorityExchangeRetiredInRoundBatchNestedInput = {
+  create?: Prisma.XOR<Prisma.BusinessCreateWithoutAiAuthorityExchangeRetiredInRoundBatchInput, Prisma.BusinessUncheckedCreateWithoutAiAuthorityExchangeRetiredInRoundBatchInput> | Prisma.BusinessCreateWithoutAiAuthorityExchangeRetiredInRoundBatchInput[] | Prisma.BusinessUncheckedCreateWithoutAiAuthorityExchangeRetiredInRoundBatchInput[]
+  connectOrCreate?: Prisma.BusinessCreateOrConnectWithoutAiAuthorityExchangeRetiredInRoundBatchInput | Prisma.BusinessCreateOrConnectWithoutAiAuthorityExchangeRetiredInRoundBatchInput[]
+  upsert?: Prisma.BusinessUpsertWithWhereUniqueWithoutAiAuthorityExchangeRetiredInRoundBatchInput | Prisma.BusinessUpsertWithWhereUniqueWithoutAiAuthorityExchangeRetiredInRoundBatchInput[]
+  createMany?: Prisma.BusinessCreateManyAiAuthorityExchangeRetiredInRoundBatchInputEnvelope
+  set?: Prisma.BusinessWhereUniqueInput | Prisma.BusinessWhereUniqueInput[]
+  disconnect?: Prisma.BusinessWhereUniqueInput | Prisma.BusinessWhereUniqueInput[]
+  delete?: Prisma.BusinessWhereUniqueInput | Prisma.BusinessWhereUniqueInput[]
+  connect?: Prisma.BusinessWhereUniqueInput | Prisma.BusinessWhereUniqueInput[]
+  update?: Prisma.BusinessUpdateWithWhereUniqueWithoutAiAuthorityExchangeRetiredInRoundBatchInput | Prisma.BusinessUpdateWithWhereUniqueWithoutAiAuthorityExchangeRetiredInRoundBatchInput[]
+  updateMany?: Prisma.BusinessUpdateManyWithWhereWithoutAiAuthorityExchangeRetiredInRoundBatchInput | Prisma.BusinessUpdateManyWithWhereWithoutAiAuthorityExchangeRetiredInRoundBatchInput[]
+  deleteMany?: Prisma.BusinessScalarWhereInput | Prisma.BusinessScalarWhereInput[]
+}
+
+export type BusinessUncheckedUpdateManyWithoutAiAuthorityExchangeRetiredInRoundBatchNestedInput = {
+  create?: Prisma.XOR<Prisma.BusinessCreateWithoutAiAuthorityExchangeRetiredInRoundBatchInput, Prisma.BusinessUncheckedCreateWithoutAiAuthorityExchangeRetiredInRoundBatchInput> | Prisma.BusinessCreateWithoutAiAuthorityExchangeRetiredInRoundBatchInput[] | Prisma.BusinessUncheckedCreateWithoutAiAuthorityExchangeRetiredInRoundBatchInput[]
+  connectOrCreate?: Prisma.BusinessCreateOrConnectWithoutAiAuthorityExchangeRetiredInRoundBatchInput | Prisma.BusinessCreateOrConnectWithoutAiAuthorityExchangeRetiredInRoundBatchInput[]
+  upsert?: Prisma.BusinessUpsertWithWhereUniqueWithoutAiAuthorityExchangeRetiredInRoundBatchInput | Prisma.BusinessUpsertWithWhereUniqueWithoutAiAuthorityExchangeRetiredInRoundBatchInput[]
+  createMany?: Prisma.BusinessCreateManyAiAuthorityExchangeRetiredInRoundBatchInputEnvelope
+  set?: Prisma.BusinessWhereUniqueInput | Prisma.BusinessWhereUniqueInput[]
+  disconnect?: Prisma.BusinessWhereUniqueInput | Prisma.BusinessWhereUniqueInput[]
+  delete?: Prisma.BusinessWhereUniqueInput | Prisma.BusinessWhereUniqueInput[]
+  connect?: Prisma.BusinessWhereUniqueInput | Prisma.BusinessWhereUniqueInput[]
+  update?: Prisma.BusinessUpdateWithWhereUniqueWithoutAiAuthorityExchangeRetiredInRoundBatchInput | Prisma.BusinessUpdateWithWhereUniqueWithoutAiAuthorityExchangeRetiredInRoundBatchInput[]
+  updateMany?: Prisma.BusinessUpdateManyWithWhereWithoutAiAuthorityExchangeRetiredInRoundBatchInput | Prisma.BusinessUpdateManyWithWhereWithoutAiAuthorityExchangeRetiredInRoundBatchInput[]
+  deleteMany?: Prisma.BusinessScalarWhereInput | Prisma.BusinessScalarWhereInput[]
+}
+
+export type BusinessCreateNestedOneWithoutIncomingRoundAssignmentsInput = {
+  create?: Prisma.XOR<Prisma.BusinessCreateWithoutIncomingRoundAssignmentsInput, Prisma.BusinessUncheckedCreateWithoutIncomingRoundAssignmentsInput>
+  connectOrCreate?: Prisma.BusinessCreateOrConnectWithoutIncomingRoundAssignmentsInput
+  connect?: Prisma.BusinessWhereUniqueInput
+}
+
+export type BusinessCreateNestedOneWithoutOutgoingRoundAssignmentsInput = {
+  create?: Prisma.XOR<Prisma.BusinessCreateWithoutOutgoingRoundAssignmentsInput, Prisma.BusinessUncheckedCreateWithoutOutgoingRoundAssignmentsInput>
+  connectOrCreate?: Prisma.BusinessCreateOrConnectWithoutOutgoingRoundAssignmentsInput
+  connect?: Prisma.BusinessWhereUniqueInput
+}
+
+export type BusinessUpdateOneRequiredWithoutIncomingRoundAssignmentsNestedInput = {
+  create?: Prisma.XOR<Prisma.BusinessCreateWithoutIncomingRoundAssignmentsInput, Prisma.BusinessUncheckedCreateWithoutIncomingRoundAssignmentsInput>
+  connectOrCreate?: Prisma.BusinessCreateOrConnectWithoutIncomingRoundAssignmentsInput
+  upsert?: Prisma.BusinessUpsertWithoutIncomingRoundAssignmentsInput
+  connect?: Prisma.BusinessWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.BusinessUpdateToOneWithWhereWithoutIncomingRoundAssignmentsInput, Prisma.BusinessUpdateWithoutIncomingRoundAssignmentsInput>, Prisma.BusinessUncheckedUpdateWithoutIncomingRoundAssignmentsInput>
+}
+
+export type BusinessUpdateOneRequiredWithoutOutgoingRoundAssignmentsNestedInput = {
+  create?: Prisma.XOR<Prisma.BusinessCreateWithoutOutgoingRoundAssignmentsInput, Prisma.BusinessUncheckedCreateWithoutOutgoingRoundAssignmentsInput>
+  connectOrCreate?: Prisma.BusinessCreateOrConnectWithoutOutgoingRoundAssignmentsInput
+  upsert?: Prisma.BusinessUpsertWithoutOutgoingRoundAssignmentsInput
+  connect?: Prisma.BusinessWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.BusinessUpdateToOneWithWhereWithoutOutgoingRoundAssignmentsInput, Prisma.BusinessUpdateWithoutOutgoingRoundAssignmentsInput>, Prisma.BusinessUncheckedUpdateWithoutOutgoingRoundAssignmentsInput>
 }
 
 export type BusinessCreateNestedManyWithoutBusiness_categoriesInput = {
@@ -854,6 +1042,9 @@ export type BusinessUpdateOneRequiredWithoutPublicationsNestedInput = {
 export type BusinessCreateWithoutGuestMatchesInput = {
   business: string
   websiteUrl?: string | null
+  isActiveOnAiAuthorityExchange?: boolean
+  aiAuthorityExchangeJoinedAt?: Date | string | null
+  aiAuthorityExchangeRetiredAt?: Date | string | null
   google_drive_folder_url?: string | null
   writer_411_document_url?: string | null
   discovery_packet_document_url?: string | null
@@ -869,6 +1060,9 @@ export type BusinessCreateWithoutGuestMatchesInput = {
   related_categories_reasoning?: string | null
   clientType?: $Enums.BusinessRoleType | null
   hostedMatches?: Prisma.MatchCreateNestedManyWithoutHostInput
+  aiAuthorityExchangeRetiredInRoundBatch?: Prisma.RoundBatchCreateNestedOneWithoutRetiredBusinessesInput
+  incomingRoundAssignments?: Prisma.RoundAssignmentCreateNestedManyWithoutGuestBusinessInput
+  outgoingRoundAssignments?: Prisma.RoundAssignmentCreateNestedManyWithoutHostBusinessInput
   business_categories?: Prisma.business_categoriesCreateNestedOneWithoutBusinessesInput
   client_details?: Prisma.client_detailsCreateNestedOneWithoutBusinessesInput
   publications?: Prisma.publicationsCreateNestedManyWithoutBusinessesInput
@@ -878,6 +1072,10 @@ export type BusinessUncheckedCreateWithoutGuestMatchesInput = {
   id?: number
   business: string
   websiteUrl?: string | null
+  isActiveOnAiAuthorityExchange?: boolean
+  aiAuthorityExchangeJoinedAt?: Date | string | null
+  aiAuthorityExchangeRetiredAt?: Date | string | null
+  aiAuthorityExchangeRetiredInRoundBatchId?: number | null
   google_drive_folder_url?: string | null
   writer_411_document_url?: string | null
   discovery_packet_document_url?: string | null
@@ -894,6 +1092,8 @@ export type BusinessUncheckedCreateWithoutGuestMatchesInput = {
   related_categories_reasoning?: string | null
   clientType?: $Enums.BusinessRoleType | null
   hostedMatches?: Prisma.MatchUncheckedCreateNestedManyWithoutHostInput
+  incomingRoundAssignments?: Prisma.RoundAssignmentUncheckedCreateNestedManyWithoutGuestBusinessInput
+  outgoingRoundAssignments?: Prisma.RoundAssignmentUncheckedCreateNestedManyWithoutHostBusinessInput
   client_details?: Prisma.client_detailsUncheckedCreateNestedOneWithoutBusinessesInput
   publications?: Prisma.publicationsUncheckedCreateNestedManyWithoutBusinessesInput
 }
@@ -906,6 +1106,9 @@ export type BusinessCreateOrConnectWithoutGuestMatchesInput = {
 export type BusinessCreateWithoutHostedMatchesInput = {
   business: string
   websiteUrl?: string | null
+  isActiveOnAiAuthorityExchange?: boolean
+  aiAuthorityExchangeJoinedAt?: Date | string | null
+  aiAuthorityExchangeRetiredAt?: Date | string | null
   google_drive_folder_url?: string | null
   writer_411_document_url?: string | null
   discovery_packet_document_url?: string | null
@@ -921,6 +1124,9 @@ export type BusinessCreateWithoutHostedMatchesInput = {
   related_categories_reasoning?: string | null
   clientType?: $Enums.BusinessRoleType | null
   guestMatches?: Prisma.MatchCreateNestedManyWithoutGuestInput
+  aiAuthorityExchangeRetiredInRoundBatch?: Prisma.RoundBatchCreateNestedOneWithoutRetiredBusinessesInput
+  incomingRoundAssignments?: Prisma.RoundAssignmentCreateNestedManyWithoutGuestBusinessInput
+  outgoingRoundAssignments?: Prisma.RoundAssignmentCreateNestedManyWithoutHostBusinessInput
   business_categories?: Prisma.business_categoriesCreateNestedOneWithoutBusinessesInput
   client_details?: Prisma.client_detailsCreateNestedOneWithoutBusinessesInput
   publications?: Prisma.publicationsCreateNestedManyWithoutBusinessesInput
@@ -930,6 +1136,10 @@ export type BusinessUncheckedCreateWithoutHostedMatchesInput = {
   id?: number
   business: string
   websiteUrl?: string | null
+  isActiveOnAiAuthorityExchange?: boolean
+  aiAuthorityExchangeJoinedAt?: Date | string | null
+  aiAuthorityExchangeRetiredAt?: Date | string | null
+  aiAuthorityExchangeRetiredInRoundBatchId?: number | null
   google_drive_folder_url?: string | null
   writer_411_document_url?: string | null
   discovery_packet_document_url?: string | null
@@ -946,6 +1156,8 @@ export type BusinessUncheckedCreateWithoutHostedMatchesInput = {
   related_categories_reasoning?: string | null
   clientType?: $Enums.BusinessRoleType | null
   guestMatches?: Prisma.MatchUncheckedCreateNestedManyWithoutGuestInput
+  incomingRoundAssignments?: Prisma.RoundAssignmentUncheckedCreateNestedManyWithoutGuestBusinessInput
+  outgoingRoundAssignments?: Prisma.RoundAssignmentUncheckedCreateNestedManyWithoutHostBusinessInput
   client_details?: Prisma.client_detailsUncheckedCreateNestedOneWithoutBusinessesInput
   publications?: Prisma.publicationsUncheckedCreateNestedManyWithoutBusinessesInput
 }
@@ -969,6 +1181,9 @@ export type BusinessUpdateToOneWithWhereWithoutGuestMatchesInput = {
 export type BusinessUpdateWithoutGuestMatchesInput = {
   business?: Prisma.StringFieldUpdateOperationsInput | string
   websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActiveOnAiAuthorityExchange?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  aiAuthorityExchangeJoinedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  aiAuthorityExchangeRetiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -984,6 +1199,9 @@ export type BusinessUpdateWithoutGuestMatchesInput = {
   related_categories_reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
   hostedMatches?: Prisma.MatchUpdateManyWithoutHostNestedInput
+  aiAuthorityExchangeRetiredInRoundBatch?: Prisma.RoundBatchUpdateOneWithoutRetiredBusinessesNestedInput
+  incomingRoundAssignments?: Prisma.RoundAssignmentUpdateManyWithoutGuestBusinessNestedInput
+  outgoingRoundAssignments?: Prisma.RoundAssignmentUpdateManyWithoutHostBusinessNestedInput
   business_categories?: Prisma.business_categoriesUpdateOneWithoutBusinessesNestedInput
   client_details?: Prisma.client_detailsUpdateOneWithoutBusinessesNestedInput
   publications?: Prisma.publicationsUpdateManyWithoutBusinessesNestedInput
@@ -993,6 +1211,10 @@ export type BusinessUncheckedUpdateWithoutGuestMatchesInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   business?: Prisma.StringFieldUpdateOperationsInput | string
   websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActiveOnAiAuthorityExchange?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  aiAuthorityExchangeJoinedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  aiAuthorityExchangeRetiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  aiAuthorityExchangeRetiredInRoundBatchId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1009,6 +1231,8 @@ export type BusinessUncheckedUpdateWithoutGuestMatchesInput = {
   related_categories_reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
   hostedMatches?: Prisma.MatchUncheckedUpdateManyWithoutHostNestedInput
+  incomingRoundAssignments?: Prisma.RoundAssignmentUncheckedUpdateManyWithoutGuestBusinessNestedInput
+  outgoingRoundAssignments?: Prisma.RoundAssignmentUncheckedUpdateManyWithoutHostBusinessNestedInput
   client_details?: Prisma.client_detailsUncheckedUpdateOneWithoutBusinessesNestedInput
   publications?: Prisma.publicationsUncheckedUpdateManyWithoutBusinessesNestedInput
 }
@@ -1027,6 +1251,9 @@ export type BusinessUpdateToOneWithWhereWithoutHostedMatchesInput = {
 export type BusinessUpdateWithoutHostedMatchesInput = {
   business?: Prisma.StringFieldUpdateOperationsInput | string
   websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActiveOnAiAuthorityExchange?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  aiAuthorityExchangeJoinedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  aiAuthorityExchangeRetiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1042,6 +1269,9 @@ export type BusinessUpdateWithoutHostedMatchesInput = {
   related_categories_reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
   guestMatches?: Prisma.MatchUpdateManyWithoutGuestNestedInput
+  aiAuthorityExchangeRetiredInRoundBatch?: Prisma.RoundBatchUpdateOneWithoutRetiredBusinessesNestedInput
+  incomingRoundAssignments?: Prisma.RoundAssignmentUpdateManyWithoutGuestBusinessNestedInput
+  outgoingRoundAssignments?: Prisma.RoundAssignmentUpdateManyWithoutHostBusinessNestedInput
   business_categories?: Prisma.business_categoriesUpdateOneWithoutBusinessesNestedInput
   client_details?: Prisma.client_detailsUpdateOneWithoutBusinessesNestedInput
   publications?: Prisma.publicationsUpdateManyWithoutBusinessesNestedInput
@@ -1051,6 +1281,10 @@ export type BusinessUncheckedUpdateWithoutHostedMatchesInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   business?: Prisma.StringFieldUpdateOperationsInput | string
   websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActiveOnAiAuthorityExchange?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  aiAuthorityExchangeJoinedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  aiAuthorityExchangeRetiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  aiAuthorityExchangeRetiredInRoundBatchId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1067,13 +1301,18 @@ export type BusinessUncheckedUpdateWithoutHostedMatchesInput = {
   related_categories_reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
   guestMatches?: Prisma.MatchUncheckedUpdateManyWithoutGuestNestedInput
+  incomingRoundAssignments?: Prisma.RoundAssignmentUncheckedUpdateManyWithoutGuestBusinessNestedInput
+  outgoingRoundAssignments?: Prisma.RoundAssignmentUncheckedUpdateManyWithoutHostBusinessNestedInput
   client_details?: Prisma.client_detailsUncheckedUpdateOneWithoutBusinessesNestedInput
   publications?: Prisma.publicationsUncheckedUpdateManyWithoutBusinessesNestedInput
 }
 
-export type BusinessCreateWithoutBusiness_categoriesInput = {
+export type BusinessCreateWithoutAiAuthorityExchangeRetiredInRoundBatchInput = {
   business: string
   websiteUrl?: string | null
+  isActiveOnAiAuthorityExchange?: boolean
+  aiAuthorityExchangeJoinedAt?: Date | string | null
+  aiAuthorityExchangeRetiredAt?: Date | string | null
   google_drive_folder_url?: string | null
   writer_411_document_url?: string | null
   discovery_packet_document_url?: string | null
@@ -1090,6 +1329,390 @@ export type BusinessCreateWithoutBusiness_categoriesInput = {
   clientType?: $Enums.BusinessRoleType | null
   guestMatches?: Prisma.MatchCreateNestedManyWithoutGuestInput
   hostedMatches?: Prisma.MatchCreateNestedManyWithoutHostInput
+  incomingRoundAssignments?: Prisma.RoundAssignmentCreateNestedManyWithoutGuestBusinessInput
+  outgoingRoundAssignments?: Prisma.RoundAssignmentCreateNestedManyWithoutHostBusinessInput
+  business_categories?: Prisma.business_categoriesCreateNestedOneWithoutBusinessesInput
+  client_details?: Prisma.client_detailsCreateNestedOneWithoutBusinessesInput
+  publications?: Prisma.publicationsCreateNestedManyWithoutBusinessesInput
+}
+
+export type BusinessUncheckedCreateWithoutAiAuthorityExchangeRetiredInRoundBatchInput = {
+  id?: number
+  business: string
+  websiteUrl?: string | null
+  isActiveOnAiAuthorityExchange?: boolean
+  aiAuthorityExchangeJoinedAt?: Date | string | null
+  aiAuthorityExchangeRetiredAt?: Date | string | null
+  google_drive_folder_url?: string | null
+  writer_411_document_url?: string | null
+  discovery_packet_document_url?: string | null
+  client_status?: $Enums.client_status
+  created_at?: Date | string
+  updated_at?: Date | string
+  subcategory?: string | null
+  description?: string | null
+  writing_topics?: Prisma.BusinessCreatewriting_topicsInput | string[]
+  target_audience?: string | null
+  business_category_id?: number | null
+  domain_rating?: number | null
+  related_category_ids?: Prisma.BusinessCreaterelated_category_idsInput | number[]
+  related_categories_reasoning?: string | null
+  clientType?: $Enums.BusinessRoleType | null
+  guestMatches?: Prisma.MatchUncheckedCreateNestedManyWithoutGuestInput
+  hostedMatches?: Prisma.MatchUncheckedCreateNestedManyWithoutHostInput
+  incomingRoundAssignments?: Prisma.RoundAssignmentUncheckedCreateNestedManyWithoutGuestBusinessInput
+  outgoingRoundAssignments?: Prisma.RoundAssignmentUncheckedCreateNestedManyWithoutHostBusinessInput
+  client_details?: Prisma.client_detailsUncheckedCreateNestedOneWithoutBusinessesInput
+  publications?: Prisma.publicationsUncheckedCreateNestedManyWithoutBusinessesInput
+}
+
+export type BusinessCreateOrConnectWithoutAiAuthorityExchangeRetiredInRoundBatchInput = {
+  where: Prisma.BusinessWhereUniqueInput
+  create: Prisma.XOR<Prisma.BusinessCreateWithoutAiAuthorityExchangeRetiredInRoundBatchInput, Prisma.BusinessUncheckedCreateWithoutAiAuthorityExchangeRetiredInRoundBatchInput>
+}
+
+export type BusinessCreateManyAiAuthorityExchangeRetiredInRoundBatchInputEnvelope = {
+  data: Prisma.BusinessCreateManyAiAuthorityExchangeRetiredInRoundBatchInput | Prisma.BusinessCreateManyAiAuthorityExchangeRetiredInRoundBatchInput[]
+  skipDuplicates?: boolean
+}
+
+export type BusinessUpsertWithWhereUniqueWithoutAiAuthorityExchangeRetiredInRoundBatchInput = {
+  where: Prisma.BusinessWhereUniqueInput
+  update: Prisma.XOR<Prisma.BusinessUpdateWithoutAiAuthorityExchangeRetiredInRoundBatchInput, Prisma.BusinessUncheckedUpdateWithoutAiAuthorityExchangeRetiredInRoundBatchInput>
+  create: Prisma.XOR<Prisma.BusinessCreateWithoutAiAuthorityExchangeRetiredInRoundBatchInput, Prisma.BusinessUncheckedCreateWithoutAiAuthorityExchangeRetiredInRoundBatchInput>
+}
+
+export type BusinessUpdateWithWhereUniqueWithoutAiAuthorityExchangeRetiredInRoundBatchInput = {
+  where: Prisma.BusinessWhereUniqueInput
+  data: Prisma.XOR<Prisma.BusinessUpdateWithoutAiAuthorityExchangeRetiredInRoundBatchInput, Prisma.BusinessUncheckedUpdateWithoutAiAuthorityExchangeRetiredInRoundBatchInput>
+}
+
+export type BusinessUpdateManyWithWhereWithoutAiAuthorityExchangeRetiredInRoundBatchInput = {
+  where: Prisma.BusinessScalarWhereInput
+  data: Prisma.XOR<Prisma.BusinessUpdateManyMutationInput, Prisma.BusinessUncheckedUpdateManyWithoutAiAuthorityExchangeRetiredInRoundBatchInput>
+}
+
+export type BusinessScalarWhereInput = {
+  AND?: Prisma.BusinessScalarWhereInput | Prisma.BusinessScalarWhereInput[]
+  OR?: Prisma.BusinessScalarWhereInput[]
+  NOT?: Prisma.BusinessScalarWhereInput | Prisma.BusinessScalarWhereInput[]
+  id?: Prisma.IntFilter<"Business"> | number
+  business?: Prisma.StringFilter<"Business"> | string
+  websiteUrl?: Prisma.StringNullableFilter<"Business"> | string | null
+  isActiveOnAiAuthorityExchange?: Prisma.BoolFilter<"Business"> | boolean
+  aiAuthorityExchangeJoinedAt?: Prisma.DateTimeNullableFilter<"Business"> | Date | string | null
+  aiAuthorityExchangeRetiredAt?: Prisma.DateTimeNullableFilter<"Business"> | Date | string | null
+  aiAuthorityExchangeRetiredInRoundBatchId?: Prisma.IntNullableFilter<"Business"> | number | null
+  google_drive_folder_url?: Prisma.StringNullableFilter<"Business"> | string | null
+  writer_411_document_url?: Prisma.StringNullableFilter<"Business"> | string | null
+  discovery_packet_document_url?: Prisma.StringNullableFilter<"Business"> | string | null
+  client_status?: Prisma.Enumclient_statusFilter<"Business"> | $Enums.client_status
+  created_at?: Prisma.DateTimeFilter<"Business"> | Date | string
+  updated_at?: Prisma.DateTimeFilter<"Business"> | Date | string
+  subcategory?: Prisma.StringNullableFilter<"Business"> | string | null
+  description?: Prisma.StringNullableFilter<"Business"> | string | null
+  writing_topics?: Prisma.StringNullableListFilter<"Business">
+  target_audience?: Prisma.StringNullableFilter<"Business"> | string | null
+  business_category_id?: Prisma.IntNullableFilter<"Business"> | number | null
+  domain_rating?: Prisma.IntNullableFilter<"Business"> | number | null
+  related_category_ids?: Prisma.IntNullableListFilter<"Business">
+  related_categories_reasoning?: Prisma.StringNullableFilter<"Business"> | string | null
+  clientType?: Prisma.EnumBusinessRoleTypeNullableFilter<"Business"> | $Enums.BusinessRoleType | null
+}
+
+export type BusinessCreateWithoutIncomingRoundAssignmentsInput = {
+  business: string
+  websiteUrl?: string | null
+  isActiveOnAiAuthorityExchange?: boolean
+  aiAuthorityExchangeJoinedAt?: Date | string | null
+  aiAuthorityExchangeRetiredAt?: Date | string | null
+  google_drive_folder_url?: string | null
+  writer_411_document_url?: string | null
+  discovery_packet_document_url?: string | null
+  client_status?: $Enums.client_status
+  created_at?: Date | string
+  updated_at?: Date | string
+  subcategory?: string | null
+  description?: string | null
+  writing_topics?: Prisma.BusinessCreatewriting_topicsInput | string[]
+  target_audience?: string | null
+  domain_rating?: number | null
+  related_category_ids?: Prisma.BusinessCreaterelated_category_idsInput | number[]
+  related_categories_reasoning?: string | null
+  clientType?: $Enums.BusinessRoleType | null
+  guestMatches?: Prisma.MatchCreateNestedManyWithoutGuestInput
+  hostedMatches?: Prisma.MatchCreateNestedManyWithoutHostInput
+  aiAuthorityExchangeRetiredInRoundBatch?: Prisma.RoundBatchCreateNestedOneWithoutRetiredBusinessesInput
+  outgoingRoundAssignments?: Prisma.RoundAssignmentCreateNestedManyWithoutHostBusinessInput
+  business_categories?: Prisma.business_categoriesCreateNestedOneWithoutBusinessesInput
+  client_details?: Prisma.client_detailsCreateNestedOneWithoutBusinessesInput
+  publications?: Prisma.publicationsCreateNestedManyWithoutBusinessesInput
+}
+
+export type BusinessUncheckedCreateWithoutIncomingRoundAssignmentsInput = {
+  id?: number
+  business: string
+  websiteUrl?: string | null
+  isActiveOnAiAuthorityExchange?: boolean
+  aiAuthorityExchangeJoinedAt?: Date | string | null
+  aiAuthorityExchangeRetiredAt?: Date | string | null
+  aiAuthorityExchangeRetiredInRoundBatchId?: number | null
+  google_drive_folder_url?: string | null
+  writer_411_document_url?: string | null
+  discovery_packet_document_url?: string | null
+  client_status?: $Enums.client_status
+  created_at?: Date | string
+  updated_at?: Date | string
+  subcategory?: string | null
+  description?: string | null
+  writing_topics?: Prisma.BusinessCreatewriting_topicsInput | string[]
+  target_audience?: string | null
+  business_category_id?: number | null
+  domain_rating?: number | null
+  related_category_ids?: Prisma.BusinessCreaterelated_category_idsInput | number[]
+  related_categories_reasoning?: string | null
+  clientType?: $Enums.BusinessRoleType | null
+  guestMatches?: Prisma.MatchUncheckedCreateNestedManyWithoutGuestInput
+  hostedMatches?: Prisma.MatchUncheckedCreateNestedManyWithoutHostInput
+  outgoingRoundAssignments?: Prisma.RoundAssignmentUncheckedCreateNestedManyWithoutHostBusinessInput
+  client_details?: Prisma.client_detailsUncheckedCreateNestedOneWithoutBusinessesInput
+  publications?: Prisma.publicationsUncheckedCreateNestedManyWithoutBusinessesInput
+}
+
+export type BusinessCreateOrConnectWithoutIncomingRoundAssignmentsInput = {
+  where: Prisma.BusinessWhereUniqueInput
+  create: Prisma.XOR<Prisma.BusinessCreateWithoutIncomingRoundAssignmentsInput, Prisma.BusinessUncheckedCreateWithoutIncomingRoundAssignmentsInput>
+}
+
+export type BusinessCreateWithoutOutgoingRoundAssignmentsInput = {
+  business: string
+  websiteUrl?: string | null
+  isActiveOnAiAuthorityExchange?: boolean
+  aiAuthorityExchangeJoinedAt?: Date | string | null
+  aiAuthorityExchangeRetiredAt?: Date | string | null
+  google_drive_folder_url?: string | null
+  writer_411_document_url?: string | null
+  discovery_packet_document_url?: string | null
+  client_status?: $Enums.client_status
+  created_at?: Date | string
+  updated_at?: Date | string
+  subcategory?: string | null
+  description?: string | null
+  writing_topics?: Prisma.BusinessCreatewriting_topicsInput | string[]
+  target_audience?: string | null
+  domain_rating?: number | null
+  related_category_ids?: Prisma.BusinessCreaterelated_category_idsInput | number[]
+  related_categories_reasoning?: string | null
+  clientType?: $Enums.BusinessRoleType | null
+  guestMatches?: Prisma.MatchCreateNestedManyWithoutGuestInput
+  hostedMatches?: Prisma.MatchCreateNestedManyWithoutHostInput
+  aiAuthorityExchangeRetiredInRoundBatch?: Prisma.RoundBatchCreateNestedOneWithoutRetiredBusinessesInput
+  incomingRoundAssignments?: Prisma.RoundAssignmentCreateNestedManyWithoutGuestBusinessInput
+  business_categories?: Prisma.business_categoriesCreateNestedOneWithoutBusinessesInput
+  client_details?: Prisma.client_detailsCreateNestedOneWithoutBusinessesInput
+  publications?: Prisma.publicationsCreateNestedManyWithoutBusinessesInput
+}
+
+export type BusinessUncheckedCreateWithoutOutgoingRoundAssignmentsInput = {
+  id?: number
+  business: string
+  websiteUrl?: string | null
+  isActiveOnAiAuthorityExchange?: boolean
+  aiAuthorityExchangeJoinedAt?: Date | string | null
+  aiAuthorityExchangeRetiredAt?: Date | string | null
+  aiAuthorityExchangeRetiredInRoundBatchId?: number | null
+  google_drive_folder_url?: string | null
+  writer_411_document_url?: string | null
+  discovery_packet_document_url?: string | null
+  client_status?: $Enums.client_status
+  created_at?: Date | string
+  updated_at?: Date | string
+  subcategory?: string | null
+  description?: string | null
+  writing_topics?: Prisma.BusinessCreatewriting_topicsInput | string[]
+  target_audience?: string | null
+  business_category_id?: number | null
+  domain_rating?: number | null
+  related_category_ids?: Prisma.BusinessCreaterelated_category_idsInput | number[]
+  related_categories_reasoning?: string | null
+  clientType?: $Enums.BusinessRoleType | null
+  guestMatches?: Prisma.MatchUncheckedCreateNestedManyWithoutGuestInput
+  hostedMatches?: Prisma.MatchUncheckedCreateNestedManyWithoutHostInput
+  incomingRoundAssignments?: Prisma.RoundAssignmentUncheckedCreateNestedManyWithoutGuestBusinessInput
+  client_details?: Prisma.client_detailsUncheckedCreateNestedOneWithoutBusinessesInput
+  publications?: Prisma.publicationsUncheckedCreateNestedManyWithoutBusinessesInput
+}
+
+export type BusinessCreateOrConnectWithoutOutgoingRoundAssignmentsInput = {
+  where: Prisma.BusinessWhereUniqueInput
+  create: Prisma.XOR<Prisma.BusinessCreateWithoutOutgoingRoundAssignmentsInput, Prisma.BusinessUncheckedCreateWithoutOutgoingRoundAssignmentsInput>
+}
+
+export type BusinessUpsertWithoutIncomingRoundAssignmentsInput = {
+  update: Prisma.XOR<Prisma.BusinessUpdateWithoutIncomingRoundAssignmentsInput, Prisma.BusinessUncheckedUpdateWithoutIncomingRoundAssignmentsInput>
+  create: Prisma.XOR<Prisma.BusinessCreateWithoutIncomingRoundAssignmentsInput, Prisma.BusinessUncheckedCreateWithoutIncomingRoundAssignmentsInput>
+  where?: Prisma.BusinessWhereInput
+}
+
+export type BusinessUpdateToOneWithWhereWithoutIncomingRoundAssignmentsInput = {
+  where?: Prisma.BusinessWhereInput
+  data: Prisma.XOR<Prisma.BusinessUpdateWithoutIncomingRoundAssignmentsInput, Prisma.BusinessUncheckedUpdateWithoutIncomingRoundAssignmentsInput>
+}
+
+export type BusinessUpdateWithoutIncomingRoundAssignmentsInput = {
+  business?: Prisma.StringFieldUpdateOperationsInput | string
+  websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActiveOnAiAuthorityExchange?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  aiAuthorityExchangeJoinedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  aiAuthorityExchangeRetiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  client_status?: Prisma.Enumclient_statusFieldUpdateOperationsInput | $Enums.client_status
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  subcategory?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writing_topics?: Prisma.BusinessUpdatewriting_topicsInput | string[]
+  target_audience?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  domain_rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  related_category_ids?: Prisma.BusinessUpdaterelated_category_idsInput | number[]
+  related_categories_reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
+  guestMatches?: Prisma.MatchUpdateManyWithoutGuestNestedInput
+  hostedMatches?: Prisma.MatchUpdateManyWithoutHostNestedInput
+  aiAuthorityExchangeRetiredInRoundBatch?: Prisma.RoundBatchUpdateOneWithoutRetiredBusinessesNestedInput
+  outgoingRoundAssignments?: Prisma.RoundAssignmentUpdateManyWithoutHostBusinessNestedInput
+  business_categories?: Prisma.business_categoriesUpdateOneWithoutBusinessesNestedInput
+  client_details?: Prisma.client_detailsUpdateOneWithoutBusinessesNestedInput
+  publications?: Prisma.publicationsUpdateManyWithoutBusinessesNestedInput
+}
+
+export type BusinessUncheckedUpdateWithoutIncomingRoundAssignmentsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  business?: Prisma.StringFieldUpdateOperationsInput | string
+  websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActiveOnAiAuthorityExchange?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  aiAuthorityExchangeJoinedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  aiAuthorityExchangeRetiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  aiAuthorityExchangeRetiredInRoundBatchId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  client_status?: Prisma.Enumclient_statusFieldUpdateOperationsInput | $Enums.client_status
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  subcategory?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writing_topics?: Prisma.BusinessUpdatewriting_topicsInput | string[]
+  target_audience?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  business_category_id?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  domain_rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  related_category_ids?: Prisma.BusinessUpdaterelated_category_idsInput | number[]
+  related_categories_reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
+  guestMatches?: Prisma.MatchUncheckedUpdateManyWithoutGuestNestedInput
+  hostedMatches?: Prisma.MatchUncheckedUpdateManyWithoutHostNestedInput
+  outgoingRoundAssignments?: Prisma.RoundAssignmentUncheckedUpdateManyWithoutHostBusinessNestedInput
+  client_details?: Prisma.client_detailsUncheckedUpdateOneWithoutBusinessesNestedInput
+  publications?: Prisma.publicationsUncheckedUpdateManyWithoutBusinessesNestedInput
+}
+
+export type BusinessUpsertWithoutOutgoingRoundAssignmentsInput = {
+  update: Prisma.XOR<Prisma.BusinessUpdateWithoutOutgoingRoundAssignmentsInput, Prisma.BusinessUncheckedUpdateWithoutOutgoingRoundAssignmentsInput>
+  create: Prisma.XOR<Prisma.BusinessCreateWithoutOutgoingRoundAssignmentsInput, Prisma.BusinessUncheckedCreateWithoutOutgoingRoundAssignmentsInput>
+  where?: Prisma.BusinessWhereInput
+}
+
+export type BusinessUpdateToOneWithWhereWithoutOutgoingRoundAssignmentsInput = {
+  where?: Prisma.BusinessWhereInput
+  data: Prisma.XOR<Prisma.BusinessUpdateWithoutOutgoingRoundAssignmentsInput, Prisma.BusinessUncheckedUpdateWithoutOutgoingRoundAssignmentsInput>
+}
+
+export type BusinessUpdateWithoutOutgoingRoundAssignmentsInput = {
+  business?: Prisma.StringFieldUpdateOperationsInput | string
+  websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActiveOnAiAuthorityExchange?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  aiAuthorityExchangeJoinedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  aiAuthorityExchangeRetiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  client_status?: Prisma.Enumclient_statusFieldUpdateOperationsInput | $Enums.client_status
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  subcategory?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writing_topics?: Prisma.BusinessUpdatewriting_topicsInput | string[]
+  target_audience?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  domain_rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  related_category_ids?: Prisma.BusinessUpdaterelated_category_idsInput | number[]
+  related_categories_reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
+  guestMatches?: Prisma.MatchUpdateManyWithoutGuestNestedInput
+  hostedMatches?: Prisma.MatchUpdateManyWithoutHostNestedInput
+  aiAuthorityExchangeRetiredInRoundBatch?: Prisma.RoundBatchUpdateOneWithoutRetiredBusinessesNestedInput
+  incomingRoundAssignments?: Prisma.RoundAssignmentUpdateManyWithoutGuestBusinessNestedInput
+  business_categories?: Prisma.business_categoriesUpdateOneWithoutBusinessesNestedInput
+  client_details?: Prisma.client_detailsUpdateOneWithoutBusinessesNestedInput
+  publications?: Prisma.publicationsUpdateManyWithoutBusinessesNestedInput
+}
+
+export type BusinessUncheckedUpdateWithoutOutgoingRoundAssignmentsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  business?: Prisma.StringFieldUpdateOperationsInput | string
+  websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActiveOnAiAuthorityExchange?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  aiAuthorityExchangeJoinedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  aiAuthorityExchangeRetiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  aiAuthorityExchangeRetiredInRoundBatchId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  client_status?: Prisma.Enumclient_statusFieldUpdateOperationsInput | $Enums.client_status
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  subcategory?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writing_topics?: Prisma.BusinessUpdatewriting_topicsInput | string[]
+  target_audience?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  business_category_id?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  domain_rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  related_category_ids?: Prisma.BusinessUpdaterelated_category_idsInput | number[]
+  related_categories_reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
+  guestMatches?: Prisma.MatchUncheckedUpdateManyWithoutGuestNestedInput
+  hostedMatches?: Prisma.MatchUncheckedUpdateManyWithoutHostNestedInput
+  incomingRoundAssignments?: Prisma.RoundAssignmentUncheckedUpdateManyWithoutGuestBusinessNestedInput
+  client_details?: Prisma.client_detailsUncheckedUpdateOneWithoutBusinessesNestedInput
+  publications?: Prisma.publicationsUncheckedUpdateManyWithoutBusinessesNestedInput
+}
+
+export type BusinessCreateWithoutBusiness_categoriesInput = {
+  business: string
+  websiteUrl?: string | null
+  isActiveOnAiAuthorityExchange?: boolean
+  aiAuthorityExchangeJoinedAt?: Date | string | null
+  aiAuthorityExchangeRetiredAt?: Date | string | null
+  google_drive_folder_url?: string | null
+  writer_411_document_url?: string | null
+  discovery_packet_document_url?: string | null
+  client_status?: $Enums.client_status
+  created_at?: Date | string
+  updated_at?: Date | string
+  subcategory?: string | null
+  description?: string | null
+  writing_topics?: Prisma.BusinessCreatewriting_topicsInput | string[]
+  target_audience?: string | null
+  domain_rating?: number | null
+  related_category_ids?: Prisma.BusinessCreaterelated_category_idsInput | number[]
+  related_categories_reasoning?: string | null
+  clientType?: $Enums.BusinessRoleType | null
+  guestMatches?: Prisma.MatchCreateNestedManyWithoutGuestInput
+  hostedMatches?: Prisma.MatchCreateNestedManyWithoutHostInput
+  aiAuthorityExchangeRetiredInRoundBatch?: Prisma.RoundBatchCreateNestedOneWithoutRetiredBusinessesInput
+  incomingRoundAssignments?: Prisma.RoundAssignmentCreateNestedManyWithoutGuestBusinessInput
+  outgoingRoundAssignments?: Prisma.RoundAssignmentCreateNestedManyWithoutHostBusinessInput
   client_details?: Prisma.client_detailsCreateNestedOneWithoutBusinessesInput
   publications?: Prisma.publicationsCreateNestedManyWithoutBusinessesInput
 }
@@ -1098,6 +1721,10 @@ export type BusinessUncheckedCreateWithoutBusiness_categoriesInput = {
   id?: number
   business: string
   websiteUrl?: string | null
+  isActiveOnAiAuthorityExchange?: boolean
+  aiAuthorityExchangeJoinedAt?: Date | string | null
+  aiAuthorityExchangeRetiredAt?: Date | string | null
+  aiAuthorityExchangeRetiredInRoundBatchId?: number | null
   google_drive_folder_url?: string | null
   writer_411_document_url?: string | null
   discovery_packet_document_url?: string | null
@@ -1114,6 +1741,8 @@ export type BusinessUncheckedCreateWithoutBusiness_categoriesInput = {
   clientType?: $Enums.BusinessRoleType | null
   guestMatches?: Prisma.MatchUncheckedCreateNestedManyWithoutGuestInput
   hostedMatches?: Prisma.MatchUncheckedCreateNestedManyWithoutHostInput
+  incomingRoundAssignments?: Prisma.RoundAssignmentUncheckedCreateNestedManyWithoutGuestBusinessInput
+  outgoingRoundAssignments?: Prisma.RoundAssignmentUncheckedCreateNestedManyWithoutHostBusinessInput
   client_details?: Prisma.client_detailsUncheckedCreateNestedOneWithoutBusinessesInput
   publications?: Prisma.publicationsUncheckedCreateNestedManyWithoutBusinessesInput
 }
@@ -1144,33 +1773,12 @@ export type BusinessUpdateManyWithWhereWithoutBusiness_categoriesInput = {
   data: Prisma.XOR<Prisma.BusinessUpdateManyMutationInput, Prisma.BusinessUncheckedUpdateManyWithoutBusiness_categoriesInput>
 }
 
-export type BusinessScalarWhereInput = {
-  AND?: Prisma.BusinessScalarWhereInput | Prisma.BusinessScalarWhereInput[]
-  OR?: Prisma.BusinessScalarWhereInput[]
-  NOT?: Prisma.BusinessScalarWhereInput | Prisma.BusinessScalarWhereInput[]
-  id?: Prisma.IntFilter<"Business"> | number
-  business?: Prisma.StringFilter<"Business"> | string
-  websiteUrl?: Prisma.StringNullableFilter<"Business"> | string | null
-  google_drive_folder_url?: Prisma.StringNullableFilter<"Business"> | string | null
-  writer_411_document_url?: Prisma.StringNullableFilter<"Business"> | string | null
-  discovery_packet_document_url?: Prisma.StringNullableFilter<"Business"> | string | null
-  client_status?: Prisma.Enumclient_statusFilter<"Business"> | $Enums.client_status
-  created_at?: Prisma.DateTimeFilter<"Business"> | Date | string
-  updated_at?: Prisma.DateTimeFilter<"Business"> | Date | string
-  subcategory?: Prisma.StringNullableFilter<"Business"> | string | null
-  description?: Prisma.StringNullableFilter<"Business"> | string | null
-  writing_topics?: Prisma.StringNullableListFilter<"Business">
-  target_audience?: Prisma.StringNullableFilter<"Business"> | string | null
-  business_category_id?: Prisma.IntNullableFilter<"Business"> | number | null
-  domain_rating?: Prisma.IntNullableFilter<"Business"> | number | null
-  related_category_ids?: Prisma.IntNullableListFilter<"Business">
-  related_categories_reasoning?: Prisma.StringNullableFilter<"Business"> | string | null
-  clientType?: Prisma.EnumBusinessRoleTypeNullableFilter<"Business"> | $Enums.BusinessRoleType | null
-}
-
 export type BusinessCreateWithoutClient_detailsInput = {
   business: string
   websiteUrl?: string | null
+  isActiveOnAiAuthorityExchange?: boolean
+  aiAuthorityExchangeJoinedAt?: Date | string | null
+  aiAuthorityExchangeRetiredAt?: Date | string | null
   google_drive_folder_url?: string | null
   writer_411_document_url?: string | null
   discovery_packet_document_url?: string | null
@@ -1187,6 +1795,9 @@ export type BusinessCreateWithoutClient_detailsInput = {
   clientType?: $Enums.BusinessRoleType | null
   guestMatches?: Prisma.MatchCreateNestedManyWithoutGuestInput
   hostedMatches?: Prisma.MatchCreateNestedManyWithoutHostInput
+  aiAuthorityExchangeRetiredInRoundBatch?: Prisma.RoundBatchCreateNestedOneWithoutRetiredBusinessesInput
+  incomingRoundAssignments?: Prisma.RoundAssignmentCreateNestedManyWithoutGuestBusinessInput
+  outgoingRoundAssignments?: Prisma.RoundAssignmentCreateNestedManyWithoutHostBusinessInput
   business_categories?: Prisma.business_categoriesCreateNestedOneWithoutBusinessesInput
   publications?: Prisma.publicationsCreateNestedManyWithoutBusinessesInput
 }
@@ -1195,6 +1806,10 @@ export type BusinessUncheckedCreateWithoutClient_detailsInput = {
   id?: number
   business: string
   websiteUrl?: string | null
+  isActiveOnAiAuthorityExchange?: boolean
+  aiAuthorityExchangeJoinedAt?: Date | string | null
+  aiAuthorityExchangeRetiredAt?: Date | string | null
+  aiAuthorityExchangeRetiredInRoundBatchId?: number | null
   google_drive_folder_url?: string | null
   writer_411_document_url?: string | null
   discovery_packet_document_url?: string | null
@@ -1212,6 +1827,8 @@ export type BusinessUncheckedCreateWithoutClient_detailsInput = {
   clientType?: $Enums.BusinessRoleType | null
   guestMatches?: Prisma.MatchUncheckedCreateNestedManyWithoutGuestInput
   hostedMatches?: Prisma.MatchUncheckedCreateNestedManyWithoutHostInput
+  incomingRoundAssignments?: Prisma.RoundAssignmentUncheckedCreateNestedManyWithoutGuestBusinessInput
+  outgoingRoundAssignments?: Prisma.RoundAssignmentUncheckedCreateNestedManyWithoutHostBusinessInput
   publications?: Prisma.publicationsUncheckedCreateNestedManyWithoutBusinessesInput
 }
 
@@ -1234,6 +1851,9 @@ export type BusinessUpdateToOneWithWhereWithoutClient_detailsInput = {
 export type BusinessUpdateWithoutClient_detailsInput = {
   business?: Prisma.StringFieldUpdateOperationsInput | string
   websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActiveOnAiAuthorityExchange?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  aiAuthorityExchangeJoinedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  aiAuthorityExchangeRetiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1250,6 +1870,9 @@ export type BusinessUpdateWithoutClient_detailsInput = {
   clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
   guestMatches?: Prisma.MatchUpdateManyWithoutGuestNestedInput
   hostedMatches?: Prisma.MatchUpdateManyWithoutHostNestedInput
+  aiAuthorityExchangeRetiredInRoundBatch?: Prisma.RoundBatchUpdateOneWithoutRetiredBusinessesNestedInput
+  incomingRoundAssignments?: Prisma.RoundAssignmentUpdateManyWithoutGuestBusinessNestedInput
+  outgoingRoundAssignments?: Prisma.RoundAssignmentUpdateManyWithoutHostBusinessNestedInput
   business_categories?: Prisma.business_categoriesUpdateOneWithoutBusinessesNestedInput
   publications?: Prisma.publicationsUpdateManyWithoutBusinessesNestedInput
 }
@@ -1258,6 +1881,10 @@ export type BusinessUncheckedUpdateWithoutClient_detailsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   business?: Prisma.StringFieldUpdateOperationsInput | string
   websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActiveOnAiAuthorityExchange?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  aiAuthorityExchangeJoinedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  aiAuthorityExchangeRetiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  aiAuthorityExchangeRetiredInRoundBatchId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1275,12 +1902,17 @@ export type BusinessUncheckedUpdateWithoutClient_detailsInput = {
   clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
   guestMatches?: Prisma.MatchUncheckedUpdateManyWithoutGuestNestedInput
   hostedMatches?: Prisma.MatchUncheckedUpdateManyWithoutHostNestedInput
+  incomingRoundAssignments?: Prisma.RoundAssignmentUncheckedUpdateManyWithoutGuestBusinessNestedInput
+  outgoingRoundAssignments?: Prisma.RoundAssignmentUncheckedUpdateManyWithoutHostBusinessNestedInput
   publications?: Prisma.publicationsUncheckedUpdateManyWithoutBusinessesNestedInput
 }
 
 export type BusinessCreateWithoutPublicationsInput = {
   business: string
   websiteUrl?: string | null
+  isActiveOnAiAuthorityExchange?: boolean
+  aiAuthorityExchangeJoinedAt?: Date | string | null
+  aiAuthorityExchangeRetiredAt?: Date | string | null
   google_drive_folder_url?: string | null
   writer_411_document_url?: string | null
   discovery_packet_document_url?: string | null
@@ -1297,6 +1929,9 @@ export type BusinessCreateWithoutPublicationsInput = {
   clientType?: $Enums.BusinessRoleType | null
   guestMatches?: Prisma.MatchCreateNestedManyWithoutGuestInput
   hostedMatches?: Prisma.MatchCreateNestedManyWithoutHostInput
+  aiAuthorityExchangeRetiredInRoundBatch?: Prisma.RoundBatchCreateNestedOneWithoutRetiredBusinessesInput
+  incomingRoundAssignments?: Prisma.RoundAssignmentCreateNestedManyWithoutGuestBusinessInput
+  outgoingRoundAssignments?: Prisma.RoundAssignmentCreateNestedManyWithoutHostBusinessInput
   business_categories?: Prisma.business_categoriesCreateNestedOneWithoutBusinessesInput
   client_details?: Prisma.client_detailsCreateNestedOneWithoutBusinessesInput
 }
@@ -1305,6 +1940,10 @@ export type BusinessUncheckedCreateWithoutPublicationsInput = {
   id?: number
   business: string
   websiteUrl?: string | null
+  isActiveOnAiAuthorityExchange?: boolean
+  aiAuthorityExchangeJoinedAt?: Date | string | null
+  aiAuthorityExchangeRetiredAt?: Date | string | null
+  aiAuthorityExchangeRetiredInRoundBatchId?: number | null
   google_drive_folder_url?: string | null
   writer_411_document_url?: string | null
   discovery_packet_document_url?: string | null
@@ -1322,6 +1961,8 @@ export type BusinessUncheckedCreateWithoutPublicationsInput = {
   clientType?: $Enums.BusinessRoleType | null
   guestMatches?: Prisma.MatchUncheckedCreateNestedManyWithoutGuestInput
   hostedMatches?: Prisma.MatchUncheckedCreateNestedManyWithoutHostInput
+  incomingRoundAssignments?: Prisma.RoundAssignmentUncheckedCreateNestedManyWithoutGuestBusinessInput
+  outgoingRoundAssignments?: Prisma.RoundAssignmentUncheckedCreateNestedManyWithoutHostBusinessInput
   client_details?: Prisma.client_detailsUncheckedCreateNestedOneWithoutBusinessesInput
 }
 
@@ -1344,6 +1985,9 @@ export type BusinessUpdateToOneWithWhereWithoutPublicationsInput = {
 export type BusinessUpdateWithoutPublicationsInput = {
   business?: Prisma.StringFieldUpdateOperationsInput | string
   websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActiveOnAiAuthorityExchange?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  aiAuthorityExchangeJoinedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  aiAuthorityExchangeRetiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1360,6 +2004,9 @@ export type BusinessUpdateWithoutPublicationsInput = {
   clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
   guestMatches?: Prisma.MatchUpdateManyWithoutGuestNestedInput
   hostedMatches?: Prisma.MatchUpdateManyWithoutHostNestedInput
+  aiAuthorityExchangeRetiredInRoundBatch?: Prisma.RoundBatchUpdateOneWithoutRetiredBusinessesNestedInput
+  incomingRoundAssignments?: Prisma.RoundAssignmentUpdateManyWithoutGuestBusinessNestedInput
+  outgoingRoundAssignments?: Prisma.RoundAssignmentUpdateManyWithoutHostBusinessNestedInput
   business_categories?: Prisma.business_categoriesUpdateOneWithoutBusinessesNestedInput
   client_details?: Prisma.client_detailsUpdateOneWithoutBusinessesNestedInput
 }
@@ -1368,6 +2015,10 @@ export type BusinessUncheckedUpdateWithoutPublicationsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   business?: Prisma.StringFieldUpdateOperationsInput | string
   websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActiveOnAiAuthorityExchange?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  aiAuthorityExchangeJoinedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  aiAuthorityExchangeRetiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  aiAuthorityExchangeRetiredInRoundBatchId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1385,13 +2036,126 @@ export type BusinessUncheckedUpdateWithoutPublicationsInput = {
   clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
   guestMatches?: Prisma.MatchUncheckedUpdateManyWithoutGuestNestedInput
   hostedMatches?: Prisma.MatchUncheckedUpdateManyWithoutHostNestedInput
+  incomingRoundAssignments?: Prisma.RoundAssignmentUncheckedUpdateManyWithoutGuestBusinessNestedInput
+  outgoingRoundAssignments?: Prisma.RoundAssignmentUncheckedUpdateManyWithoutHostBusinessNestedInput
   client_details?: Prisma.client_detailsUncheckedUpdateOneWithoutBusinessesNestedInput
+}
+
+export type BusinessCreateManyAiAuthorityExchangeRetiredInRoundBatchInput = {
+  id?: number
+  business: string
+  websiteUrl?: string | null
+  isActiveOnAiAuthorityExchange?: boolean
+  aiAuthorityExchangeJoinedAt?: Date | string | null
+  aiAuthorityExchangeRetiredAt?: Date | string | null
+  google_drive_folder_url?: string | null
+  writer_411_document_url?: string | null
+  discovery_packet_document_url?: string | null
+  client_status?: $Enums.client_status
+  created_at?: Date | string
+  updated_at?: Date | string
+  subcategory?: string | null
+  description?: string | null
+  writing_topics?: Prisma.BusinessCreatewriting_topicsInput | string[]
+  target_audience?: string | null
+  business_category_id?: number | null
+  domain_rating?: number | null
+  related_category_ids?: Prisma.BusinessCreaterelated_category_idsInput | number[]
+  related_categories_reasoning?: string | null
+  clientType?: $Enums.BusinessRoleType | null
+}
+
+export type BusinessUpdateWithoutAiAuthorityExchangeRetiredInRoundBatchInput = {
+  business?: Prisma.StringFieldUpdateOperationsInput | string
+  websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActiveOnAiAuthorityExchange?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  aiAuthorityExchangeJoinedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  aiAuthorityExchangeRetiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  client_status?: Prisma.Enumclient_statusFieldUpdateOperationsInput | $Enums.client_status
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  subcategory?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writing_topics?: Prisma.BusinessUpdatewriting_topicsInput | string[]
+  target_audience?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  domain_rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  related_category_ids?: Prisma.BusinessUpdaterelated_category_idsInput | number[]
+  related_categories_reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
+  guestMatches?: Prisma.MatchUpdateManyWithoutGuestNestedInput
+  hostedMatches?: Prisma.MatchUpdateManyWithoutHostNestedInput
+  incomingRoundAssignments?: Prisma.RoundAssignmentUpdateManyWithoutGuestBusinessNestedInput
+  outgoingRoundAssignments?: Prisma.RoundAssignmentUpdateManyWithoutHostBusinessNestedInput
+  business_categories?: Prisma.business_categoriesUpdateOneWithoutBusinessesNestedInput
+  client_details?: Prisma.client_detailsUpdateOneWithoutBusinessesNestedInput
+  publications?: Prisma.publicationsUpdateManyWithoutBusinessesNestedInput
+}
+
+export type BusinessUncheckedUpdateWithoutAiAuthorityExchangeRetiredInRoundBatchInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  business?: Prisma.StringFieldUpdateOperationsInput | string
+  websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActiveOnAiAuthorityExchange?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  aiAuthorityExchangeJoinedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  aiAuthorityExchangeRetiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  client_status?: Prisma.Enumclient_statusFieldUpdateOperationsInput | $Enums.client_status
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  subcategory?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writing_topics?: Prisma.BusinessUpdatewriting_topicsInput | string[]
+  target_audience?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  business_category_id?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  domain_rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  related_category_ids?: Prisma.BusinessUpdaterelated_category_idsInput | number[]
+  related_categories_reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
+  guestMatches?: Prisma.MatchUncheckedUpdateManyWithoutGuestNestedInput
+  hostedMatches?: Prisma.MatchUncheckedUpdateManyWithoutHostNestedInput
+  incomingRoundAssignments?: Prisma.RoundAssignmentUncheckedUpdateManyWithoutGuestBusinessNestedInput
+  outgoingRoundAssignments?: Prisma.RoundAssignmentUncheckedUpdateManyWithoutHostBusinessNestedInput
+  client_details?: Prisma.client_detailsUncheckedUpdateOneWithoutBusinessesNestedInput
+  publications?: Prisma.publicationsUncheckedUpdateManyWithoutBusinessesNestedInput
+}
+
+export type BusinessUncheckedUpdateManyWithoutAiAuthorityExchangeRetiredInRoundBatchInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  business?: Prisma.StringFieldUpdateOperationsInput | string
+  websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActiveOnAiAuthorityExchange?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  aiAuthorityExchangeJoinedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  aiAuthorityExchangeRetiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  client_status?: Prisma.Enumclient_statusFieldUpdateOperationsInput | $Enums.client_status
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  subcategory?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  writing_topics?: Prisma.BusinessUpdatewriting_topicsInput | string[]
+  target_audience?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  business_category_id?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  domain_rating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  related_category_ids?: Prisma.BusinessUpdaterelated_category_idsInput | number[]
+  related_categories_reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
 }
 
 export type BusinessCreateManyBusiness_categoriesInput = {
   id?: number
   business: string
   websiteUrl?: string | null
+  isActiveOnAiAuthorityExchange?: boolean
+  aiAuthorityExchangeJoinedAt?: Date | string | null
+  aiAuthorityExchangeRetiredAt?: Date | string | null
+  aiAuthorityExchangeRetiredInRoundBatchId?: number | null
   google_drive_folder_url?: string | null
   writer_411_document_url?: string | null
   discovery_packet_document_url?: string | null
@@ -1411,6 +2175,9 @@ export type BusinessCreateManyBusiness_categoriesInput = {
 export type BusinessUpdateWithoutBusiness_categoriesInput = {
   business?: Prisma.StringFieldUpdateOperationsInput | string
   websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActiveOnAiAuthorityExchange?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  aiAuthorityExchangeJoinedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  aiAuthorityExchangeRetiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1427,6 +2194,9 @@ export type BusinessUpdateWithoutBusiness_categoriesInput = {
   clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
   guestMatches?: Prisma.MatchUpdateManyWithoutGuestNestedInput
   hostedMatches?: Prisma.MatchUpdateManyWithoutHostNestedInput
+  aiAuthorityExchangeRetiredInRoundBatch?: Prisma.RoundBatchUpdateOneWithoutRetiredBusinessesNestedInput
+  incomingRoundAssignments?: Prisma.RoundAssignmentUpdateManyWithoutGuestBusinessNestedInput
+  outgoingRoundAssignments?: Prisma.RoundAssignmentUpdateManyWithoutHostBusinessNestedInput
   client_details?: Prisma.client_detailsUpdateOneWithoutBusinessesNestedInput
   publications?: Prisma.publicationsUpdateManyWithoutBusinessesNestedInput
 }
@@ -1435,6 +2205,10 @@ export type BusinessUncheckedUpdateWithoutBusiness_categoriesInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   business?: Prisma.StringFieldUpdateOperationsInput | string
   websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActiveOnAiAuthorityExchange?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  aiAuthorityExchangeJoinedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  aiAuthorityExchangeRetiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  aiAuthorityExchangeRetiredInRoundBatchId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1451,6 +2225,8 @@ export type BusinessUncheckedUpdateWithoutBusiness_categoriesInput = {
   clientType?: Prisma.NullableEnumBusinessRoleTypeFieldUpdateOperationsInput | $Enums.BusinessRoleType | null
   guestMatches?: Prisma.MatchUncheckedUpdateManyWithoutGuestNestedInput
   hostedMatches?: Prisma.MatchUncheckedUpdateManyWithoutHostNestedInput
+  incomingRoundAssignments?: Prisma.RoundAssignmentUncheckedUpdateManyWithoutGuestBusinessNestedInput
+  outgoingRoundAssignments?: Prisma.RoundAssignmentUncheckedUpdateManyWithoutHostBusinessNestedInput
   client_details?: Prisma.client_detailsUncheckedUpdateOneWithoutBusinessesNestedInput
   publications?: Prisma.publicationsUncheckedUpdateManyWithoutBusinessesNestedInput
 }
@@ -1459,6 +2235,10 @@ export type BusinessUncheckedUpdateManyWithoutBusiness_categoriesInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   business?: Prisma.StringFieldUpdateOperationsInput | string
   websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActiveOnAiAuthorityExchange?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  aiAuthorityExchangeJoinedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  aiAuthorityExchangeRetiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  aiAuthorityExchangeRetiredInRoundBatchId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   google_drive_folder_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   writer_411_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   discovery_packet_document_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1483,12 +2263,16 @@ export type BusinessUncheckedUpdateManyWithoutBusiness_categoriesInput = {
 export type BusinessCountOutputType = {
   guestMatches: number
   hostedMatches: number
+  incomingRoundAssignments: number
+  outgoingRoundAssignments: number
   publications: number
 }
 
 export type BusinessCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   guestMatches?: boolean | BusinessCountOutputTypeCountGuestMatchesArgs
   hostedMatches?: boolean | BusinessCountOutputTypeCountHostedMatchesArgs
+  incomingRoundAssignments?: boolean | BusinessCountOutputTypeCountIncomingRoundAssignmentsArgs
+  outgoingRoundAssignments?: boolean | BusinessCountOutputTypeCountOutgoingRoundAssignmentsArgs
   publications?: boolean | BusinessCountOutputTypeCountPublicationsArgs
 }
 
@@ -1519,6 +2303,20 @@ export type BusinessCountOutputTypeCountHostedMatchesArgs<ExtArgs extends runtim
 /**
  * BusinessCountOutputType without action
  */
+export type BusinessCountOutputTypeCountIncomingRoundAssignmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.RoundAssignmentWhereInput
+}
+
+/**
+ * BusinessCountOutputType without action
+ */
+export type BusinessCountOutputTypeCountOutgoingRoundAssignmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.RoundAssignmentWhereInput
+}
+
+/**
+ * BusinessCountOutputType without action
+ */
 export type BusinessCountOutputTypeCountPublicationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.publicationsWhereInput
 }
@@ -1528,6 +2326,10 @@ export type BusinessSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   id?: boolean
   business?: boolean
   websiteUrl?: boolean
+  isActiveOnAiAuthorityExchange?: boolean
+  aiAuthorityExchangeJoinedAt?: boolean
+  aiAuthorityExchangeRetiredAt?: boolean
+  aiAuthorityExchangeRetiredInRoundBatchId?: boolean
   google_drive_folder_url?: boolean
   writer_411_document_url?: boolean
   discovery_packet_document_url?: boolean
@@ -1545,6 +2347,9 @@ export type BusinessSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   clientType?: boolean
   guestMatches?: boolean | Prisma.Business$guestMatchesArgs<ExtArgs>
   hostedMatches?: boolean | Prisma.Business$hostedMatchesArgs<ExtArgs>
+  aiAuthorityExchangeRetiredInRoundBatch?: boolean | Prisma.Business$aiAuthorityExchangeRetiredInRoundBatchArgs<ExtArgs>
+  incomingRoundAssignments?: boolean | Prisma.Business$incomingRoundAssignmentsArgs<ExtArgs>
+  outgoingRoundAssignments?: boolean | Prisma.Business$outgoingRoundAssignmentsArgs<ExtArgs>
   business_categories?: boolean | Prisma.Business$business_categoriesArgs<ExtArgs>
   client_details?: boolean | Prisma.Business$client_detailsArgs<ExtArgs>
   publications?: boolean | Prisma.Business$publicationsArgs<ExtArgs>
@@ -1555,6 +2360,10 @@ export type BusinessSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   id?: boolean
   business?: boolean
   websiteUrl?: boolean
+  isActiveOnAiAuthorityExchange?: boolean
+  aiAuthorityExchangeJoinedAt?: boolean
+  aiAuthorityExchangeRetiredAt?: boolean
+  aiAuthorityExchangeRetiredInRoundBatchId?: boolean
   google_drive_folder_url?: boolean
   writer_411_document_url?: boolean
   discovery_packet_document_url?: boolean
@@ -1570,6 +2379,7 @@ export type BusinessSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   related_category_ids?: boolean
   related_categories_reasoning?: boolean
   clientType?: boolean
+  aiAuthorityExchangeRetiredInRoundBatch?: boolean | Prisma.Business$aiAuthorityExchangeRetiredInRoundBatchArgs<ExtArgs>
   business_categories?: boolean | Prisma.Business$business_categoriesArgs<ExtArgs>
 }, ExtArgs["result"]["business"]>
 
@@ -1577,6 +2387,10 @@ export type BusinessSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   id?: boolean
   business?: boolean
   websiteUrl?: boolean
+  isActiveOnAiAuthorityExchange?: boolean
+  aiAuthorityExchangeJoinedAt?: boolean
+  aiAuthorityExchangeRetiredAt?: boolean
+  aiAuthorityExchangeRetiredInRoundBatchId?: boolean
   google_drive_folder_url?: boolean
   writer_411_document_url?: boolean
   discovery_packet_document_url?: boolean
@@ -1592,6 +2406,7 @@ export type BusinessSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   related_category_ids?: boolean
   related_categories_reasoning?: boolean
   clientType?: boolean
+  aiAuthorityExchangeRetiredInRoundBatch?: boolean | Prisma.Business$aiAuthorityExchangeRetiredInRoundBatchArgs<ExtArgs>
   business_categories?: boolean | Prisma.Business$business_categoriesArgs<ExtArgs>
 }, ExtArgs["result"]["business"]>
 
@@ -1599,6 +2414,10 @@ export type BusinessSelectScalar = {
   id?: boolean
   business?: boolean
   websiteUrl?: boolean
+  isActiveOnAiAuthorityExchange?: boolean
+  aiAuthorityExchangeJoinedAt?: boolean
+  aiAuthorityExchangeRetiredAt?: boolean
+  aiAuthorityExchangeRetiredInRoundBatchId?: boolean
   google_drive_folder_url?: boolean
   writer_411_document_url?: boolean
   discovery_packet_document_url?: boolean
@@ -1616,19 +2435,24 @@ export type BusinessSelectScalar = {
   clientType?: boolean
 }
 
-export type BusinessOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "business" | "websiteUrl" | "google_drive_folder_url" | "writer_411_document_url" | "discovery_packet_document_url" | "client_status" | "created_at" | "updated_at" | "subcategory" | "description" | "writing_topics" | "target_audience" | "business_category_id" | "domain_rating" | "related_category_ids" | "related_categories_reasoning" | "clientType", ExtArgs["result"]["business"]>
+export type BusinessOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "business" | "websiteUrl" | "isActiveOnAiAuthorityExchange" | "aiAuthorityExchangeJoinedAt" | "aiAuthorityExchangeRetiredAt" | "aiAuthorityExchangeRetiredInRoundBatchId" | "google_drive_folder_url" | "writer_411_document_url" | "discovery_packet_document_url" | "client_status" | "created_at" | "updated_at" | "subcategory" | "description" | "writing_topics" | "target_audience" | "business_category_id" | "domain_rating" | "related_category_ids" | "related_categories_reasoning" | "clientType", ExtArgs["result"]["business"]>
 export type BusinessInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   guestMatches?: boolean | Prisma.Business$guestMatchesArgs<ExtArgs>
   hostedMatches?: boolean | Prisma.Business$hostedMatchesArgs<ExtArgs>
+  aiAuthorityExchangeRetiredInRoundBatch?: boolean | Prisma.Business$aiAuthorityExchangeRetiredInRoundBatchArgs<ExtArgs>
+  incomingRoundAssignments?: boolean | Prisma.Business$incomingRoundAssignmentsArgs<ExtArgs>
+  outgoingRoundAssignments?: boolean | Prisma.Business$outgoingRoundAssignmentsArgs<ExtArgs>
   business_categories?: boolean | Prisma.Business$business_categoriesArgs<ExtArgs>
   client_details?: boolean | Prisma.Business$client_detailsArgs<ExtArgs>
   publications?: boolean | Prisma.Business$publicationsArgs<ExtArgs>
   _count?: boolean | Prisma.BusinessCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type BusinessIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  aiAuthorityExchangeRetiredInRoundBatch?: boolean | Prisma.Business$aiAuthorityExchangeRetiredInRoundBatchArgs<ExtArgs>
   business_categories?: boolean | Prisma.Business$business_categoriesArgs<ExtArgs>
 }
 export type BusinessIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  aiAuthorityExchangeRetiredInRoundBatch?: boolean | Prisma.Business$aiAuthorityExchangeRetiredInRoundBatchArgs<ExtArgs>
   business_categories?: boolean | Prisma.Business$business_categoriesArgs<ExtArgs>
 }
 
@@ -1637,6 +2461,9 @@ export type $BusinessPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
   objects: {
     guestMatches: Prisma.$MatchPayload<ExtArgs>[]
     hostedMatches: Prisma.$MatchPayload<ExtArgs>[]
+    aiAuthorityExchangeRetiredInRoundBatch: Prisma.$RoundBatchPayload<ExtArgs> | null
+    incomingRoundAssignments: Prisma.$RoundAssignmentPayload<ExtArgs>[]
+    outgoingRoundAssignments: Prisma.$RoundAssignmentPayload<ExtArgs>[]
     business_categories: Prisma.$business_categoriesPayload<ExtArgs> | null
     client_details: Prisma.$client_detailsPayload<ExtArgs> | null
     publications: Prisma.$publicationsPayload<ExtArgs>[]
@@ -1645,6 +2472,10 @@ export type $BusinessPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     id: number
     business: string
     websiteUrl: string | null
+    isActiveOnAiAuthorityExchange: boolean
+    aiAuthorityExchangeJoinedAt: Date | null
+    aiAuthorityExchangeRetiredAt: Date | null
+    aiAuthorityExchangeRetiredInRoundBatchId: number | null
     google_drive_folder_url: string | null
     writer_411_document_url: string | null
     discovery_packet_document_url: string | null
@@ -2056,6 +2887,9 @@ export interface Prisma__BusinessClient<T, Null = never, ExtArgs extends runtime
   readonly [Symbol.toStringTag]: "PrismaPromise"
   guestMatches<T extends Prisma.Business$guestMatchesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Business$guestMatchesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MatchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   hostedMatches<T extends Prisma.Business$hostedMatchesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Business$hostedMatchesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MatchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  aiAuthorityExchangeRetiredInRoundBatch<T extends Prisma.Business$aiAuthorityExchangeRetiredInRoundBatchArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Business$aiAuthorityExchangeRetiredInRoundBatchArgs<ExtArgs>>): Prisma.Prisma__RoundBatchClient<runtime.Types.Result.GetResult<Prisma.$RoundBatchPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  incomingRoundAssignments<T extends Prisma.Business$incomingRoundAssignmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Business$incomingRoundAssignmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RoundAssignmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  outgoingRoundAssignments<T extends Prisma.Business$outgoingRoundAssignmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Business$outgoingRoundAssignmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RoundAssignmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   business_categories<T extends Prisma.Business$business_categoriesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Business$business_categoriesArgs<ExtArgs>>): Prisma.Prisma__business_categoriesClient<runtime.Types.Result.GetResult<Prisma.$business_categoriesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   client_details<T extends Prisma.Business$client_detailsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Business$client_detailsArgs<ExtArgs>>): Prisma.Prisma__client_detailsClient<runtime.Types.Result.GetResult<Prisma.$client_detailsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   publications<T extends Prisma.Business$publicationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Business$publicationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$publicationsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -2091,6 +2925,10 @@ export interface BusinessFieldRefs {
   readonly id: Prisma.FieldRef<"Business", 'Int'>
   readonly business: Prisma.FieldRef<"Business", 'String'>
   readonly websiteUrl: Prisma.FieldRef<"Business", 'String'>
+  readonly isActiveOnAiAuthorityExchange: Prisma.FieldRef<"Business", 'Boolean'>
+  readonly aiAuthorityExchangeJoinedAt: Prisma.FieldRef<"Business", 'DateTime'>
+  readonly aiAuthorityExchangeRetiredAt: Prisma.FieldRef<"Business", 'DateTime'>
+  readonly aiAuthorityExchangeRetiredInRoundBatchId: Prisma.FieldRef<"Business", 'Int'>
   readonly google_drive_folder_url: Prisma.FieldRef<"Business", 'String'>
   readonly writer_411_document_url: Prisma.FieldRef<"Business", 'String'>
   readonly discovery_packet_document_url: Prisma.FieldRef<"Business", 'String'>
@@ -2547,6 +3385,73 @@ export type Business$hostedMatchesArgs<ExtArgs extends runtime.Types.Extensions.
   take?: number
   skip?: number
   distinct?: Prisma.MatchScalarFieldEnum | Prisma.MatchScalarFieldEnum[]
+}
+
+/**
+ * Business.aiAuthorityExchangeRetiredInRoundBatch
+ */
+export type Business$aiAuthorityExchangeRetiredInRoundBatchArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the RoundBatch
+   */
+  select?: Prisma.RoundBatchSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the RoundBatch
+   */
+  omit?: Prisma.RoundBatchOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.RoundBatchInclude<ExtArgs> | null
+  where?: Prisma.RoundBatchWhereInput
+}
+
+/**
+ * Business.incomingRoundAssignments
+ */
+export type Business$incomingRoundAssignmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the RoundAssignment
+   */
+  select?: Prisma.RoundAssignmentSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the RoundAssignment
+   */
+  omit?: Prisma.RoundAssignmentOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.RoundAssignmentInclude<ExtArgs> | null
+  where?: Prisma.RoundAssignmentWhereInput
+  orderBy?: Prisma.RoundAssignmentOrderByWithRelationInput | Prisma.RoundAssignmentOrderByWithRelationInput[]
+  cursor?: Prisma.RoundAssignmentWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.RoundAssignmentScalarFieldEnum | Prisma.RoundAssignmentScalarFieldEnum[]
+}
+
+/**
+ * Business.outgoingRoundAssignments
+ */
+export type Business$outgoingRoundAssignmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the RoundAssignment
+   */
+  select?: Prisma.RoundAssignmentSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the RoundAssignment
+   */
+  omit?: Prisma.RoundAssignmentOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.RoundAssignmentInclude<ExtArgs> | null
+  where?: Prisma.RoundAssignmentWhereInput
+  orderBy?: Prisma.RoundAssignmentOrderByWithRelationInput | Prisma.RoundAssignmentOrderByWithRelationInput[]
+  cursor?: Prisma.RoundAssignmentWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.RoundAssignmentScalarFieldEnum | Prisma.RoundAssignmentScalarFieldEnum[]
 }
 
 /**
