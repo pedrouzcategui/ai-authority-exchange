@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { Prisma, type MatchStatus } from "@/generated/prisma/client";
+import { requireLegacyUserSession } from "@/lib/auth-session";
 import { formatDatabaseError, withDatabaseRetry } from "@/lib/prisma";
 
 type CreateMatchPayload = {
@@ -60,7 +61,8 @@ function parseMatchStatus(value: unknown) {
     return null;
   }
 
-  return typeof value === "string" && matchStatusValues.includes(value as MatchStatus)
+  return typeof value === "string" &&
+    matchStatusValues.includes(value as MatchStatus)
     ? (value as MatchStatus)
     : null;
 }
@@ -87,6 +89,12 @@ function parseNumericIdList(value: unknown) {
 }
 
 export async function POST(request: Request) {
+  const session = await requireLegacyUserSession();
+
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
   let payload: CreateMatchPayload;
 
   try {
@@ -249,6 +257,12 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  const session = await requireLegacyUserSession();
+
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
   let payload: UpdateMatchPayload;
 
   try {
@@ -339,7 +353,9 @@ export async function PATCH(request: Request) {
     }
 
     return NextResponse.json(
-      { error: `The match could not be updated. ${formatDatabaseError(error)}` },
+      {
+        error: `The match could not be updated. ${formatDatabaseError(error)}`,
+      },
       { status: 500 },
     );
   }

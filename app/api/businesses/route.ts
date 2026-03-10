@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { Prisma, type BusinessRoleType } from "@/generated/prisma/client";
+import { requireLegacyUserSession } from "@/lib/auth-session";
 import { prisma } from "@/lib/prisma";
 
 type CreateBusinessPayload = {
@@ -87,6 +88,12 @@ function parseNumericId(value: unknown) {
 }
 
 export async function POST(request: Request) {
+  const session = await requireLegacyUserSession();
+
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
   let payload: CreateBusinessPayload;
 
   try {
@@ -157,6 +164,12 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  const session = await requireLegacyUserSession();
+
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
   let payload: UpdateBusinessPayload;
 
   try {

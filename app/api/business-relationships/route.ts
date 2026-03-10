@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { Prisma } from "@/generated/prisma/client";
+import { requireLegacyUserSession } from "@/lib/auth-session";
 import { formatDatabaseError, withDatabaseRetry } from "@/lib/prisma";
 
 type UpdateBusinessRelationshipsPayload = {
@@ -46,6 +47,12 @@ function parseNumericIdList(value: unknown) {
 }
 
 export async function PUT(request: Request) {
+  const session = await requireLegacyUserSession();
+
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
   let payload: UpdateBusinessRelationshipsPayload;
 
   try {
