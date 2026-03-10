@@ -116,7 +116,7 @@ export default async function BusinessProfilePage({
       </section>
 
       <section className="rounded-4xl border border-border bg-surface p-6 shadow-(--shadow) backdrop-blur-md sm:p-8">
-        <BusinessMatchesTable businessName={business.business} rows={rows} />
+        <BusinessMatchesTable business={business} rows={rows} />
       </section>
     </main>
   );

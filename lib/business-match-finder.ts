@@ -2,7 +2,7 @@ import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import type { BusinessOption } from "@/lib/matches";
 
-const WEBHOOK_TIMEOUT_MS = 45_000;
+const WEBHOOK_TIMEOUT_MS = 60_000;
 
 export type BusinessMatchSuggestion = {
   competitionRationale: string | null;
@@ -16,6 +16,7 @@ export type BusinessMatchSuggestion = {
 
 export type LocalBusinessMatchCandidate = {
   categoryName: string | null;
+  clientType: "client" | "partner" | null;
   domainRating: number | null;
   id: number;
   name: string;
@@ -356,6 +357,7 @@ export const getLocalBusinessMatchCandidates = cache(
             name: true,
           },
         },
+        clientType: true,
         domain_rating: true,
         id: true,
         related_category_ids: true,
@@ -395,6 +397,7 @@ export const getLocalBusinessMatchCandidates = cache(
 
     return candidates.map((candidate) => ({
       categoryName: candidate.business_categories?.name ?? null,
+      clientType: candidate.clientType,
       domainRating: candidate.domain_rating,
       id: candidate.id,
       name: candidate.business,

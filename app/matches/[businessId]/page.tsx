@@ -1,7 +1,15 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import {
+  ActionTooltip,
+  BackIcon,
+  CategoryIcon,
+  CategorySectorIcon,
+  ExternalLinkIcon,
+} from "@/components/action-icons";
 import { BusinessMatchAnalysisToast } from "@/components/business-match-analysis-toast";
+import { CreateSuggestedMatchModal } from "@/components/create-suggested-match-modal";
 import { getBusinessProfileHref } from "@/lib/business-profile-route";
 import {
   findBusinessMatches,
@@ -139,8 +147,10 @@ function getCandidateForMatch(
 }
 
 function LocalShortlistTable({
+  parentBusiness,
   localCandidates,
 }: {
+  parentBusiness: BusinessOption;
   localCandidates: LocalBusinessMatchCandidate[];
 }) {
   if (localCandidates.length === 0) {
@@ -162,6 +172,7 @@ function LocalShortlistTable({
               <th className="px-5 py-4 sm:px-6">Subcategory Name</th>
               <th className="px-5 py-4 sm:px-6">Domain Rating</th>
               <th className="px-5 py-4 sm:px-6">Related Categories</th>
+              <th className="w-32 px-5 py-4 text-right sm:px-6">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -211,6 +222,19 @@ function LocalShortlistTable({
                   ) : (
                     "None"
                   )}
+                </td>
+                <td className="border-t border-border px-5 py-4 text-right align-middle sm:px-6">
+                  <div className="flex justify-end">
+                    <CreateSuggestedMatchModal
+                      parentBusiness={parentBusiness}
+                      suggestedBusiness={{
+                        business: candidate.name,
+                        clientType: candidate.clientType,
+                        id: candidate.id,
+                        websiteUrl: candidate.websiteUrl,
+                      }}
+                    />
+                  </div>
                 </td>
               </tr>
             ))}
@@ -729,38 +753,60 @@ export default async function BusinessMatchesPage({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <Link
-            className="inline-flex min-h-12 items-center justify-center rounded-full border border-border bg-white/80 px-5 py-3 text-sm font-medium text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent"
-            href={buildBusinessMatchesHref(business.id, "same-category")}
-          >
-            Same Category
-          </Link>
-          <Link
-            className="inline-flex min-h-12 items-center justify-center rounded-full border border-border bg-white/80 px-5 py-3 text-sm font-medium text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent"
-            href={buildBusinessMatchesHref(
-              business.id,
-              "same-category-or-sector",
-            )}
-          >
-            Same Category or Sector
-          </Link>
-          {business.websiteUrl ? (
-            <a
-              className="inline-flex min-h-12 items-center justify-center rounded-full border border-border bg-white/80 px-5 py-3 text-sm font-medium text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent"
-              href={business.websiteUrl}
-              rel="noreferrer"
-              target="_blank"
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <span className="group relative inline-flex">
+            <Link
+              aria-label="Same category"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-white/80 text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
+              href={buildBusinessMatchesHref(business.id, "same-category")}
+              prefetch={false}
             >
-              Visit Website
-            </a>
+              <CategoryIcon />
+            </Link>
+            <ActionTooltip label="Same category" />
+          </span>
+
+          <span className="group relative inline-flex">
+            <Link
+              aria-label="Same category or sector"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-white/80 text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
+              href={buildBusinessMatchesHref(
+                business.id,
+                "same-category-or-sector",
+              )}
+              prefetch={false}
+            >
+              <CategorySectorIcon />
+            </Link>
+            <ActionTooltip label="Same category or sector" />
+          </span>
+
+          {business.websiteUrl ? (
+            <span className="group relative inline-flex">
+              <a
+                aria-label="Visit website"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-white/80 text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
+                href={business.websiteUrl}
+                rel="noreferrer"
+                target="_blank"
+              >
+                <ExternalLinkIcon />
+              </a>
+              <ActionTooltip label="Visit website" />
+            </span>
           ) : null}
-          <Link
-            className="inline-flex min-h-12 items-center justify-center rounded-full border border-border bg-white/80 px-5 py-3 text-sm font-medium text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent"
-            href="/matches"
-          >
-            Back to Match Table
-          </Link>
+
+          <span className="group relative inline-flex">
+            <Link
+              aria-label="Back to match table"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-white/80 text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
+              href="/matches"
+              prefetch={false}
+            >
+              <BackIcon />
+            </Link>
+            <ActionTooltip label="Back to match table" />
+          </span>
         </div>
       </section>
 
@@ -800,7 +846,10 @@ export default async function BusinessMatchesPage({
               </div>
             </div>
 
-            <LocalShortlistTable localCandidates={localCandidates} />
+            <LocalShortlistTable
+              localCandidates={localCandidates}
+              parentBusiness={business}
+            />
           </div>
         </div>
       </section>

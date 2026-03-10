@@ -181,6 +181,19 @@ export const authOptions: NextAuthOptions = {
   },
   providers: [
     GoogleProvider({
+      authorization: {
+        params: {
+          access_type: "offline",
+          include_granted_scopes: "true",
+          prompt: "consent",
+          scope: [
+            "openid",
+            "email",
+            "profile",
+            "https://www.googleapis.com/auth/gmail.compose",
+          ].join(" "),
+        },
+      },
       clientId: process.env.GOOGLE_CLIENT_ID ?? "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
     }),

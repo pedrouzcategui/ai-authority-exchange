@@ -4,12 +4,15 @@ import { requireLegacyUserSession } from "@/lib/auth-session";
 import { formatDatabaseError, withDatabaseRetry } from "@/lib/prisma";
 
 type CreateMatchPayload = {
+  status?: unknown;
   hostId?: unknown;
   guestId?: unknown;
   guestIds?: unknown;
 };
 
 type UpdateMatchPayload = {
+  businessId?: unknown;
+  counterpartRole?: unknown;
   interviewPublished?: unknown;
   interviewSent?: unknown;
   matchId?: unknown;
@@ -67,6 +70,14 @@ function parseMatchStatus(value: unknown) {
     : null;
 }
 
+function parseCounterpartRole(value: unknown) {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  return value === "guest" || value === "host" ? value : null;
+}
+
 function parseNumericIdList(value: unknown) {
   if (value === undefined) {
     return [];
@@ -111,12 +122,18 @@ export async function POST(request: Request) {
     payload.guestIds !== undefined
       ? parseNumericIdList(payload.guestIds)
       : parseNumericIdList(payload.guestId);
+  const status = parseMatchStatus(payload.status);
 
-  if (hostId === null || guestIds === null || guestIds.length === 0) {
+  if (
+    hostId === null ||
+    guestIds === null ||
+    guestIds.length === 0 ||
+    status === null
+  ) {
     return NextResponse.json(
       {
         error:
-          "Please choose one publisher and at least one published-for business.",
+          "Please choose one publisher, at least one published-for business, and a valid status.",
       },
       { status: 400 },
     );
@@ -200,6 +217,7 @@ export async function POST(request: Request) {
         data: guestIds.map((guestId) => ({
           hostId,
           guestId,
+          ...(status === undefined ? {} : { status }),
         })),
         skipDuplicates: true,
       }),
@@ -275,12 +293,16 @@ export async function PATCH(request: Request) {
   }
 
   const matchId = parseNumericId(payload.matchId);
+  const businessId = parseNumericId(payload.businessId);
+  const counterpartRole = parseCounterpartRole(payload.counterpartRole);
   const interviewSent = parseOptionalBoolean(payload.interviewSent);
   const interviewPublished = parseOptionalBoolean(payload.interviewPublished);
   const status = parseMatchStatus(payload.status);
 
   if (
     matchId === null ||
+    businessId === null ||
+    counterpartRole === null ||
     interviewSent === null ||
     interviewPublished === null ||
     status === null
@@ -295,9 +317,11 @@ export async function PATCH(request: Request) {
   }
 
   if (
+    counterpartRole !== undefined && businessId === undefined ||
     interviewSent === undefined &&
     interviewPublished === undefined &&
-    status === undefined
+    status === undefined &&
+    counterpartRole === undefined
   ) {
     return NextResponse.json(
       { error: "No match updates were provided." },
@@ -306,8 +330,78 @@ export async function PATCH(request: Request) {
   }
 
   try {
-    const updatedMatch = await withDatabaseRetry((database) =>
-      database.match.update({
+    const updatedMatch = await withDatabaseRetry(async (database) => {
+      const existingMatch = await database.match.findUnique({
+        select: {
+          guestId: true,
+          hostId: true,
+          id: true,
+        },
+        where: {
+          id: matchId,
+        },
+      });
+
+      if (!existingMatch) {
+        throw new Prisma.PrismaClientKnownRequestError(
+          "The selected match does not exist.",
+          {
+            clientVersion: Prisma.prismaVersion.client,
+            code: "P2025",
+          },
+        );
+      }
+
+      let nextHostId = existingMatch.hostId;
+      let nextGuestId = existingMatch.guestId;
+
+      if (counterpartRole !== undefined) {
+        if (
+          businessId === undefined ||
+          (existingMatch.hostId !== businessId &&
+            existingMatch.guestId !== businessId)
+        ) {
+          return null;
+        }
+
+        const counterpartId =
+          existingMatch.hostId === businessId
+            ? existingMatch.guestId
+            : existingMatch.hostId;
+
+        if (counterpartRole === "guest") {
+          nextHostId = businessId;
+          nextGuestId = counterpartId;
+        } else {
+          nextHostId = counterpartId;
+          nextGuestId = businessId;
+        }
+
+        if (
+          (nextHostId !== existingMatch.hostId ||
+            nextGuestId !== existingMatch.guestId) &&
+          (await database.match.findFirst({
+            select: { id: true },
+            where: {
+              guestId: nextGuestId,
+              hostId: nextHostId,
+              id: {
+                not: matchId,
+              },
+            },
+          }))
+        ) {
+          throw new Prisma.PrismaClientKnownRequestError(
+            "A match with that orientation already exists.",
+            {
+              clientVersion: Prisma.prismaVersion.client,
+              code: "P2002",
+            },
+          );
+        }
+      }
+
+      return database.match.update({
         data: {
           ...(interviewSent === undefined
             ? {}
@@ -316,8 +410,14 @@ export async function PATCH(request: Request) {
             ? {}
             : { interview_published: interviewPublished }),
           ...(status === undefined ? {} : { status }),
+          ...(nextHostId === existingMatch.hostId ? {} : { hostId: nextHostId }),
+          ...(nextGuestId === existingMatch.guestId
+            ? {}
+            : { guestId: nextGuestId }),
         },
         select: {
+          guestId: true,
+          hostId: true,
           id: true,
           interview_published: true,
           interview_sent: true,
@@ -326,12 +426,27 @@ export async function PATCH(request: Request) {
         where: {
           id: matchId,
         },
-      }),
-    );
+      });
+    });
+
+    if (updatedMatch === null) {
+      return NextResponse.json(
+        {
+          error: "The selected business is not part of this match.",
+        },
+        { status: 409 },
+      );
+    }
 
     return NextResponse.json(
       {
         match: {
+          counterpartRole:
+            businessId === undefined
+              ? undefined
+              : updatedMatch.hostId === businessId
+                ? "guest"
+                : "host",
           id: updatedMatch.id,
           interviewPublished: updatedMatch.interview_published ?? false,
           interviewSent: updatedMatch.interview_sent ?? false,
@@ -352,6 +467,19 @@ export async function PATCH(request: Request) {
       );
     }
 
+
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "That company role change would duplicate an existing match orientation.",
+        },
+        { status: 409 },
+      );
+    }
     return NextResponse.json(
       {
         error: `The match could not be updated. ${formatDatabaseError(error)}`,

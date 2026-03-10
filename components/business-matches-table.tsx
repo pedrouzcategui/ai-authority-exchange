@@ -4,12 +4,13 @@ import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { CreateEmailDraftButton } from "@/components/create-email-draft-button";
 import type { MatchStatus } from "@/generated/prisma/client";
 import { getBusinessProfileHref } from "@/lib/business-profile-route";
-import type { BusinessMatchBoardRow } from "@/lib/matches";
+import type { BusinessMatchBoardRow, BusinessOption } from "@/lib/matches";
 
 type BusinessMatchesTableProps = {
-  businessName: string;
+  business: BusinessOption;
   rows: BusinessMatchBoardRow[];
 };
 
@@ -73,6 +74,14 @@ function getCounterpartRoleClassName(
     : "border-[#c3ceda] bg-[#f1f5f8] text-[#55697e]";
 }
 
+const counterpartRoleOptions: Array<{
+  label: string;
+  value: BusinessMatchBoardRow["counterpartRole"];
+}> = [
+  { label: "Guest", value: "guest" },
+  { label: "Host", value: "host" },
+];
+
 function SortIcon({
   active,
   direction,
@@ -124,9 +133,10 @@ function SortHeaderButton({
 }
 
 export function BusinessMatchesTable({
-  businessName,
+  business,
   rows,
 }: BusinessMatchesTableProps) {
+  const businessName = business.business;
   const router = useRouter();
   const [tableRows, setTableRows] = useState(rows);
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
@@ -153,7 +163,10 @@ export function BusinessMatchesTable({
   async function updateMatch(
     matchId: number,
     updates: Partial<
-      Pick<BusinessMatchBoardRow, "interviewPublished" | "interviewSent" | "status">
+      Pick<
+        BusinessMatchBoardRow,
+        "counterpartRole" | "interviewPublished" | "interviewSent" | "status"
+      >
     >,
   ) {
     const previousRow = tableRows.find((row) => row.id === matchId);
@@ -163,6 +176,8 @@ export function BusinessMatchesTable({
     }
 
     const requestBody: {
+      businessId?: number;
+      counterpartRole?: BusinessMatchBoardRow["counterpartRole"];
       interviewPublished?: boolean;
       interviewSent?: boolean;
       matchId: number;
@@ -181,6 +196,11 @@ export function BusinessMatchesTable({
 
     if (updates.status !== undefined) {
       requestBody.status = updates.status;
+    }
+
+    if (updates.counterpartRole !== undefined) {
+      requestBody.businessId = business.id;
+      requestBody.counterpartRole = updates.counterpartRole;
     }
 
     setPendingMatchIds((currentIds) => [...currentIds, matchId]);
@@ -207,6 +227,7 @@ export function BusinessMatchesTable({
       const payload = (await response.json().catch(() => null)) as {
         error?: string;
         match?: {
+          counterpartRole?: BusinessMatchBoardRow["counterpartRole"];
           interviewPublished: boolean;
           interviewSent: boolean;
           status: MatchStatus | null;
@@ -391,6 +412,7 @@ export function BusinessMatchesTable({
                       sortKey="status"
                     />
                   </th>
+                  <th className="w-28 px-5 py-4 text-right sm:px-6">Draft</th>
                 </tr>
               </thead>
               <tbody>
@@ -420,13 +442,40 @@ export function BusinessMatchesTable({
                         </div>
                       </td>
                       <td className="border-t border-border px-5 py-4 sm:px-6">
-                        <span
-                          className={`inline-flex min-h-10 items-center rounded-full border px-4 py-2 text-sm font-semibold ${getCounterpartRoleClassName(
-                            row.counterpartRole,
-                          )}`}
-                        >
-                          {getRoleLabel(row.counterpartRole)}
-                        </span>
+                        <div className="relative inline-flex">
+                          <select
+                            aria-busy={isPending}
+                            className={`min-h-10 min-w-32 appearance-none rounded-full border px-4 pr-10 pl-4 text-sm font-semibold outline-none transition focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${getCounterpartRoleClassName(
+                              row.counterpartRole,
+                            )}`}
+                            disabled={isPending}
+                            onChange={(event) =>
+                              updateMatch(row.id, {
+                                counterpartRole: event.target
+                                  .value as BusinessMatchBoardRow["counterpartRole"],
+                              })
+                            }
+                            value={row.counterpartRole}
+                          >
+                            {counterpartRoleOptions.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                          <svg
+                            aria-hidden="true"
+                            className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 text-current"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="1.8"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="m7 10 5 5 5-5" />
+                          </svg>
+                        </div>
                       </td>
                       <td className="border-t border-border px-5 py-4 text-center sm:px-6">
                         <input
@@ -487,6 +536,22 @@ export function BusinessMatchesTable({
                           >
                             <path d="m7 10 5 5 5-5" />
                           </svg>
+                        </div>
+                      </td>
+                      <td className="border-t border-border px-5 py-4 text-right sm:px-6">
+                        <div className="flex justify-end">
+                          <CreateEmailDraftButton
+                            guestId={
+                              row.counterpartRole === "guest"
+                                ? row.counterpart.id
+                                : business.id
+                            }
+                            hostId={
+                              row.counterpartRole === "guest"
+                                ? business.id
+                                : row.counterpart.id
+                            }
+                          />
                         </div>
                       </td>
                     </tr>
