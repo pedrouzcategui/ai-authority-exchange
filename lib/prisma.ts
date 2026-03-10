@@ -2,16 +2,13 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { getNormalizedDatabaseUrl } from "@/lib/database-url";
 import { Prisma, PrismaClient } from "@/generated/prisma/client";
 
-const connectionString = process.env.DATABASE_URL;
+const connectionString = getNormalizedDatabaseUrl();
 const schemaFingerprint = createHash("sha1")
   .update(readFileSync(join(process.cwd(), "prisma", "schema.prisma"), "utf8"))
   .digest("hex");
-
-if (!connectionString) {
-  throw new Error("DATABASE_URL is not set.");
-}
 
 const globalForPrisma = globalThis as typeof globalThis & {
   prismaAdapter?: PrismaPg;

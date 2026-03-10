@@ -32,6 +32,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body
+        suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} app-shell antialiased`}
       >
         <div className="relative min-h-screen">

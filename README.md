@@ -19,7 +19,7 @@ This Next.js app lets you:
 ## Setup
 
 1. Create your environment file from the example.
-2. Set `DATABASE_URL` to your Neon connection string.
+2. Set `DATABASE_URL` to your Neon connection string. If your provider gives you `sslmode=require`, replace it with `sslmode=verify-full` to match the current `pg` driver behavior without warnings.
 3. Set `N8N_MATCH_FINDER_WEBHOOK_URL` to the n8n webhook that returns your business matches.
 4. Optionally set `N8N_MATCH_FINDER_WEBHOOK_METHOD` to `POST` if your workflow expects a JSON body. The default is `GET`.
 5. Install dependencies.
