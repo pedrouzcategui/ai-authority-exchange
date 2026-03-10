@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 import { Prisma, type BusinessRoleType } from "@/generated/prisma/client";
+import type { ExchangeParticipationStatus } from "@/lib/ai-authority-exchange";
 import { requireLegacyUserSession } from "@/lib/auth-session";
 import { prisma } from "@/lib/prisma";
 
 type CreateBusinessPayload = {
+  aiAuthorityExchangeRetiredAt?: unknown;
+  aiAuthorityExchangeRetiredRoundSequenceNumber?: unknown;
+  exchangeParticipationStatus?: unknown;
+  isActiveOnAiAuthorityExchange?: unknown;
   name?: unknown;
   role?: unknown;
   websiteUrl?: unknown;
@@ -71,6 +76,127 @@ function normalizeRole(value: unknown): BusinessRoleType | null {
   return null;
 }
 
+function normalizeOptionalBoolean(value: unknown) {
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  return null;
+}
+
+function normalizeExchangeParticipationStatus(
+  value: unknown,
+): ExchangeParticipationStatus | null {
+  if (
+    value === "not-participating" ||
+    value === "active" ||
+    value === "retired"
+  ) {
+    return value;
+  }
+
+  return null;
+}
+
+function resolveExchangeParticipationStatus(params: {
+  legacyIsActiveOnAiAuthorityExchange: boolean | null;
+  providedStatus: ExchangeParticipationStatus | null;
+}) {
+  const { legacyIsActiveOnAiAuthorityExchange, providedStatus } = params;
+
+  if (providedStatus) {
+    return providedStatus;
+  }
+
+  if (legacyIsActiveOnAiAuthorityExchange === true) {
+    return "active";
+  }
+
+  if (legacyIsActiveOnAiAuthorityExchange === false) {
+    return "not-participating";
+  }
+
+  return null;
+}
+
+function normalizeOptionalDate(value: unknown) {
+  if (value === null || value === undefined || value === "") {
+    return { isValid: true, value: null } as const;
+  }
+
+  if (typeof value === "string" || value instanceof Date) {
+    const parsedDate = new Date(value);
+
+    if (!Number.isNaN(parsedDate.getTime())) {
+      return { isValid: true, value: parsedDate } as const;
+    }
+  }
+
+  return { isValid: false, value: null } as const;
+}
+
+function parsePositiveInteger(value: unknown) {
+  const parsedValue = parseNumericId(value);
+
+  if (parsedValue === null || parsedValue <= 0) {
+    return null;
+  }
+
+  return parsedValue;
+}
+
+function buildExchangeLifecycleFields(params: {
+  currentJoinedAt?: Date | null;
+  retiredAt: Date | null;
+  retiredRoundBatchId: number | null;
+  status: ExchangeParticipationStatus;
+}) {
+  const { currentJoinedAt = null, retiredAt, retiredRoundBatchId, status } =
+    params;
+
+  if (status === "not-participating") {
+    return {
+      aiAuthorityExchangeJoinedAt: null,
+      aiAuthorityExchangeRetiredAt: null,
+      aiAuthorityExchangeRetiredInRoundBatchId: null,
+      isActiveOnAiAuthorityExchange: false,
+    };
+  }
+
+  if (status === "active") {
+    return {
+      aiAuthorityExchangeJoinedAt: currentJoinedAt ?? new Date(),
+      aiAuthorityExchangeRetiredAt: null,
+      aiAuthorityExchangeRetiredInRoundBatchId: null,
+      isActiveOnAiAuthorityExchange: true,
+    };
+  }
+
+  return {
+    aiAuthorityExchangeJoinedAt: currentJoinedAt ?? retiredAt,
+    aiAuthorityExchangeRetiredAt: retiredAt,
+    aiAuthorityExchangeRetiredInRoundBatchId: retiredRoundBatchId,
+    isActiveOnAiAuthorityExchange: false,
+  };
+}
+
+async function resolveRetiredRoundBatchId(sequenceNumber: number | null) {
+  if (sequenceNumber === null) {
+    return null;
+  }
+
+  const roundBatch = await prisma.roundBatch.findUnique({
+    select: {
+      id: true,
+    },
+    where: {
+      sequenceNumber,
+    },
+  });
+
+  return roundBatch?.id ?? null;
+}
+
 function parseNumericId(value: unknown) {
   if (typeof value === "number" && Number.isInteger(value)) {
     return value;
@@ -107,34 +233,101 @@ export async function POST(request: Request) {
 
   const name = normalizeString(payload.name);
   const role = normalizeRole(payload.role);
+  const legacyIsActiveOnAiAuthorityExchange = normalizeOptionalBoolean(
+    payload.isActiveOnAiAuthorityExchange,
+  );
+  const exchangeParticipationStatus = resolveExchangeParticipationStatus({
+    legacyIsActiveOnAiAuthorityExchange,
+    providedStatus: normalizeExchangeParticipationStatus(
+      payload.exchangeParticipationStatus,
+    ),
+  });
+  const retiredAt = normalizeOptionalDate(payload.aiAuthorityExchangeRetiredAt);
+  const retiredRoundSequenceNumber = parsePositiveInteger(
+    payload.aiAuthorityExchangeRetiredRoundSequenceNumber,
+  );
   const websiteUrl = normalizeWebsiteUrl(payload.websiteUrl);
 
-  if (!name || !websiteUrl || !role) {
+  if (
+    !name ||
+    !websiteUrl ||
+    !role ||
+    !exchangeParticipationStatus ||
+    !retiredAt.isValid
+  ) {
     return NextResponse.json(
       {
         error:
-          "Please provide a business name, a valid website URL, and a role.",
+          "Please provide a business name, a valid website URL, a role, and a valid AI Authority Exchange status.",
+      },
+      { status: 400 },
+    );
+  }
+
+  if (
+    exchangeParticipationStatus === "retired" &&
+    retiredAt.value === null
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "Please provide the retirement date when a business is marked as retired from the AI Authority Exchange.",
+      },
+      { status: 400 },
+    );
+  }
+
+  if (
+    exchangeParticipationStatus !== "retired" &&
+    (retiredAt.value !== null || retiredRoundSequenceNumber !== null)
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "Retirement details can only be provided when the business is marked as retired from the AI Authority Exchange.",
       },
       { status: 400 },
     );
   }
 
   try {
-    const [business] = await prisma.$queryRaw<
-      Array<{ business: string; id: number }>
-    >(
-      Prisma.sql`
-        INSERT INTO businesses (name, website_url, role)
-        VALUES (${name}, ${websiteUrl}, ${role}::business_role_type)
-        RETURNING id, name AS business
-      `,
+    const retiredRoundBatchId = await resolveRetiredRoundBatchId(
+      retiredRoundSequenceNumber,
     );
 
-    if (!business) {
-      throw new Error(
-        "The database insert completed without returning the new business.",
+    if (retiredRoundSequenceNumber !== null && retiredRoundBatchId === null) {
+      return NextResponse.json(
+        {
+          error: `Round ${retiredRoundSequenceNumber} does not exist yet. Create or import that round before assigning it as the retirement round.`,
+        },
+        { status: 400 },
       );
     }
+
+    const exchangeLifecycleFields = buildExchangeLifecycleFields({
+      retiredAt: retiredAt.value,
+      retiredRoundBatchId,
+      status: exchangeParticipationStatus,
+    });
+    const business = await prisma.business.create({
+      data: {
+        aiAuthorityExchangeJoinedAt:
+          exchangeLifecycleFields.aiAuthorityExchangeJoinedAt,
+        aiAuthorityExchangeRetiredAt:
+          exchangeLifecycleFields.aiAuthorityExchangeRetiredAt,
+        aiAuthorityExchangeRetiredInRoundBatchId:
+          exchangeLifecycleFields.aiAuthorityExchangeRetiredInRoundBatchId,
+        business: name,
+        clientType: role,
+        isActiveOnAiAuthorityExchange:
+          exchangeLifecycleFields.isActiveOnAiAuthorityExchange,
+        websiteUrl,
+      },
+      select: {
+        business: true,
+        id: true,
+      },
+    });
 
     return NextResponse.json(
       {
@@ -184,38 +377,122 @@ export async function PATCH(request: Request) {
   const businessId = parseNumericId(payload.businessId);
   const name = normalizeString(payload.name);
   const role = normalizeRole(payload.role);
+  const legacyIsActiveOnAiAuthorityExchange = normalizeOptionalBoolean(
+    payload.isActiveOnAiAuthorityExchange,
+  );
+  const exchangeParticipationStatus = resolveExchangeParticipationStatus({
+    legacyIsActiveOnAiAuthorityExchange,
+    providedStatus: normalizeExchangeParticipationStatus(
+      payload.exchangeParticipationStatus,
+    ),
+  });
+  const retiredAt = normalizeOptionalDate(payload.aiAuthorityExchangeRetiredAt);
+  const retiredRoundSequenceNumber = parsePositiveInteger(
+    payload.aiAuthorityExchangeRetiredRoundSequenceNumber,
+  );
   const websiteUrl = normalizeWebsiteUrl(payload.websiteUrl);
 
-  if (businessId === null || !name || !role || !websiteUrl) {
+  if (
+    businessId === null ||
+    !name ||
+    !role ||
+    !websiteUrl ||
+    !exchangeParticipationStatus ||
+    !retiredAt.isValid
+  ) {
     return NextResponse.json(
       {
         error:
-          "Please provide a valid business, business name, website URL, and role.",
+          "Please provide a valid business, business name, website URL, role, and AI Authority Exchange status.",
+      },
+      { status: 400 },
+    );
+  }
+
+  if (
+    exchangeParticipationStatus === "retired" &&
+    retiredAt.value === null
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "Please provide the retirement date when a business is marked as retired from the AI Authority Exchange.",
+      },
+      { status: 400 },
+    );
+  }
+
+  if (
+    exchangeParticipationStatus !== "retired" &&
+    (retiredAt.value !== null || retiredRoundSequenceNumber !== null)
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "Retirement details can only be provided when the business is marked as retired from the AI Authority Exchange.",
       },
       { status: 400 },
     );
   }
 
   try {
-    const [business] = await prisma.$queryRaw<
-      Array<{ business: string; id: number }>
-    >(
-      Prisma.sql`
-        UPDATE businesses
-        SET name = ${name},
-            website_url = ${websiteUrl},
-            role = ${role}::business_role_type
-        WHERE id = ${businessId}
-        RETURNING id, name AS business
-      `,
-    );
+    const [currentBusiness, retiredRoundBatchId] = await Promise.all([
+      prisma.business.findUnique({
+        select: {
+          aiAuthorityExchangeJoinedAt: true,
+          id: true,
+        },
+        where: {
+          id: businessId,
+        },
+      }),
+      resolveRetiredRoundBatchId(retiredRoundSequenceNumber),
+    ]);
 
-    if (!business) {
+    if (!currentBusiness) {
       return NextResponse.json(
         { error: "The selected business does not exist." },
         { status: 404 },
       );
     }
+
+    if (retiredRoundSequenceNumber !== null && retiredRoundBatchId === null) {
+      return NextResponse.json(
+        {
+          error: `Round ${retiredRoundSequenceNumber} does not exist yet. Create or import that round before assigning it as the retirement round.`,
+        },
+        { status: 400 },
+      );
+    }
+
+    const exchangeLifecycleFields = buildExchangeLifecycleFields({
+      currentJoinedAt: currentBusiness.aiAuthorityExchangeJoinedAt,
+      retiredAt: retiredAt.value,
+      retiredRoundBatchId,
+      status: exchangeParticipationStatus,
+    });
+    const business = await prisma.business.update({
+      data: {
+        aiAuthorityExchangeJoinedAt:
+          exchangeLifecycleFields.aiAuthorityExchangeJoinedAt,
+        aiAuthorityExchangeRetiredAt:
+          exchangeLifecycleFields.aiAuthorityExchangeRetiredAt,
+        aiAuthorityExchangeRetiredInRoundBatchId:
+          exchangeLifecycleFields.aiAuthorityExchangeRetiredInRoundBatchId,
+        business: name,
+        clientType: role,
+        isActiveOnAiAuthorityExchange:
+          exchangeLifecycleFields.isActiveOnAiAuthorityExchange,
+        websiteUrl,
+      },
+      select: {
+        business: true,
+        id: true,
+      },
+      where: {
+        id: businessId,
+      },
+    });
 
     return NextResponse.json(
       {
@@ -232,6 +509,16 @@ export async function PATCH(request: Request) {
       return NextResponse.json(
         { error: "A business with that name already exists." },
         { status: 409 },
+      );
+    }
+
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      return NextResponse.json(
+        { error: "The selected business does not exist." },
+        { status: 404 },
       );
     }
 

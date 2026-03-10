@@ -1,15 +1,79 @@
 import { cache } from "react";
-import type { MatchStatus } from "@/generated/prisma/client";
+import type {
+  MatchStatus,
+  Prisma,
+  RoundBatchStatus,
+} from "@/generated/prisma/client";
+import { getExchangeParticipationStatus } from "@/lib/ai-authority-exchange";
 import { getBusinessProfileSlug } from "@/lib/business-profile-route";
 import { prisma } from "@/lib/prisma";
 
 const businessSelection = {
+  aiAuthorityExchangeJoinedAt: true,
+  aiAuthorityExchangeRetiredAt: true,
+  aiAuthorityExchangeRetiredInRoundBatch: {
+    select: {
+      sequenceNumber: true,
+    },
+  },
+  aiAuthorityExchangeRetiredInRoundBatchId: true,
   business: true,
   clientType: true,
   domain_rating: true,
   id: true,
+  isActiveOnAiAuthorityExchange: true,
   websiteUrl: true,
 } as const;
+
+type SelectedBusiness = Prisma.BusinessGetPayload<{
+  select: typeof businessSelection;
+}>;
+
+function toBusinessOption(business: SelectedBusiness) {
+  return {
+    aiAuthorityExchangeJoinedAt: business.aiAuthorityExchangeJoinedAt,
+    aiAuthorityExchangeParticipationStatus:
+      getExchangeParticipationStatus(business),
+    aiAuthorityExchangeRetiredAt: business.aiAuthorityExchangeRetiredAt,
+    aiAuthorityExchangeRetiredInRoundBatchId:
+      business.aiAuthorityExchangeRetiredInRoundBatchId,
+    aiAuthorityExchangeRetiredInRoundSequenceNumber:
+      business.aiAuthorityExchangeRetiredInRoundBatch?.sequenceNumber ?? null,
+    business: business.business,
+    clientType: business.clientType,
+    domain_rating: business.domain_rating,
+    id: business.id,
+    isActiveOnAiAuthorityExchange:
+      business.isActiveOnAiAuthorityExchange === true,
+    websiteUrl: business.websiteUrl,
+  };
+}
+
+type RawMatchWithBusinesses = Prisma.MatchGetPayload<{
+  include: {
+    guest: {
+      select: typeof businessSelection;
+    };
+    host: {
+      select: typeof businessSelection;
+    };
+    roundBatch: {
+      select: {
+        id: true;
+        sequenceNumber: true;
+        status: true;
+      };
+    };
+  };
+}>;
+
+function toMatchWithBusinesses(match: RawMatchWithBusinesses) {
+  return {
+    ...match,
+    guest: toBusinessOption(match.guest),
+    host: toBusinessOption(match.host),
+  };
+}
 
 const businessNameCollator = new Intl.Collator(undefined, {
   numeric: true,
@@ -32,18 +96,33 @@ export const getBusinesses = cache(async () => {
     select: businessSelection,
   });
 
-  return businesses.toSorted(compareBusinessNames);
+  return businesses.map((business) => toBusinessOption(business)).toSorted(compareBusinessNames);
+});
+
+export const getExplicitlyActiveExchangeBusinesses = cache(async () => {
+  const businesses = await prisma.business.findMany({
+    select: businessSelection,
+    where: {
+      isActiveOnAiAuthorityExchange: true,
+    },
+  });
+
+  return businesses
+    .map((business) => toBusinessOption(business))
+    .toSorted(compareBusinessNames);
 });
 
 export type BusinessOption = Awaited<ReturnType<typeof getBusinesses>>[number];
 
 export const getBusinessById = cache(async (businessId: number) => {
-  return prisma.business.findUnique({
+  const business = await prisma.business.findUnique({
     where: {
       id: businessId,
     },
     select: businessSelection,
   });
+
+  return business ? toBusinessOption(business) : null;
 });
 
 export const getBusinessByIdentifier = cache(async (identifier: string) => {
@@ -78,7 +157,7 @@ export const getMatches = cache(async (hostId?: number, guestId?: number) => {
           ...(guestId === undefined ? {} : { guestId }),
         };
 
-  return prisma.match.findMany({
+  const matches = await prisma.match.findMany({
     include: {
       guest: {
         select: businessSelection,
@@ -86,12 +165,21 @@ export const getMatches = cache(async (hostId?: number, guestId?: number) => {
       host: {
         select: businessSelection,
       },
+      roundBatch: {
+        select: {
+          id: true,
+          sequenceNumber: true,
+          status: true,
+        },
+      },
     },
     where,
     orderBy: {
       id: "desc",
     },
   });
+
+  return matches.map((match) => toMatchWithBusinesses(match));
 });
 
 type MatchWithBusinesses = Awaited<ReturnType<typeof getMatches>>[number];
@@ -114,6 +202,9 @@ export type BusinessMatchBoardRow = {
   id: number;
   interviewPublished: boolean;
   interviewSent: boolean;
+  roundBatchId: number | null;
+  roundSequenceNumber: number | null;
+  roundStatus: RoundBatchStatus | null;
   status: MatchStatus | null;
 };
 
@@ -154,6 +245,13 @@ export const getBusinessMatchBoard = cache(async (businessId: number) => {
       host: {
         select: businessSelection,
       },
+      roundBatch: {
+        select: {
+          id: true,
+          sequenceNumber: true,
+          status: true,
+        },
+      },
     },
     orderBy: [{ created_at: "desc" }, { id: "desc" }],
     where: {
@@ -168,7 +266,9 @@ export const getBusinessMatchBoard = cache(async (businessId: number) => {
     },
   });
 
-  return matches.map((match) => {
+  const normalizedMatches = matches.map((match) => toMatchWithBusinesses(match));
+
+  return normalizedMatches.map((match) => {
     const businessIsHost = match.hostId === businessId;
 
     return {
@@ -178,6 +278,9 @@ export const getBusinessMatchBoard = cache(async (businessId: number) => {
       id: match.id,
       interviewPublished: match.interview_published ?? false,
       interviewSent: match.interview_sent ?? false,
+      roundBatchId: match.roundBatchId ?? null,
+      roundSequenceNumber: match.roundBatch?.sequenceNumber ?? null,
+      roundStatus: match.roundBatch?.status ?? null,
       status: match.status ?? null,
     } satisfies BusinessMatchBoardRow;
   });
@@ -187,7 +290,7 @@ export const getBusinessRelationshipRows = cache(
   async (hostId?: number, guestId?: number, businessId?: number) => {
     if (businessId !== undefined) {
       const [businesses, matches] = await Promise.all([
-        getBusinesses(),
+        getExplicitlyActiveExchangeBusinesses(),
         prisma.match.findMany({
           include: {
             guest: {
@@ -195,6 +298,13 @@ export const getBusinessRelationshipRows = cache(
             },
             host: {
               select: businessSelection,
+            },
+            roundBatch: {
+              select: {
+                id: true,
+                sequenceNumber: true,
+                status: true,
+              },
             },
           },
           where: {
@@ -212,6 +322,14 @@ export const getBusinessRelationshipRows = cache(
           },
         }),
       ]);
+      const activeBusinessIds = new Set(businesses.map((business) => business.id));
+      const normalizedMatches = matches.map((match) =>
+        toMatchWithBusinesses(match),
+      ).filter(
+        (match) =>
+          activeBusinessIds.has(match.host.id) &&
+          activeBusinessIds.has(match.guest.id),
+      );
       const business = businesses.find(
         (candidate) => candidate.id === businessId,
       );
@@ -226,7 +344,7 @@ export const getBusinessRelationshipRows = cache(
         publishedFor: [],
       };
 
-      for (const match of matches) {
+      for (const match of normalizedMatches) {
         if (match.host.id === businessId) {
           relationshipRow.publishedFor.push(match.guest);
         }
@@ -243,10 +361,19 @@ export const getBusinessRelationshipRows = cache(
     }
 
     const [businesses, matches] = await Promise.all([
-      getBusinesses(),
+      getExplicitlyActiveExchangeBusinesses(),
       getMatches(),
     ]);
-    const relationshipRows = buildBusinessRelationshipRows(businesses, matches);
+    const activeBusinessIds = new Set(businesses.map((business) => business.id));
+    const activeMatches = matches.filter(
+      (match) =>
+        activeBusinessIds.has(match.host.id) &&
+        activeBusinessIds.has(match.guest.id),
+    );
+    const relationshipRows = buildBusinessRelationshipRows(
+      businesses,
+      activeMatches,
+    );
 
     if (hostId === undefined && guestId === undefined) {
       return relationshipRows;

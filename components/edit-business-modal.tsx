@@ -5,6 +5,8 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ActionTooltip, EditBusinessIcon } from "@/components/action-icons";
+import { ExchangeParticipationFields } from "@/components/exchange-participation-fields";
+import type { ExchangeParticipationStatus } from "@/lib/ai-authority-exchange";
 import type { BusinessOption } from "@/lib/matches";
 
 type EditBusinessModalProps = {
@@ -31,6 +33,20 @@ function normalizeWebsiteInput(value: string) {
     : `https://${trimmedValue}`;
 }
 
+function formatDateInputValue(value: Date | string | null | undefined) {
+  if (!value) {
+    return "";
+  }
+
+  const parsedDate = value instanceof Date ? value : new Date(value);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return "";
+  }
+
+  return parsedDate.toISOString().slice(0, 10);
+}
+
 export function EditBusinessModal({
   business,
   triggerVariant = "default",
@@ -38,16 +54,35 @@ export function EditBusinessModal({
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [exchangeParticipationStatus, setExchangeParticipationStatus] =
+    useState<ExchangeParticipationStatus>(
+      business.aiAuthorityExchangeParticipationStatus,
+    );
   const [name, setName] = useState(business.business);
   const [role, setRole] = useState<(typeof roleOptions)[number]["value"]>(
     business.clientType ?? "partner",
   );
+  const [aiAuthorityExchangeRetiredAt, setAiAuthorityExchangeRetiredAt] =
+    useState(formatDateInputValue(business.aiAuthorityExchangeRetiredAt));
+  const [aiAuthorityExchangeRetiredRoundSequenceNumber,
+    setAiAuthorityExchangeRetiredRoundSequenceNumber] = useState(
+      business.aiAuthorityExchangeRetiredInRoundSequenceNumber?.toString() ??
+        "",
+    );
   const [websiteUrl, setWebsiteUrl] = useState(business.websiteUrl ?? "");
   const portalTarget = typeof document === "undefined" ? null : document.body;
 
   function syncFormWithBusiness() {
+    setExchangeParticipationStatus(business.aiAuthorityExchangeParticipationStatus);
     setName(business.business);
     setRole(business.clientType ?? "partner");
+    setAiAuthorityExchangeRetiredAt(
+      formatDateInputValue(business.aiAuthorityExchangeRetiredAt),
+    );
+    setAiAuthorityExchangeRetiredRoundSequenceNumber(
+      business.aiAuthorityExchangeRetiredInRoundSequenceNumber?.toString() ??
+        "",
+    );
     setWebsiteUrl(business.websiteUrl ?? "");
   }
 
@@ -73,6 +108,31 @@ export function EditBusinessModal({
       return;
     }
 
+    if (
+      exchangeParticipationStatus === "retired" &&
+      !aiAuthorityExchangeRetiredAt
+    ) {
+      toast.error("Please provide the retirement date for retired businesses.");
+      return;
+    }
+
+    if (
+      exchangeParticipationStatus === "retired" &&
+      aiAuthorityExchangeRetiredRoundSequenceNumber.trim() !== ""
+    ) {
+      const parsedRoundSequenceNumber = Number(
+        aiAuthorityExchangeRetiredRoundSequenceNumber,
+      );
+
+      if (
+        !Number.isInteger(parsedRoundSequenceNumber) ||
+        parsedRoundSequenceNumber <= 0
+      ) {
+        toast.error("Retirement round must be a whole number greater than 0.");
+        return;
+      }
+    }
+
     const normalizedWebsiteUrl = normalizeWebsiteInput(websiteUrl);
     setWebsiteUrl(normalizedWebsiteUrl);
 
@@ -83,7 +143,17 @@ export function EditBusinessModal({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          aiAuthorityExchangeRetiredAt:
+            exchangeParticipationStatus === "retired"
+              ? aiAuthorityExchangeRetiredAt
+              : null,
+          aiAuthorityExchangeRetiredRoundSequenceNumber:
+            exchangeParticipationStatus === "retired" &&
+            aiAuthorityExchangeRetiredRoundSequenceNumber.trim() !== ""
+              ? Number(aiAuthorityExchangeRetiredRoundSequenceNumber)
+              : null,
           businessId: business.id,
+          exchangeParticipationStatus,
           name,
           role,
           websiteUrl: normalizedWebsiteUrl,
@@ -214,10 +284,32 @@ export function EditBusinessModal({
                     />
                   </label>
 
+                  <ExchangeParticipationFields
+                    disabled={isPending}
+                    onRetiredAtChange={setAiAuthorityExchangeRetiredAt}
+                    onRetiredRoundSequenceNumberChange={
+                      setAiAuthorityExchangeRetiredRoundSequenceNumber
+                    }
+                    onStatusChange={(nextStatus) => {
+                      setExchangeParticipationStatus(nextStatus);
+
+                      if (nextStatus !== "retired") {
+                        setAiAuthorityExchangeRetiredAt("");
+                        setAiAuthorityExchangeRetiredRoundSequenceNumber("");
+                      }
+                    }}
+                    retiredAt={aiAuthorityExchangeRetiredAt}
+                    retiredRoundSequenceNumber={
+                      aiAuthorityExchangeRetiredRoundSequenceNumber
+                    }
+                    status={exchangeParticipationStatus}
+                  />
+
                   <div className="flex flex-col gap-4 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-sm leading-7 text-muted">
-                      These changes update the business record directly and
-                      refresh the table once saved.
+                      These changes update the business record directly,
+                      including whether it should stay active in future rounds
+                      or be tracked as retired.
                     </p>
 
                     <button

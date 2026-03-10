@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { isExchangeParticipationActive } from "@/lib/ai-authority-exchange";
 import { prisma } from "@/lib/prisma";
 import type { BusinessOption } from "@/lib/matches";
 
@@ -19,6 +20,7 @@ export type LocalBusinessMatchCandidate = {
   clientType: "client" | "partner" | null;
   domainRating: number | null;
   id: number;
+  isActiveOnAiAuthorityExchange: boolean;
   name: string;
   relatedCategoryNames: string[];
   sectorName: string | null;
@@ -346,6 +348,8 @@ export const getLocalBusinessMatchCandidates = cache(
     const candidates = await prisma.business.findMany({
       orderBy: [{ domain_rating: "desc" }, { created_at: "desc" }],
       select: {
+        aiAuthorityExchangeJoinedAt: true,
+        aiAuthorityExchangeRetiredAt: true,
         business: true,
         business_categories: {
           select: {
@@ -360,6 +364,7 @@ export const getLocalBusinessMatchCandidates = cache(
         clientType: true,
         domain_rating: true,
         id: true,
+        isActiveOnAiAuthorityExchange: true,
         related_category_ids: true,
         subcategory: true,
         websiteUrl: true,
@@ -367,10 +372,21 @@ export const getLocalBusinessMatchCandidates = cache(
       take: 5,
       where: {
         ...categoryOrSectorWhere,
+        aiAuthorityExchangeRetiredAt: null,
         client_status: "active",
         id: {
           notIn: [...blockedBusinessIds],
         },
+        OR: [
+          {
+            aiAuthorityExchangeJoinedAt: {
+              not: null,
+            },
+          },
+          {
+            isActiveOnAiAuthorityExchange: true,
+          },
+        ],
       },
     });
 
@@ -400,6 +416,7 @@ export const getLocalBusinessMatchCandidates = cache(
       clientType: candidate.clientType,
       domainRating: candidate.domain_rating,
       id: candidate.id,
+      isActiveOnAiAuthorityExchange: isExchangeParticipationActive(candidate),
       name: candidate.business,
       relatedCategoryNames: candidate.related_category_ids
         .map((categoryId) => relatedCategoryNameById.get(categoryId))

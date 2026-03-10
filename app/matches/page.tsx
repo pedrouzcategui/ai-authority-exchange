@@ -7,7 +7,7 @@ import Link from "next/link";
 import { MatchesFilterControls } from "@/components/matches-filter-controls";
 import { getBusinessProfileHref } from "@/lib/business-profile-route";
 import {
-  getBusinesses,
+  getExplicitlyActiveExchangeBusinesses,
   getBusinessRelationshipRows,
   type BusinessOption,
 } from "@/lib/matches";
@@ -149,7 +149,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
   const requestedPage = parsePageNumber(resolvedSearchParams.page);
   const perPage = parseResultsPerPage(resolvedSearchParams.perPage);
   const [businesses, relationshipRows] = await Promise.all([
-    getBusinesses(),
+    getExplicitlyActiveExchangeBusinesses(),
     getBusinessRelationshipRows(hostFilter, guestFilter, businessFilter),
   ]);
   const businessById = new Map(
@@ -230,6 +230,12 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
         </div>
 
         <div className="flex flex-wrap items-center justify-end gap-3">
+          <Link
+            className="inline-flex items-center rounded-full border border-border bg-white/80 px-5 py-3 text-sm font-medium text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent"
+            href="/rounds"
+          >
+            View Rounds
+          </Link>
           <AddClientModal />
         </div>
       </section>
@@ -336,21 +342,11 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                           <ActionTooltip label="Find matches" />
                         </span>
                         <EditBusinessModal
-                          business={{
-                            business: row.business,
-                            clientType: row.clientType,
-                            id: row.id,
-                            websiteUrl: row.websiteUrl,
-                          }}
+                          business={row}
                           triggerVariant="icon"
                         />
                         <ManageBusinessRelationshipsModal
-                          business={{
-                            business: row.business,
-                            clientType: row.clientType,
-                            id: row.id,
-                            websiteUrl: row.websiteUrl,
-                          }}
+                          business={row}
                           businesses={businesses}
                           publishedBy={row.publishedBy}
                           publishedFor={row.publishedFor}

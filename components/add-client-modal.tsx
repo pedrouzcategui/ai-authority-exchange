@@ -3,6 +3,8 @@
 import { useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import type { ExchangeParticipationStatus } from "@/lib/ai-authority-exchange";
+import { ExchangeParticipationFields } from "@/components/exchange-participation-fields";
 
 const roleOptions = [
   { label: "Client", value: "client" },
@@ -27,14 +29,23 @@ export function AddClientModal() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [exchangeParticipationStatus, setExchangeParticipationStatus] =
+    useState<ExchangeParticipationStatus>("not-participating");
   const [name, setName] = useState("");
   const [role, setRole] =
     useState<(typeof roleOptions)[number]["value"]>("partner");
+  const [aiAuthorityExchangeRetiredAt, setAiAuthorityExchangeRetiredAt] =
+    useState("");
+  const [aiAuthorityExchangeRetiredRoundSequenceNumber,
+    setAiAuthorityExchangeRetiredRoundSequenceNumber] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
 
   function resetForm() {
+    setExchangeParticipationStatus("not-participating");
     setName("");
     setRole("partner");
+    setAiAuthorityExchangeRetiredAt("");
+    setAiAuthorityExchangeRetiredRoundSequenceNumber("");
     setWebsiteUrl("");
   }
 
@@ -55,6 +66,31 @@ export function AddClientModal() {
       return;
     }
 
+    if (
+      exchangeParticipationStatus === "retired" &&
+      !aiAuthorityExchangeRetiredAt
+    ) {
+      toast.error("Please provide the retirement date for retired businesses.");
+      return;
+    }
+
+    if (
+      exchangeParticipationStatus === "retired" &&
+      aiAuthorityExchangeRetiredRoundSequenceNumber.trim() !== ""
+    ) {
+      const parsedRoundSequenceNumber = Number(
+        aiAuthorityExchangeRetiredRoundSequenceNumber,
+      );
+
+      if (
+        !Number.isInteger(parsedRoundSequenceNumber) ||
+        parsedRoundSequenceNumber <= 0
+      ) {
+        toast.error("Retirement round must be a whole number greater than 0.");
+        return;
+      }
+    }
+
     const normalizedWebsiteUrl = normalizeWebsiteInput(websiteUrl);
     setWebsiteUrl(normalizedWebsiteUrl);
 
@@ -64,7 +100,21 @@ export function AddClientModal() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name, role, websiteUrl: normalizedWebsiteUrl }),
+        body: JSON.stringify({
+          aiAuthorityExchangeRetiredAt:
+            exchangeParticipationStatus === "retired"
+              ? aiAuthorityExchangeRetiredAt
+              : null,
+          aiAuthorityExchangeRetiredRoundSequenceNumber:
+            exchangeParticipationStatus === "retired" &&
+            aiAuthorityExchangeRetiredRoundSequenceNumber.trim() !== ""
+              ? Number(aiAuthorityExchangeRetiredRoundSequenceNumber)
+              : null,
+          exchangeParticipationStatus,
+          name,
+          role,
+          websiteUrl: normalizedWebsiteUrl,
+        }),
       });
 
       const payload = (await response.json().catch(() => null)) as {
@@ -178,10 +228,32 @@ export function AddClientModal() {
                 />
               </label>
 
+              <ExchangeParticipationFields
+                disabled={isPending}
+                onRetiredAtChange={setAiAuthorityExchangeRetiredAt}
+                onRetiredRoundSequenceNumberChange={
+                  setAiAuthorityExchangeRetiredRoundSequenceNumber
+                }
+                onStatusChange={(nextStatus) => {
+                  setExchangeParticipationStatus(nextStatus);
+
+                  if (nextStatus !== "retired") {
+                    setAiAuthorityExchangeRetiredAt("");
+                    setAiAuthorityExchangeRetiredRoundSequenceNumber("");
+                  }
+                }}
+                retiredAt={aiAuthorityExchangeRetiredAt}
+                retiredRoundSequenceNumber={
+                  aiAuthorityExchangeRetiredRoundSequenceNumber
+                }
+                status={exchangeParticipationStatus}
+              />
+
               <div className="flex flex-col gap-4 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm leading-7 text-muted">
-                  Use the role to control whether this business appears as a
-                  client or partner in the rest of the app.
+                  Use the role for client vs partner, and use the exchange
+                  status to control whether the business appears in future round
+                  drafts or is tracked as retired.
                 </p>
 
                 <button
