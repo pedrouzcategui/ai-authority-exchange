@@ -1,15 +1,24 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f7f1e8;
-  --foreground: #17211a;
-  --surface: rgba(255, 250, 243, 0.86);
-  --surface-strong: #fffaf2;
-  --border: rgba(38, 56, 44, 0.14);
-  --accent: #1f6b57;
-  --accent-strong: #174d3f;
-  --muted: #5f6d62;
-  --shadow: 0 24px 80px rgba(44, 56, 39, 0.14);
+  --background: #eef2f5;
+  --foreground: #243547;
+  --surface: rgba(255, 255, 255, 0.82);
+  --surface-strong: #ffffff;
+  --surface-muted: #e6edf3;
+  --border: rgba(51, 71, 91, 0.14);
+  --accent: #e85d4f;
+  --accent-strong: #d24f43;
+  --accent-soft: #fee5df;
+  --brand-deep: #33475b;
+  --brand-deep-strong: #25384a;
+  --brand-deep-soft: #e8eef4;
+  --warning-soft: #fff2e4;
+  --warning-strong: #9a6431;
+  --danger-soft: #feeff2;
+  --danger-strong: #a95065;
+  --muted: #6f7f92;
+  --shadow: 0 24px 80px rgba(51, 71, 91, 0.12);
 }
 
 @theme inline {
@@ -17,9 +26,18 @@
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
   --color-surface-strong: var(--surface-strong);
+  --color-surface-muted: var(--surface-muted);
   --color-border: var(--border);
   --color-accent: var(--accent);
   --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+  --color-brand-deep: var(--brand-deep);
+  --color-brand-deep-strong: var(--brand-deep-strong);
+  --color-brand-deep-soft: var(--brand-deep-soft);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-strong: var(--warning-strong);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-strong: var(--danger-strong);
   --color-muted: var(--muted);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -38,16 +56,16 @@ body {
   color: var(--foreground);
   background-image:
     radial-gradient(
-      circle at top left,
-      rgba(225, 165, 108, 0.28),
-      transparent 32%
+      circle at 14% 10%,
+      rgba(232, 93, 79, 0.16),
+      transparent 28%
     ),
     radial-gradient(
       circle at 82% 16%,
-      rgba(31, 107, 87, 0.18),
+      rgba(51, 71, 91, 0.12),
       transparent 24%
     ),
-    linear-gradient(180deg, #faf4ea 0%, #f7f1e8 42%, #efe6d9 100%);
+    linear-gradient(180deg, #f5f7fa 0%, #eef2f5 46%, #e7edf3 100%);
   font-family: var(--font-geist-sans), sans-serif;
   min-height: 100vh;
 }
@@ -58,7 +76,7 @@ a {
 }
 
 ::selection {
-  background: rgba(31, 107, 87, 0.18);
+  background: rgba(232, 93, 79, 0.18);
 }
 
 button,
@@ -74,8 +92,8 @@ textarea {
 
 .app-shell::before {
   background-image:
-    linear-gradient(rgba(23, 33, 26, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(23, 33, 26, 0.04) 1px, transparent 1px);
+    linear-gradient(rgba(51, 71, 91, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(51, 71, 91, 0.04) 1px, transparent 1px);
   background-position: center;
   background-size: 42px 42px;
   content: "";

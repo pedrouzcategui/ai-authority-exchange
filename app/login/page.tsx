@@ -76,7 +76,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </p>
 
           {missingAuthTables.length > 0 ? (
-            <div className="mt-6 rounded-3xl border border-[#d9b06b]/35 bg-[#fff3db] px-5 py-4 text-sm leading-7 text-[#8a621f]">
+            <div className="mt-6 rounded-3xl border border-warning-strong/20 bg-warning-soft px-5 py-4 text-sm leading-7 text-warning-strong">
               Authentication tables are not present in the database yet.
               Missing: {missingAuthTables.join(", ")}. Google sign-in will keep
               failing until the SQL in
@@ -85,7 +85,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           ) : null}
 
           {errorMessage ? (
-            <div className="mt-6 rounded-3xl border border-[#e3a0b2] bg-[#fff0f4] px-5 py-4 text-sm leading-7 text-[#8f3d58]">
+            <div className="mt-6 rounded-3xl border border-danger-strong/20 bg-danger-soft px-5 py-4 text-sm leading-7 text-danger-strong">
               {errorMessage}
             </div>
           ) : null}
@@ -104,7 +104,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                   <span className="font-semibold text-foreground">Recorded:</span>{" "}
                   {authDiagnostic.recordedAt}
                 </p>
-                <pre className="overflow-x-auto rounded-2xl bg-[#122019] p-4 text-xs leading-6 text-[#e7f1ed]">
+                <pre className="overflow-x-auto rounded-2xl bg-brand-deep p-4 text-xs leading-6 text-white/88">
                   {authDiagnostic.details}
                 </pre>
               </div>
@@ -126,8 +126,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </div>
         </div>
 
-        <aside className="rounded-4xl border border-[#173127]/14 bg-[#122019] p-8 text-[#ecf0e8] shadow-(--shadow) sm:p-10">
-          <p className="text-sm font-medium tracking-[0.16em] text-[#c2d2c1] uppercase">
+        <aside className="rounded-4xl border border-brand-deep/10 bg-brand-deep p-8 text-white shadow-(--shadow) sm:p-10">
+          <p className="text-sm font-medium tracking-[0.16em] text-white/72 uppercase">
             Access Rules
           </p>
 
@@ -136,24 +136,24 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               <h2 className="text-xl font-semibold tracking-tight">
                 Who can get in
               </h2>
-              <p className="mt-2 text-sm leading-7 text-[#d3ddd1]">
+              <p className="mt-2 text-sm leading-7 text-white/78">
                 Only Google accounts whose email address already exists in the
                 database users table are allowed through.
               </p>
             </div>
 
             <div className="rounded-3xl border border-white/10 bg-white/6 p-5">
-              <p className="text-sm font-medium text-[#f5cf9b]">
+              <p className="text-sm font-medium text-accent-soft">
                 Protected now
               </p>
-              <p className="mt-2 text-sm leading-7 text-[#d3ddd1]">
+              <p className="mt-2 text-sm leading-7 text-white/78">
                 Match pages, business profile pages, and write APIs will require
                 an authenticated approved session.
               </p>
             </div>
 
             <Link
-              className="inline-flex items-center rounded-full border border-white/12 bg-white/8 px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-white/12"
+              className="inline-flex items-center rounded-full border border-accent bg-accent px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-accent-strong"
               href="/"
             >
               Back to home

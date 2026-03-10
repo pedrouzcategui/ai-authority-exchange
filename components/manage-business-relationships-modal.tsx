@@ -73,7 +73,7 @@ function RelationshipSelector({
           {emptyLabel}
         </p>
       ) : (
-        <div className="max-h-80 overflow-y-auto rounded-2xl bg-[#f8f3eb] p-2">
+        <div className="max-h-80 overflow-y-auto rounded-2xl bg-surface-muted p-2">
           <div className="flex flex-wrap gap-2.5">
             {options.map((option) => {
               const optionId = option.id.toString();
@@ -258,7 +258,7 @@ export function ManageBusinessRelationshipsModal({
 
       {portalTarget && isOpen
         ? createPortal(
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#122019]/45 px-4 py-8 backdrop-blur-sm">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(51,71,91,0.36)] px-4 py-8 backdrop-blur-sm">
               <div className="max-h-[calc(100vh-4rem)] w-full max-w-6xl overflow-y-auto rounded-4xl border border-border bg-surface p-6 shadow-(--shadow) sm:p-8">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="space-y-3">

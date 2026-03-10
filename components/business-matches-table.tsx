@@ -52,13 +52,13 @@ function getRoleLabel(role: BusinessMatchBoardRow["counterpartRole"]) {
 function getStatusSelectClassName(status: MatchStatus | null) {
   switch (status ?? "Not_Started") {
     case "In_Progress":
-      return "border-[#7db1e8] bg-[#e8f3ff] text-[#235f98] focus:border-[#4b8fd7] focus:ring-[#4b8fd7]/20";
+      return "border-[#abc0d6] bg-[#edf3fa] text-[#3a536b] focus:border-brand-deep focus:ring-brand-deep/15";
     case "Done":
       return "border-[#8cc6a7] bg-[#e9f8ef] text-[#276b4a] focus:border-[#4eab78] focus:ring-[#4eab78]/20";
     case "Leaving":
-      return "border-[#e3a0b2] bg-[#fff0f4] text-[#a54f68] focus:border-[#d77a96] focus:ring-[#d77a96]/20";
+      return "border-[#efb1a8] bg-[#fff0ec] text-[#b55247] focus:border-accent focus:ring-accent/15";
     case "Partner_Leaving":
-      return "border-[#cab0ef] bg-[#f3edff] text-[#7652b4] focus:border-[#9f7ae2] focus:ring-[#9f7ae2]/20";
+      return "border-[#c3ceda] bg-[#f1f5f8] text-[#55697e] focus:border-brand-deep focus:ring-brand-deep/15";
     case "Not_Started":
     default:
       return "border-border bg-white/85 text-foreground focus:border-accent focus:ring-accent/15";
@@ -69,8 +69,8 @@ function getCounterpartRoleClassName(
   role: BusinessMatchBoardRow["counterpartRole"],
 ) {
   return role === "guest"
-    ? "border-[#9cc7ba] bg-[#edf8f3] text-[#21644e]"
-    : "border-[#cab0ef] bg-[#f3edff] text-[#7652b4]";
+    ? "border-[#f0b8b0] bg-[#fff0ec] text-[#b55247]"
+    : "border-[#c3ceda] bg-[#f1f5f8] text-[#55697e]";
 }
 
 function SortIcon({
@@ -345,7 +345,7 @@ export function BusinessMatchesTable({
           <div className="overflow-x-auto">
             <table className="min-w-full border-separate border-spacing-0">
               <thead>
-                <tr className="bg-[#efe3d2]/70 text-left text-xs font-semibold tracking-[0.16em] text-muted uppercase">
+                <tr className="bg-brand-deep-soft/75 text-left text-xs font-semibold tracking-[0.16em] text-muted uppercase">
                   <th className="px-5 py-4 sm:px-6">
                     <SortHeaderButton
                       activeSortKey={sortKey}

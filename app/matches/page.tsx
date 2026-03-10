@@ -125,7 +125,7 @@ function RelationshipPills({
           className={
             tone === "accent"
               ? "inline-flex items-center rounded-full border border-accent/20 bg-accent/10 px-2.5 py-0.5 text-[13px] font-medium text-accent-strong"
-              : "inline-flex items-center rounded-full border border-border bg-[#efe3d2]/45 px-2.5 py-0.5 text-[13px] font-medium text-foreground"
+              : "inline-flex items-center rounded-full border border-border bg-brand-deep-soft/55 px-2.5 py-0.5 text-[13px] font-medium text-foreground"
           }
         >
           {business.business}
@@ -301,7 +301,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
           <div className="overflow-x-auto">
             <table className="min-w-full border-separate border-spacing-0">
               <thead>
-                <tr className="bg-[#efe3d2]/70 text-left text-sm font-medium tracking-[0.16em] text-muted uppercase">
+                <tr className="bg-brand-deep-soft/75 text-left text-sm font-medium tracking-[0.16em] text-muted uppercase">
                   <th className="px-6 py-4 sm:px-8">Business</th>
                   <th className="px-6 py-4 sm:px-8">Client Type</th>
                   <th className="px-6 py-4 sm:px-8">Published By</th>

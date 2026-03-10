@@ -16,7 +16,7 @@ export function ActionTooltip({ label }: ActionTooltipProps) {
   return (
     <span
       aria-hidden="true"
-      className="pointer-events-none absolute right-0 bottom-full z-20 mb-2 translate-y-1 whitespace-nowrap rounded-xl bg-[#122019]/92 px-3 py-2 text-xs font-medium text-white opacity-0 shadow-lg transition duration-150 ease-out group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100"
+      className="pointer-events-none absolute right-0 bottom-full z-20 mb-2 translate-y-1 whitespace-nowrap rounded-xl bg-[rgba(51,71,91,0.94)] px-3 py-2 text-xs font-medium text-white opacity-0 shadow-lg transition duration-150 ease-out group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100"
     >
       {label}
     </span>

@@ -27,8 +27,8 @@ export default function BusinessMatchesLoading() {
           </span>
           Loading match page
         </div>
-        <div className="mt-5 h-12 w-full max-w-3xl animate-pulse rounded-3xl bg-[#e9dfd1]" />
-        <div className="mt-4 h-5 w-full max-w-2xl animate-pulse rounded-full bg-[#eee5d9]" />
+        <div className="mt-5 h-12 w-full max-w-3xl animate-pulse rounded-3xl bg-brand-deep-soft" />
+        <div className="mt-4 h-5 w-full max-w-2xl animate-pulse rounded-full bg-brand-deep-soft/75" />
         <p className="mt-5 max-w-2xl text-sm leading-7 text-muted">
           The app is loading the business context and building the local
           shortlist before the AI enrichment step begins.
@@ -37,17 +37,17 @@ export default function BusinessMatchesLoading() {
 
       <section className="rounded-4xl border border-border bg-surface p-6 shadow-(--shadow) backdrop-blur-md sm:p-8">
         <div className="flex flex-wrap gap-3">
-          <div className="h-12 w-44 animate-pulse rounded-full bg-[#ece3d6]" />
-          <div className="h-12 w-60 animate-pulse rounded-full bg-[#f0e8dc]" />
-          <div className="h-12 w-40 animate-pulse rounded-full bg-[#f5ede1]" />
+          <div className="h-12 w-44 animate-pulse rounded-full bg-brand-deep-soft" />
+          <div className="h-12 w-60 animate-pulse rounded-full bg-surface-muted" />
+          <div className="h-12 w-40 animate-pulse rounded-full bg-accent-soft/65" />
         </div>
-        <div className="mt-5 h-24 animate-pulse rounded-4xl bg-[#efe6da]" />
+        <div className="mt-5 h-24 animate-pulse rounded-4xl bg-surface-muted" />
       </section>
 
       <section className="rounded-4xl border border-border bg-surface p-6 shadow-(--shadow) backdrop-blur-md sm:p-8">
-        <div className="h-5 w-44 animate-pulse rounded-full bg-[#e4dacb]" />
-        <div className="mt-4 h-10 w-full max-w-2xl animate-pulse rounded-3xl bg-[#ece3d7]" />
-        <div className="mt-4 h-5 w-full max-w-3xl animate-pulse rounded-full bg-[#eee5d9]" />
+        <div className="h-5 w-44 animate-pulse rounded-full bg-brand-deep-soft" />
+        <div className="mt-4 h-10 w-full max-w-2xl animate-pulse rounded-3xl bg-surface-muted" />
+        <div className="mt-4 h-5 w-full max-w-3xl animate-pulse rounded-full bg-brand-deep-soft/75" />
         <div className="mt-6 grid gap-4 lg:grid-cols-2">
           <div className="h-32 animate-pulse rounded-[1.75rem] border border-border bg-white/72" />
           <div className="h-32 animate-pulse rounded-[1.75rem] border border-border bg-white/68" />
@@ -55,9 +55,9 @@ export default function BusinessMatchesLoading() {
       </section>
 
       <section className="space-y-4">
-        <div className="h-8 w-full max-w-md animate-pulse rounded-full bg-[#e8ddce]" />
+        <div className="h-8 w-full max-w-md animate-pulse rounded-full bg-brand-deep-soft" />
         <div className="overflow-hidden rounded-4xl border border-border bg-white/70">
-          <div className="h-14 animate-pulse border-b border-border bg-[#efe3d2]/70" />
+          <div className="h-14 animate-pulse border-b border-border bg-brand-deep-soft/75" />
           <div className="space-y-0">
             <div className="h-18 animate-pulse border-b border-border bg-white/80" />
             <div className="h-18 animate-pulse border-b border-border bg-white/72" />

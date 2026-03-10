@@ -53,8 +53,8 @@ export default async function Home() {
           <MatchForm businesses={businesses} />
         </div>
 
-        <aside className="rounded-4xl border border-border bg-[#1a2d24] p-6 text-[#ecf0e8] shadow-(--shadow) sm:p-8">
-          <p className="text-sm font-medium tracking-[0.16em] text-[#c2d2c1] uppercase">
+        <aside className="rounded-4xl border border-brand-deep/10 bg-brand-deep p-6 text-white shadow-(--shadow) sm:p-8">
+          <p className="text-sm font-medium tracking-[0.16em] text-white/72 uppercase">
             Notes
           </p>
           <div className="mt-6 space-y-5">
@@ -62,7 +62,7 @@ export default async function Home() {
               <h2 className="text-xl font-semibold tracking-tight">
                 What this screen does
               </h2>
-              <p className="mt-2 text-sm leading-7 text-[#d3ddd1]">
+              <p className="mt-2 text-sm leading-7 text-white/78">
                 The form writes a single host and guest pair into the matches
                 table. Duplicate pairs and invalid selections are blocked on the
                 backend.
@@ -70,17 +70,17 @@ export default async function Home() {
             </div>
 
             <div className="rounded-3xl border border-white/10 bg-white/6 p-5">
-              <p className="text-sm font-medium text-[#f5cf9b]">
+              <p className="text-sm font-medium text-accent-soft">
                 Backend details
               </p>
-              <p className="mt-2 text-sm leading-7 text-[#d3ddd1]">
+              <p className="mt-2 text-sm leading-7 text-white/78">
                 Prisma handles the schema and queries, and the app expects the
                 Neon connection string in the DATABASE_URL environment variable.
               </p>
             </div>
 
             <Link
-              className="inline-flex items-center rounded-full bg-[#f0c78c] px-5 py-3 text-sm font-semibold text-[#132019] transition hover:-translate-y-0.5 hover:bg-[#f5d6aa]"
+              className="inline-flex items-center rounded-full bg-accent px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-accent-strong"
               href="/matches"
             >
               Open Match Table

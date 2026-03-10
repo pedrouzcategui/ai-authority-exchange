@@ -85,7 +85,7 @@ export function AuthControls({ user, variant = "header" }: AuthControlsProps) {
       </div>
 
       <button
-        className="inline-flex min-h-11 items-center justify-center rounded-full border border-border bg-[#122019] px-5 py-2.5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#1b3028] disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex min-h-11 items-center justify-center rounded-full border border-accent bg-accent px-5 py-2.5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-60"
         disabled={isPending}
         onClick={() => {
           startTransition(() => {

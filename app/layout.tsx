@@ -35,7 +35,7 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} app-shell antialiased`}
       >
         <div className="relative min-h-screen">
-          <header className="sticky top-0 z-40 border-b border-border bg-[rgba(250,244,234,0.88)] backdrop-blur-xl">
+          <header className="sticky top-0 z-40 border-b border-border bg-white/84 backdrop-blur-xl">
             <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-4 sm:px-10 lg:flex-row lg:items-center lg:justify-between lg:px-12">
               <div className="space-y-1">
                 <Link

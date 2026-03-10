@@ -156,7 +156,7 @@ function LocalShortlistTable({
       <div className="overflow-x-auto">
         <table className="min-w-full border-separate border-spacing-0">
           <thead>
-            <tr className="bg-[#efe3d2]/70 text-left text-xs font-semibold tracking-[0.16em] text-muted uppercase">
+            <tr className="bg-brand-deep-soft/75 text-left text-xs font-semibold tracking-[0.16em] text-muted uppercase">
               <th className="px-5 py-4 sm:px-6">Business Name</th>
               <th className="px-5 py-4 sm:px-6">Category Name</th>
               <th className="px-5 py-4 sm:px-6">Subcategory Name</th>
@@ -246,7 +246,7 @@ function HistoricalMatchGroup({
               className={
                 tone === "accent"
                   ? "inline-flex items-center rounded-full border border-accent/20 bg-accent/10 px-3.5 py-2 text-sm font-medium text-accent-strong"
-                  : "inline-flex items-center rounded-full border border-border bg-[#efe3d2]/45 px-3.5 py-2 text-sm font-medium text-foreground"
+                  : "inline-flex items-center rounded-full border border-border bg-brand-deep-soft/55 px-3.5 py-2 text-sm font-medium text-foreground"
               }
             >
               {business.business}
@@ -320,7 +320,7 @@ function PendingAnalysisSection({
   scope: MatchSearchScope;
 }) {
   return (
-    <section className="rounded-4xl border border-accent/15 bg-[linear-gradient(135deg,rgba(31,107,87,0.09),rgba(255,255,255,0.9))] p-6 shadow-(--shadow) backdrop-blur-md sm:p-8">
+    <section className="rounded-4xl border border-accent/15 bg-[linear-gradient(135deg,rgba(232,93,79,0.08),rgba(255,255,255,0.92))] p-6 shadow-(--shadow) backdrop-blur-md sm:p-8">
       <div className="inline-flex items-center gap-3 rounded-full border border-accent/15 bg-white/80 px-4 py-2 text-sm font-medium tracking-[0.16em] text-accent uppercase">
         <span className="relative flex h-2.5 w-2.5">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent/60" />
@@ -347,7 +347,7 @@ function PendingAnalysisSection({
           {localCandidates.length} shortlisted candidate
           {localCandidates.length === 1 ? "" : "s"}
         </span>
-        <span className="inline-flex items-center gap-2 rounded-full border border-[#d9b06b]/35 bg-[#fff3db] px-4 py-2 font-medium text-[#8a621f]">
+        <span className="inline-flex items-center gap-2 rounded-full border border-warning-strong/20 bg-warning-soft px-4 py-2 font-medium text-warning-strong">
           <WaitingSparkIcon />
           Waiting for AI enrichment
         </span>
@@ -391,7 +391,7 @@ async function ResolvedAnalysisSection({
 
           {matchLookup.status === "success" ? (
             <div className="mt-5 space-y-4">
-              <div className="rounded-4xl border border-accent/15 bg-[linear-gradient(135deg,rgba(31,107,87,0.10),rgba(255,255,255,0.88))] p-6">
+              <div className="rounded-4xl border border-accent/15 bg-[linear-gradient(135deg,rgba(232,93,79,0.10),rgba(255,255,255,0.9))] p-6">
                 <p className="text-sm font-medium tracking-[0.16em] text-accent uppercase">
                   Shortlist Ready
                 </p>
@@ -445,14 +445,14 @@ async function ResolvedAnalysisSection({
                 </summary>
 
                 <div className="border-t border-border px-5 py-5 sm:px-6">
-                  <div className="overflow-x-auto whitespace-pre-wrap rounded-3xl border border-border/80 bg-[#fbf7f0] p-5 font-mono text-sm leading-8 text-foreground/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
+                  <div className="overflow-x-auto whitespace-pre-wrap rounded-3xl border border-border/80 bg-white/92 p-5 font-mono text-sm leading-8 text-foreground/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
                     {matchLookup.summaryText}
                   </div>
                 </div>
               </details>
             </div>
           ) : (
-            <div className="mt-5 rounded-3xl border border-[#d9b06b]/50 bg-[#fff3db] p-5 text-sm leading-7 text-[#714c18]">
+            <div className="mt-5 rounded-3xl border border-warning-strong/20 bg-warning-soft p-5 text-sm leading-7 text-warning-strong">
               {matchLookup.userMessage}
             </div>
           )}
@@ -487,12 +487,12 @@ async function ResolvedAnalysisSection({
               <details
                 open={index === 0}
                 key={`${businessName}-${match.partnerName}-${index}`}
-                className="group overflow-hidden rounded-4xl border border-border bg-[linear-gradient(180deg,rgba(255,252,246,0.98),rgba(246,239,229,0.9))] shadow-(--shadow) backdrop-blur-md transition open:border-accent/25"
+                className="group overflow-hidden rounded-4xl border border-border bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(240,245,249,0.92))] shadow-(--shadow) backdrop-blur-md transition open:border-accent/25"
               >
                 <summary className="list-none cursor-pointer px-5 py-5 [&::-webkit-details-marker]:hidden sm:px-6 sm:py-6">
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div className="flex items-start gap-4">
-                      <div className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent text-base font-semibold text-white shadow-[0_10px_24px_rgba(31,107,87,0.25)]">
+                      <div className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent text-base font-semibold text-white shadow-[0_10px_24px_rgba(232,93,79,0.22)]">
                         {index + 1}
                       </div>
                       <div>
@@ -562,7 +562,7 @@ async function ResolvedAnalysisSection({
                       </div>
 
                       <div className="grid gap-4 lg:grid-cols-2">
-                        <div className="rounded-3xl border border-border/80 bg-[#f6efe4] p-5">
+                        <div className="rounded-3xl border border-border/80 bg-[#f9f1ec] p-5">
                           <p className="text-sm font-medium tracking-[0.12em] text-muted uppercase">
                             Editorial Bridge
                           </p>
@@ -571,7 +571,7 @@ async function ResolvedAnalysisSection({
                           </p>
                         </div>
 
-                        <div className="rounded-3xl border border-border/80 bg-[#eef5f1] p-5">
+                        <div className="rounded-3xl border border-border/80 bg-[#edf3fa] p-5">
                           <p className="text-sm font-medium tracking-[0.12em] text-muted uppercase">
                             Competitor Rationale
                           </p>
@@ -582,7 +582,7 @@ async function ResolvedAnalysisSection({
                       </div>
 
                       {candidate ? (
-                        <div className="rounded-3xl border border-border/80 bg-[#fbf7f0] p-5">
+                        <div className="rounded-3xl border border-border/80 bg-white/92 p-5">
                           <p className="text-sm font-medium tracking-[0.12em] text-muted uppercase">
                             Candidate Snapshot
                           </p>
@@ -609,7 +609,7 @@ async function ResolvedAnalysisSection({
                     </div>
 
                     <div className="grid gap-4 content-start">
-                      <div className="rounded-3xl border border-accent/15 bg-[linear-gradient(180deg,rgba(31,107,87,0.09),rgba(255,255,255,0.95))] p-5">
+                      <div className="rounded-3xl border border-accent/15 bg-[linear-gradient(180deg,rgba(232,93,79,0.08),rgba(255,255,255,0.96))] p-5">
                         <p className="text-sm font-medium tracking-[0.12em] text-accent uppercase">
                           Suggested Topics
                         </p>
@@ -618,7 +618,7 @@ async function ResolvedAnalysisSection({
                             {match.suggestedTopics.map((topic) => (
                               <span
                                 key={`${match.partnerName}-${topic}`}
-                                className="inline-flex items-center rounded-full border border-accent/20 bg-white/85 px-3.5 py-2 text-sm font-medium text-accent-strong shadow-[0_4px_12px_rgba(31,107,87,0.08)]"
+                                className="inline-flex items-center rounded-full border border-accent/20 bg-white/88 px-3.5 py-2 text-sm font-medium text-accent-strong shadow-[0_4px_12px_rgba(232,93,79,0.08)]"
                               >
                                 {topic}
                               </span>
@@ -777,7 +777,7 @@ export default async function BusinessMatchesPage({
           </p>
 
           <div className="mt-5 space-y-4">
-            <div className="rounded-4xl border border-accent/15 bg-[linear-gradient(135deg,rgba(31,107,87,0.10),rgba(255,255,255,0.88))] p-6">
+            <div className="rounded-4xl border border-accent/15 bg-[linear-gradient(135deg,rgba(232,93,79,0.10),rgba(255,255,255,0.9))] p-6">
               <p className="text-sm font-medium tracking-[0.16em] text-accent uppercase">
                 Immediate Results
               </p>
