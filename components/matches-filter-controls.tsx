@@ -127,7 +127,7 @@ export function MatchesFilterControls({
 
       <label className="flex flex-col gap-2">
         <span className="flex min-h-10 items-end text-sm font-medium text-foreground">
-          Filter by publisher
+          Filter by Published By
         </span>
         <select
           className="min-h-12 w-full rounded-2xl border border-border bg-white/85 px-4 py-3 text-foreground outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15 disabled:cursor-not-allowed disabled:bg-white/55 disabled:text-muted"
@@ -147,7 +147,7 @@ export function MatchesFilterControls({
 
       <label className="flex flex-col gap-2">
         <span className="flex min-h-10 items-end text-sm font-medium text-foreground">
-          Filter by published-for
+          Filter by Published For
         </span>
         <select
           className="min-h-12 w-full rounded-2xl border border-border bg-white/85 px-4 py-3 text-foreground outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15 disabled:cursor-not-allowed disabled:bg-white/55 disabled:text-muted"
@@ -156,7 +156,7 @@ export function MatchesFilterControls({
           name="guest"
           onChange={handleChange}
         >
-          <option value="">All published-for businesses</option>
+          <option value="">All Published For businesses</option>
           {businesses.map((business) => (
             <option key={`guest-${business.id}`} value={business.id}>
               {business.business}

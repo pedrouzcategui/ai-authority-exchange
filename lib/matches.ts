@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 const businessSelection = {
   business: true,
   clientType: true,
+  domain_rating: true,
   id: true,
   websiteUrl: true,
 } as const;
@@ -58,7 +59,8 @@ export const getBusinessByIdentifier = cache(async (identifier: string) => {
         candidate.business.toLocaleLowerCase() === normalizedIdentifier,
     ) ??
     businesses.find(
-      (candidate) => getBusinessProfileSlug(candidate.business) === requestedSlug,
+      (candidate) =>
+        getBusinessProfileSlug(candidate.business) === requestedSlug,
     ) ??
     (Number.isInteger(parsedId) && parsedId > 0
       ? businesses.find((candidate) => candidate.id === parsedId)
@@ -92,6 +94,8 @@ export const getMatches = cache(async (hostId?: number, guestId?: number) => {
   });
 });
 
+type MatchWithBusinesses = Awaited<ReturnType<typeof getMatches>>[number];
+
 export type BusinessRelationshipRow = BusinessOption & {
   publishedBy: BusinessOption[];
   publishedFor: BusinessOption[];
@@ -112,6 +116,34 @@ export type BusinessMatchBoardRow = {
   interviewSent: boolean;
   status: MatchStatus | null;
 };
+
+function buildBusinessRelationshipRows(
+  businesses: BusinessOption[],
+  matches: MatchWithBusinesses[],
+) {
+  const relationshipRows: BusinessRelationshipRow[] = businesses.map(
+    (business) => ({
+      ...business,
+      publishedBy: [],
+      publishedFor: [],
+    }),
+  );
+  const rowById = new Map(
+    relationshipRows.map((row) => [row.id, row] as const),
+  );
+
+  for (const match of matches) {
+    rowById.get(match.host.id)?.publishedFor.push(match.guest);
+    rowById.get(match.guest.id)?.publishedBy.push(match.host);
+  }
+
+  for (const row of relationshipRows) {
+    row.publishedBy.sort(compareBusinessNames);
+    row.publishedFor.sort(compareBusinessNames);
+  }
+
+  return relationshipRows;
+}
 
 export const getBusinessMatchBoard = cache(async (businessId: number) => {
   const matches = await prisma.match.findMany({
@@ -210,61 +242,11 @@ export const getBusinessRelationshipRows = cache(
       return [relationshipRow];
     }
 
-    const selectedBusinessIds = [
-      ...new Set([hostId, guestId].filter((id) => id !== undefined)),
-    ];
     const [businesses, matches] = await Promise.all([
       getBusinesses(),
-      selectedBusinessIds.length === 0
-        ? getMatches()
-        : prisma.match.findMany({
-            include: {
-              guest: {
-                select: businessSelection,
-              },
-              host: {
-                select: businessSelection,
-              },
-            },
-            where: {
-              OR: [
-                {
-                  hostId: {
-                    in: selectedBusinessIds,
-                  },
-                },
-                {
-                  guestId: {
-                    in: selectedBusinessIds,
-                  },
-                },
-              ],
-            },
-            orderBy: {
-              id: "desc",
-            },
-          }),
+      getMatches(),
     ]);
-    const relationshipRows: BusinessRelationshipRow[] = businesses.map(
-      (business) => ({
-        ...business,
-        publishedBy: [],
-        publishedFor: [],
-      }),
-    );
-    const rowById = new Map(
-      relationshipRows.map((row) => [row.id, row] as const),
-    );
-
-    for (const match of matches) {
-      rowById.get(match.host.id)?.publishedFor.push(match.guest);
-      rowById.get(match.guest.id)?.publishedBy.push(match.host);
-    }
-
-    for (const row of relationshipRows) {
-      row.publishedBy.sort(compareBusinessNames);
-      row.publishedFor.sort(compareBusinessNames);
-    }
+    const relationshipRows = buildBusinessRelationshipRows(businesses, matches);
 
     if (hostId === undefined && guestId === undefined) {
       return relationshipRows;
@@ -272,10 +254,10 @@ export const getBusinessRelationshipRows = cache(
 
     return relationshipRows.filter(
       (row) =>
-        row.id === hostId ||
-        row.id === guestId ||
-        row.publishedBy.length > 0 ||
-        row.publishedFor.length > 0,
+        (hostId === undefined ||
+          row.publishedBy.some((business) => business.id === hostId)) &&
+        (guestId === undefined ||
+          row.publishedFor.some((business) => business.id === guestId)),
     );
   },
 );

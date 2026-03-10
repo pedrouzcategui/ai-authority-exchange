@@ -4,14 +4,12 @@ import { BusinessRoleBadge } from "@/components/business-role-badge";
 import { EditBusinessModal } from "@/components/edit-business-modal";
 import { ManageBusinessRelationshipsModal } from "@/components/manage-business-relationships-modal";
 import Link from "next/link";
-import { CreateMatchesModal } from "@/components/create-matches-modal";
 import { MatchesFilterControls } from "@/components/matches-filter-controls";
 import { getBusinessProfileHref } from "@/lib/business-profile-route";
 import {
   getBusinesses,
   getBusinessRelationshipRows,
   type BusinessOption,
-  type BusinessRelationshipState,
 } from "@/lib/matches";
 
 export const dynamic = "force-dynamic";
@@ -150,19 +148,10 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
     businessFilter === undefined ? requestedGuestFilter : undefined;
   const requestedPage = parsePageNumber(resolvedSearchParams.page);
   const perPage = parseResultsPerPage(resolvedSearchParams.perPage);
-  const [businesses, allRelationshipRows, relationshipRows] = await Promise.all(
-    [
-      getBusinesses(),
-      getBusinessRelationshipRows(),
-      getBusinessRelationshipRows(hostFilter, guestFilter, businessFilter),
-    ],
-  );
-  const relationshipStates: BusinessRelationshipState[] =
-    allRelationshipRows.map((row) => ({
-      id: row.id,
-      publishedByIds: row.publishedBy.map((business) => business.id),
-      publishedForIds: row.publishedFor.map((business) => business.id),
-    }));
+  const [businesses, relationshipRows] = await Promise.all([
+    getBusinesses(),
+    getBusinessRelationshipRows(hostFilter, guestFilter, businessFilter),
+  ]);
   const businessById = new Map(
     businesses.map((business) => [business.id, business.business] as const),
   );
@@ -242,10 +231,6 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
 
         <div className="flex flex-wrap items-center justify-end gap-3">
           <AddClientModal />
-          <CreateMatchesModal
-            businesses={businesses}
-            relationshipStates={relationshipStates}
-          />
         </div>
       </section>
 
@@ -306,9 +291,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                   <th className="px-6 py-4 sm:px-8">Client Type</th>
                   <th className="px-6 py-4 sm:px-8">Published By</th>
                   <th className="px-6 py-4 sm:px-8">Published For</th>
-                  <th className="w-42 px-6 py-4 text-right sm:px-8">
-                    Actions
-                  </th>
+                  <th className="w-42 px-6 py-4 text-right sm:px-8">Actions</th>
                 </tr>
               </thead>
               <tbody>

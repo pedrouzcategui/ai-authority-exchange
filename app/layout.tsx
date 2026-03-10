@@ -28,6 +28,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const session = await getServerSession(authOptions);
+  const homeHref = session?.user?.legacyUserId ? "/matches" : "/";
 
   return (
     <html lang="en">
@@ -41,7 +42,7 @@ export default async function RootLayout({
               <div className="space-y-1">
                 <Link
                   className="inline-flex text-lg font-semibold tracking-tight text-foreground transition hover:text-accent"
-                  href="/"
+                  href={homeHref}
                 >
                   AI Authority Exchange
                 </Link>
