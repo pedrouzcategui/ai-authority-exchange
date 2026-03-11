@@ -23,10 +23,13 @@ type BusinessMatchesTableProps = {
 
 type RoleFilter = "all" | "guest" | "host";
 
+type RoundFilter = "all" | "none" | `batch:${number}`;
+
 type SortDirection = "asc" | "desc";
 
 type SortKey =
   | "companyName"
+  | "round"
   | "counterpartRole"
   | "interviewPublished"
   | "interviewSent"
@@ -42,6 +45,19 @@ const roleFilterOptions: Array<{ label: string; value: RoleFilter }> = [
   { label: "Only Guests", value: "guest" },
   { label: "Only Hosts", value: "host" },
 ];
+
+function getRoundFilterValue(roundBatchId: number) {
+  return `batch:${roundBatchId}` as const;
+}
+
+function parseRoundFilterValue(value: RoundFilter) {
+  if (value === "all" || value === "none") {
+    return null;
+  }
+
+  const parsedValue = Number.parseInt(value.replace("batch:", ""), 10);
+  return Number.isInteger(parsedValue) && parsedValue > 0 ? parsedValue : null;
+}
 
 const statusOptions: Array<{ label: string; value: MatchStatus }> = [
   { label: "Not Started", value: "Not_Started" },
@@ -65,6 +81,33 @@ function formatDomainRating(domainRating: number | null) {
 
 function formatRoundBatchLabel(roundBatch: BusinessMatchesTableRoundBatch) {
   return `Round ${roundBatch.sequenceNumber} (${roundBatch.status === "draft" ? "Draft" : "Applied"})`;
+}
+
+function compareRoundAssignments(
+  left: Pick<BusinessMatchBoardRow, "roundBatchId" | "roundSequenceNumber">,
+  right: Pick<BusinessMatchBoardRow, "roundBatchId" | "roundSequenceNumber">,
+) {
+  if (left.roundBatchId === null && right.roundBatchId === null) {
+    return 0;
+  }
+
+  if (left.roundBatchId === null) {
+    return 1;
+  }
+
+  if (right.roundBatchId === null) {
+    return -1;
+  }
+
+  const leftSequenceNumber = left.roundSequenceNumber ?? Number.MAX_SAFE_INTEGER;
+  const rightSequenceNumber =
+    right.roundSequenceNumber ?? Number.MAX_SAFE_INTEGER;
+
+  if (leftSequenceNumber !== rightSequenceNumber) {
+    return leftSequenceNumber - rightSequenceNumber;
+  }
+
+  return left.roundBatchId - right.roundBatchId;
 }
 
 function parseSelectedRoundBatchId(value: string) {
@@ -173,6 +216,7 @@ export function BusinessMatchesTable({
   const router = useRouter();
   const [tableRows, setTableRows] = useState(rows);
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
+  const [roundFilter, setRoundFilter] = useState<RoundFilter>("all");
   const [sortKey, setSortKey] = useState<SortKey>("companyName");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [pendingMatchIds, setPendingMatchIds] = useState<number[]>([]);
@@ -181,6 +225,42 @@ export function BusinessMatchesTable({
   useEffect(() => {
     setTableRows(rows);
   }, [rows]);
+
+  const roundFilterOptions = (() => {
+    const options: Array<{ label: string; value: RoundFilter }> = [
+      { label: "All Rounds", value: "all" },
+    ];
+    const seenRoundBatchIds = new Set<number>();
+
+    for (const roundBatch of roundBatches) {
+      seenRoundBatchIds.add(roundBatch.id);
+      options.push({
+        label: formatRoundBatchLabel(roundBatch),
+        value: getRoundFilterValue(roundBatch.id),
+      });
+    }
+
+    for (const row of tableRows) {
+      if (
+        row.roundBatchId !== null &&
+        row.roundSequenceNumber !== null &&
+        row.roundStatus !== null &&
+        !seenRoundBatchIds.has(row.roundBatchId)
+      ) {
+        seenRoundBatchIds.add(row.roundBatchId);
+        options.push({
+          label: `Round ${row.roundSequenceNumber} (${row.roundStatus === "draft" ? "Draft" : "Applied"})`,
+          value: getRoundFilterValue(row.roundBatchId),
+        });
+      }
+    }
+
+    if (tableRows.some((row) => row.roundBatchId === null)) {
+      options.push({ label: "No Round", value: "none" });
+    }
+
+    return options;
+  })();
 
   function handleSort(nextSortKey: SortKey) {
     setSortDirection((currentDirection) =>
@@ -277,6 +357,7 @@ export function BusinessMatchesTable({
           roundStatus: RoundBatchStatus | null;
           status: MatchStatus | null;
         };
+        message?: string;
       } | null;
 
       if (!response.ok || !payload?.match) {
@@ -297,6 +378,7 @@ export function BusinessMatchesTable({
             : row,
         ),
       );
+      toast.success(payload.message ?? "Match updated successfully.");
 
       startTransition(() => {
         router.refresh();
@@ -315,6 +397,17 @@ export function BusinessMatchesTable({
 
   const visibleRows = tableRows
     .filter((row) => roleFilter === "all" || row.counterpartRole === roleFilter)
+    .filter((row) => {
+      if (roundFilter === "all") {
+        return true;
+      }
+
+      if (roundFilter === "none") {
+        return row.roundBatchId === null;
+      }
+
+      return row.roundBatchId === parseRoundFilterValue(roundFilter);
+    })
     .slice()
     .sort((left, right) => {
       let comparison = 0;
@@ -325,6 +418,9 @@ export function BusinessMatchesTable({
             left.counterpart.business,
             right.counterpart.business,
           );
+          break;
+        case "round":
+          comparison = compareRoundAssignments(left, right);
           break;
         case "counterpartRole":
           comparison = collator.compare(
@@ -381,6 +477,35 @@ export function BusinessMatchesTable({
             ))}
           </div>
 
+          <div className="relative inline-flex">
+            <select
+              aria-label="Filter matches by round"
+              className="min-h-11 min-w-44 appearance-none rounded-full border border-border bg-white/80 px-4 pr-10 pl-4 text-sm font-medium text-foreground outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
+              onChange={(event) =>
+                setRoundFilter(event.target.value as RoundFilter)
+              }
+              value={roundFilter}
+            >
+              {roundFilterOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <svg
+              aria-hidden="true"
+              className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 text-current"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="1.8"
+              viewBox="0 0 24 24"
+            >
+              <path d="m7 10 5 5 5-5" />
+            </svg>
+          </div>
+
           <div className="inline-flex items-center gap-2 rounded-full border border-border bg-white/80 px-4 py-2 text-sm font-medium text-muted">
             <span className="h-2.5 w-2.5 rounded-full bg-accent" />
             {visibleRows.length} showing
@@ -404,7 +529,7 @@ export function BusinessMatchesTable({
             No rows matched the current role filter.
           </p>
           <p className="mt-2 text-sm leading-7 text-muted">
-            Switch back to All Matches to review the full table.
+            Adjust the role or round filter to review other matches.
           </p>
         </div>
       ) : (
@@ -423,7 +548,13 @@ export function BusinessMatchesTable({
                     />
                   </th>
                   <th className="px-5 py-4 sm:px-6">
-                    <span>Round</span>
+                    <SortHeaderButton
+                      activeSortKey={sortKey}
+                      direction={sortDirection}
+                      label="Round"
+                      onSort={handleSort}
+                      sortKey="round"
+                    />
                   </th>
                   <th className="px-5 py-4 sm:px-6">
                     <SortHeaderButton

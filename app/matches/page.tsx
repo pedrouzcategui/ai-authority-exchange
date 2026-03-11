@@ -7,6 +7,7 @@ import Link from "next/link";
 import { MatchesFilterControls } from "@/components/matches-filter-controls";
 import { getBusinessProfileHref } from "@/lib/business-profile-route";
 import {
+  getBusinesses,
   getExplicitlyActiveExchangeBusinesses,
   getBusinessRelationshipRows,
   type BusinessOption,
@@ -148,9 +149,10 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
     businessFilter === undefined ? requestedGuestFilter : undefined;
   const requestedPage = parsePageNumber(resolvedSearchParams.page);
   const perPage = parseResultsPerPage(resolvedSearchParams.perPage);
-  const [businesses, relationshipRows] = await Promise.all([
+  const [businesses, relationshipRows, allBusinesses] = await Promise.all([
     getExplicitlyActiveExchangeBusinesses(),
     getBusinessRelationshipRows(hostFilter, guestFilter, businessFilter),
+    getBusinesses(),
   ]);
   const businessById = new Map(
     businesses.map((business) => [business.id, business.business] as const),
@@ -347,7 +349,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                         />
                         <ManageBusinessRelationshipsModal
                           business={row}
-                          businesses={businesses}
+                          businesses={allBusinesses}
                           publishedBy={row.publishedBy}
                           publishedFor={row.publishedFor}
                           triggerVariant="icon"
