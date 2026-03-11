@@ -14,6 +14,12 @@ const navigationItems = [
     matches: (pathname: string) => pathname.startsWith("/matches"),
   },
   {
+    href: "/businesses",
+    label: "Businesses",
+    matches: (pathname: string) =>
+      pathname.startsWith("/businesses") || pathname.startsWith("/business/"),
+  },
+  {
     href: "/rounds",
     label: "Rounds",
     matches: (pathname: string) => pathname.startsWith("/rounds"),

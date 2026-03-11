@@ -116,6 +116,23 @@ export const getExplicitlyActiveExchangeBusinesses = cache(async () => {
 
 export type BusinessOption = Awaited<ReturnType<typeof getBusinesses>>[number];
 
+export type BusinessProfileDetails = {
+  businessCategoryName: string | null;
+  relatedCategoriesReasoning: string | null;
+  relatedCategoryNames: string[];
+  sectorName: string | null;
+  subcategory: string | null;
+};
+
+export type BusinessDirectoryRow = {
+  business: string;
+  businessCategoryName: string | null;
+  id: number;
+  isActiveOnAiAuthorityExchange: boolean;
+  subcategory: string | null;
+  websiteUrl: string | null;
+};
+
 export const getBusinessById = cache(async (businessId: number) => {
   const business = await prisma.business.findUnique({
     where: {
@@ -125,6 +142,94 @@ export const getBusinessById = cache(async (businessId: number) => {
   });
 
   return business ? toBusinessOption(business) : null;
+});
+
+export const getBusinessProfileDetails = cache(async (businessId: number) => {
+  const business = await prisma.business.findUnique({
+    where: {
+      id: businessId,
+    },
+    select: {
+      business_categories: {
+        select: {
+          economic_sectors: {
+            select: {
+              name: true,
+            },
+          },
+          name: true,
+        },
+      },
+      related_categories_reasoning: true,
+      related_category_ids: true,
+      subcategory: true,
+    },
+  });
+
+  if (!business) {
+    return null;
+  }
+
+  const relatedCategories =
+    business.related_category_ids.length === 0
+      ? []
+      : await prisma.business_categories.findMany({
+          select: {
+            id: true,
+            name: true,
+          },
+          where: {
+            id: {
+              in: business.related_category_ids,
+            },
+          },
+        });
+
+  const relatedCategoryNameById = new Map(
+    relatedCategories.map((category) => [category.id, category.name] as const),
+  );
+
+  return {
+    businessCategoryName: business.business_categories?.name ?? null,
+    relatedCategoriesReasoning: business.related_categories_reasoning,
+    relatedCategoryNames: business.related_category_ids
+      .map((categoryId) => relatedCategoryNameById.get(categoryId))
+      .filter((categoryName): categoryName is string => Boolean(categoryName)),
+    sectorName: business.business_categories?.economic_sectors?.name ?? null,
+    subcategory: business.subcategory,
+  } satisfies BusinessProfileDetails;
+});
+
+export const getBusinessDirectoryRows = cache(async () => {
+  const businesses = await prisma.business.findMany({
+    select: {
+      business: true,
+      business_categories: {
+        select: {
+          name: true,
+        },
+      },
+      id: true,
+      isActiveOnAiAuthorityExchange: true,
+      subcategory: true,
+      websiteUrl: true,
+    },
+  });
+
+  return businesses
+    .map(
+      (business) =>
+        ({
+          business: business.business,
+          businessCategoryName: business.business_categories?.name ?? null,
+          id: business.id,
+          isActiveOnAiAuthorityExchange:
+            business.isActiveOnAiAuthorityExchange === true,
+          subcategory: business.subcategory,
+          websiteUrl: business.websiteUrl,
+        }) satisfies BusinessDirectoryRow,
+    )
+    .toSorted(compareBusinessNames);
 });
 
 export const getBusinessByIdentifier = cache(async (identifier: string) => {

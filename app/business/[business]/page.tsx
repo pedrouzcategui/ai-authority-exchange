@@ -4,7 +4,12 @@ import { BusinessExchangeParticipationToggle } from "@/components/business-excha
 import { BusinessMatchesTable } from "@/components/business-matches-table";
 import { BusinessRoleBadge } from "@/components/business-role-badge";
 import { EditBusinessModal } from "@/components/edit-business-modal";
-import { getBusinessByIdentifier, getBusinessMatchBoard } from "@/lib/matches";
+import {
+  getBusinessByIdentifier,
+  getBusinesses,
+  getBusinessMatchBoard,
+  getBusinessProfileDetails,
+} from "@/lib/matches";
 import { getRoundBatchSummaries } from "@/lib/rounds";
 
 export const dynamic = "force-dynamic";
@@ -31,6 +36,10 @@ function formatDomainRating(domainRating: number | null) {
   return domainRating === null ? "No DR" : `DR ${domainRating}`;
 }
 
+function formatProfileValue(value: string | null) {
+  return value && value.trim().length > 0 ? value : "Not set";
+}
+
 export default async function BusinessProfilePage({
   params,
 }: BusinessProfilePageProps) {
@@ -41,9 +50,11 @@ export default async function BusinessProfilePage({
     notFound();
   }
 
-  const [rows, roundBatches] = await Promise.all([
+  const [rows, roundBatches, profileDetails, selectableBusinesses] = await Promise.all([
     getBusinessMatchBoard(business.id),
     getRoundBatchSummaries(),
+    getBusinessProfileDetails(business.id),
+    getBusinesses(),
   ]);
   const businessDomainRating = business.domain_rating;
   const guestCount = rows.filter(
@@ -196,6 +207,83 @@ export default async function BusinessProfilePage({
         </div>
       </section>
 
+      <section className="rounded-4xl border border-border bg-surface p-6 shadow-(--shadow) backdrop-blur-md sm:p-8">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-sm font-medium tracking-[0.16em] text-accent uppercase">
+              Business Taxonomy
+            </p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+              Category details for {business.business}
+            </h2>
+          </div>
+          <p className="max-w-2xl text-sm leading-7 text-muted sm:text-right sm:text-base">
+            These fields drive the exchange matching logic and explain how the
+            business connects to adjacent categories.
+          </p>
+        </div>
+
+        <div className="mt-6 grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-3xl border border-border bg-white/75 p-5">
+            <p className="text-sm font-medium tracking-[0.12em] text-muted uppercase">
+              Subcategory
+            </p>
+            <p className="mt-3 text-lg font-semibold text-foreground">
+              {formatProfileValue(profileDetails?.subcategory ?? null)}
+            </p>
+          </div>
+
+          <div className="rounded-3xl border border-border bg-white/75 p-5">
+            <p className="text-sm font-medium tracking-[0.12em] text-muted uppercase">
+              Category
+            </p>
+            <p className="mt-3 text-lg font-semibold text-foreground">
+              {formatProfileValue(profileDetails?.businessCategoryName ?? null)}
+            </p>
+          </div>
+
+          <div className="rounded-3xl border border-border bg-white/75 p-5">
+            <p className="text-sm font-medium tracking-[0.12em] text-muted uppercase">
+              Economy Sector
+            </p>
+            <p className="mt-3 text-lg font-semibold text-foreground">
+              {formatProfileValue(profileDetails?.sectorName ?? null)}
+            </p>
+          </div>
+
+          <div className="rounded-3xl border border-border bg-white/75 p-5">
+            <p className="text-sm font-medium tracking-[0.12em] text-muted uppercase">
+              Related Categories
+            </p>
+            {profileDetails && profileDetails.relatedCategoryNames.length > 0 ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {profileDetails.relatedCategoryNames.map((categoryName) => (
+                  <span
+                    key={categoryName}
+                    className="inline-flex items-center rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-sm font-medium text-accent-strong"
+                  >
+                    {categoryName}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-3 text-lg font-semibold text-foreground">
+                Not set
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-3xl border border-border bg-white/75 p-5">
+          <p className="text-sm font-medium tracking-[0.12em] text-muted uppercase">
+            Related Categories Reasoning
+          </p>
+          <p className="mt-3 max-w-4xl text-sm leading-7 text-muted sm:text-base">
+            {formatProfileValue(profileDetails?.relatedCategoriesReasoning ?? null)}
+          </p>
+        </div>
+      </section>
+
       <BusinessExchangeParticipationToggle
         businessId={business.id}
         businessName={business.business}
@@ -260,6 +348,7 @@ export default async function BusinessProfilePage({
             sequenceNumber: batch.sequenceNumber,
             status: batch.status,
           }))}
+          selectableBusinesses={selectableBusinesses}
           rows={rows}
         />
       </section>

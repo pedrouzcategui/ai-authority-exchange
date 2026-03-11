@@ -8,6 +8,11 @@ type CreateMatchPayload = {
   hostId?: unknown;
   guestId?: unknown;
   guestIds?: unknown;
+  roundBatchId?: unknown;
+};
+
+type DeleteMatchPayload = {
+  matchId?: unknown;
 };
 
 type UpdateMatchPayload = {
@@ -28,6 +33,7 @@ const reverseRoundPairErrorMessage =
 
 const matchStatusValues: MatchStatus[] = [
   "Not_Started",
+  "Draft_Created",
   "In_Progress",
   "Done",
   "Leaving",
@@ -144,18 +150,20 @@ export async function POST(request: Request) {
     payload.guestIds !== undefined
       ? parseNumericIdList(payload.guestIds)
       : parseNumericIdList(payload.guestId);
+  const roundBatchId = parseOptionalNumericId(payload.roundBatchId);
   const status = parseMatchStatus(payload.status);
 
   if (
     hostId === null ||
     guestIds === null ||
     guestIds.length === 0 ||
+    roundBatchId === invalidOptionalNumericId ||
     status === null
   ) {
     return NextResponse.json(
       {
         error:
-          "Please choose one publisher, at least one published-for business, and a valid status.",
+          "Please choose one publisher, at least one published-for business, a valid round, and a valid status.",
       },
       { status: 400 },
     );
@@ -234,6 +242,150 @@ export async function POST(request: Request) {
         (guestBusiness): guestBusiness is string => guestBusiness !== undefined,
       );
 
+    if (roundBatchId !== undefined && roundBatchId !== null) {
+      const result = await withDatabaseRetry((database) =>
+        database.$transaction(async (transaction) => {
+          const targetBatch = await transaction.roundBatch.findUnique({
+            select: {
+              id: true,
+              sequenceNumber: true,
+            },
+            where: {
+              id: roundBatchId,
+            },
+          });
+
+          if (!targetBatch) {
+            throw new Error(roundNotFoundErrorMessage);
+          }
+
+          const reverseAssignments = await transaction.roundAssignment.findMany({
+            select: {
+              guestBusinessId: true,
+              hostBusinessId: true,
+            },
+            where: {
+              OR: guestIds.map((guestId) => ({
+                guestBusinessId: hostId,
+                hostBusinessId: guestId,
+                roundBatchId,
+              })),
+            },
+          });
+
+          if (reverseAssignments.length > 0) {
+            throw new Error(reverseRoundPairErrorMessage);
+          }
+
+          const existingAssignments = await transaction.roundAssignment.findMany({
+            select: {
+              guestBusinessId: true,
+              hostBusinessId: true,
+              id: true,
+            },
+            where: {
+              OR: guestIds.map((guestId) => ({
+                guestBusinessId: guestId,
+                hostBusinessId: hostId,
+                roundBatchId,
+              })),
+            },
+          });
+
+          const assignmentByGuestId = new Map(
+            existingAssignments.map((assignment) => [
+              assignment.guestBusinessId,
+              assignment,
+            ] as const),
+          );
+
+          let createdCount = 0;
+
+          for (const guestId of guestIds) {
+            try {
+              await transaction.match.create({
+                data: {
+                  guestId,
+                  hostId,
+                  ...(roundBatchId === null ? {} : { roundBatchId }),
+                  ...(status === undefined ? {} : { status }),
+                },
+              });
+
+              const existingAssignment = assignmentByGuestId.get(guestId);
+
+              if (existingAssignment) {
+                await transaction.roundAssignment.update({
+                  data: {
+                    source: "manual",
+                  },
+                  where: {
+                    id: existingAssignment.id,
+                  },
+                });
+              } else {
+                await transaction.roundAssignment.create({
+                  data: {
+                    guestBusinessId: guestId,
+                    hostBusinessId: hostId,
+                    roundBatchId,
+                    source: "manual",
+                  },
+                });
+              }
+
+              createdCount += 1;
+            } catch (error) {
+              if (
+                error instanceof Prisma.PrismaClientKnownRequestError &&
+                error.code === "P2002"
+              ) {
+                continue;
+              }
+
+              throw error;
+            }
+          }
+
+          return {
+            createdCount,
+            roundSequenceNumber: targetBatch.sequenceNumber,
+          };
+        }),
+      );
+
+      if (result.createdCount === 0) {
+        return NextResponse.json(
+          {
+            error:
+              "All selected publisher and published-for pairs already exist.",
+          },
+          { status: 409 },
+        );
+      }
+
+      const skippedCount = guestIds.length - result.createdCount;
+
+      if (guestIds.length === 1) {
+        return NextResponse.json(
+          {
+            message: `Match created successfully in Round ${result.roundSequenceNumber}: ${host.business} published for ${orderedGuestNames[0]}.`,
+          },
+          { status: 201 },
+        );
+      }
+
+      return NextResponse.json(
+        {
+          message:
+            skippedCount > 0
+              ? `Created ${result.createdCount} of ${guestIds.length} matches for ${host.business} in Round ${result.roundSequenceNumber}. ${skippedCount} pair${skippedCount === 1 ? " was" : "s were"} already saved.`
+              : `Created ${result.createdCount} matches for ${host.business} in Round ${result.roundSequenceNumber}: ${orderedGuestNames.join(", ")}.`,
+        },
+        { status: 201 },
+      );
+    }
+
     const creationResult = await withDatabaseRetry((database) =>
       database.match.createMany({
         data: guestIds.map((guestId) => ({
@@ -285,6 +437,20 @@ export async function POST(request: Request) {
           error:
             "One or more selected publisher and published-for pairs already exist.",
         },
+        { status: 409 },
+      );
+    }
+
+    if (error instanceof Error && error.message === roundNotFoundErrorMessage) {
+      return NextResponse.json(
+        { error: roundNotFoundErrorMessage },
+        { status: 404 },
+      );
+    }
+
+    if (error instanceof Error && error.message === reverseRoundPairErrorMessage) {
+      return NextResponse.json(
+        { error: reverseRoundPairErrorMessage },
         { status: 409 },
       );
     }
@@ -656,6 +822,125 @@ export async function PATCH(request: Request) {
     return NextResponse.json(
       {
         error: `The match could not be updated. ${formatDatabaseError(error)}`,
+      },
+      { status: 500 },
+    );
+  }
+}
+
+export async function DELETE(request: Request) {
+  const session = await requireLegacyUserSession();
+
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  let payload: DeleteMatchPayload;
+
+  try {
+    payload = (await request.json()) as DeleteMatchPayload;
+  } catch {
+    return NextResponse.json(
+      { error: "The request body could not be parsed." },
+      { status: 400 },
+    );
+  }
+
+  const matchId = parseNumericId(payload.matchId);
+
+  if (matchId === null) {
+    return NextResponse.json(
+      { error: "Please provide a valid match id." },
+      { status: 400 },
+    );
+  }
+
+  try {
+    const deletedMatch = await withDatabaseRetry((database) =>
+      database.$transaction(async (transaction) => {
+        const existingMatch = await transaction.match.findUnique({
+          select: {
+            guest: {
+              select: {
+                business: true,
+              },
+            },
+            guestId: true,
+            host: {
+              select: {
+                business: true,
+              },
+            },
+            hostId: true,
+            id: true,
+            roundBatch: {
+              select: {
+                sequenceNumber: true,
+              },
+            },
+            roundBatchId: true,
+          },
+          where: {
+            id: matchId,
+          },
+        });
+
+        if (!existingMatch) {
+          return null;
+        }
+
+        const deletedAssignmentCount =
+          existingMatch.roundBatchId === null
+            ? 0
+            : (
+                await transaction.roundAssignment.deleteMany({
+                  where: {
+                    guestBusinessId: existingMatch.guestId,
+                    hostBusinessId: existingMatch.hostId,
+                    roundBatchId: existingMatch.roundBatchId,
+                  },
+                })
+              ).count;
+
+        await transaction.match.delete({
+          where: {
+            id: matchId,
+          },
+        });
+
+        return {
+          deletedAssignmentCount,
+          guestBusinessName: existingMatch.guest.business,
+          hostBusinessName: existingMatch.host.business,
+          roundSequenceNumber: existingMatch.roundBatch?.sequenceNumber ?? null,
+        };
+      }),
+    );
+
+    if (!deletedMatch) {
+      return NextResponse.json(
+        { error: "The selected match does not exist." },
+        { status: 404 },
+      );
+    }
+
+    const relationshipLabel = `${deletedMatch.hostBusinessName} published for ${deletedMatch.guestBusinessName}`;
+    const roundRemovalMessage =
+      deletedMatch.deletedAssignmentCount > 0 &&
+      deletedMatch.roundSequenceNumber !== null
+        ? ` Its linked Round ${deletedMatch.roundSequenceNumber} assignment was also removed.`
+        : "";
+
+    return NextResponse.json(
+      {
+        message: `Deleted match: ${relationshipLabel}.${roundRemovalMessage}`,
+      },
+      { status: 200 },
+    );
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: `The match could not be deleted. ${formatDatabaseError(error)}`,
       },
       { status: 500 },
     );

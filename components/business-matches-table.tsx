@@ -4,9 +4,13 @@ import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { ActionTooltip, TrashIcon } from "@/components/action-icons";
+import { ConfirmationDialog } from "@/components/confirmation-dialog";
+import { CreateBusinessMatchModal } from "@/components/create-business-match-modal";
 import { CreateEmailDraftButton } from "@/components/create-email-draft-button";
 import type { MatchStatus, RoundBatchStatus } from "@/generated/prisma/client";
 import { getBusinessProfileHref } from "@/lib/business-profile-route";
+import { getMatchDraftCreationBlockedReason } from "@/lib/match-draft-status";
 import type { BusinessMatchBoardRow, BusinessOption } from "@/lib/matches";
 
 type BusinessMatchesTableRoundBatch = {
@@ -16,6 +20,7 @@ type BusinessMatchesTableRoundBatch = {
 };
 
 type BusinessMatchesTableProps = {
+  selectableBusinesses: Pick<BusinessOption, "business" | "clientType" | "id">[];
   business: BusinessOption;
   roundBatches: BusinessMatchesTableRoundBatch[];
   rows: BusinessMatchBoardRow[];
@@ -34,6 +39,12 @@ type SortKey =
   | "interviewPublished"
   | "interviewSent"
   | "status";
+
+type DeleteConfirmationState = {
+  description: string;
+  matchId: number;
+  title: string;
+};
 
 const collator = new Intl.Collator(undefined, {
   numeric: true,
@@ -61,6 +72,7 @@ function parseRoundFilterValue(value: RoundFilter) {
 
 const statusOptions: Array<{ label: string; value: MatchStatus }> = [
   { label: "Not Started", value: "Not_Started" },
+  { label: "Draft Created", value: "Draft_Created" },
   { label: "In Progress", value: "In_Progress" },
   { label: "Done", value: "Done" },
   { label: "Leaving", value: "Leaving" },
@@ -121,6 +133,8 @@ function parseSelectedRoundBatchId(value: string) {
 
 function getStatusSelectClassName(status: MatchStatus | null) {
   switch (status ?? "Not_Started") {
+    case "Draft_Created":
+      return "border-[#d7b4e6] bg-[#f8effc] text-[#6d3f83] focus:border-[#9d5dbb] focus:ring-[#9d5dbb]/20";
     case "In_Progress":
       return "border-[#abc0d6] bg-[#edf3fa] text-[#3a536b] focus:border-brand-deep focus:ring-brand-deep/15";
     case "Done":
@@ -150,6 +164,15 @@ const counterpartRoleOptions: Array<{
   { label: "Guest", value: "guest" },
   { label: "Host", value: "host" },
 ];
+
+function getMatchDirectionLabel(
+  businessName: string,
+  row: Pick<BusinessMatchBoardRow, "counterpart" | "counterpartRole">,
+) {
+  return row.counterpartRole === "guest"
+    ? `${businessName} -> ${row.counterpart.business}`
+    : `${row.counterpart.business} -> ${businessName}`;
+}
 
 function SortIcon({
   active,
@@ -208,6 +231,7 @@ function SortHeaderButton({
 }
 
 export function BusinessMatchesTable({
+  selectableBusinesses,
   business,
   roundBatches,
   rows,
@@ -220,6 +244,8 @@ export function BusinessMatchesTable({
   const [sortKey, setSortKey] = useState<SortKey>("companyName");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [pendingMatchIds, setPendingMatchIds] = useState<number[]>([]);
+  const [deleteConfirmationState, setDeleteConfirmationState] =
+    useState<DeleteConfirmationState | null>(null);
   const [, startTransition] = useTransition();
 
   useEffect(() => {
@@ -395,6 +421,69 @@ export function BusinessMatchesTable({
     }
   }
 
+  function requestDeleteMatch(row: BusinessMatchBoardRow) {
+    setDeleteConfirmationState({
+      description:
+        row.roundSequenceNumber === null
+          ? "This removes the saved match from this business profile. This action cannot be undone."
+          : `This removes the saved match and also clears its linked Round ${row.roundSequenceNumber} assignment. This action cannot be undone.`,
+      matchId: row.id,
+      title: `Delete ${getMatchDirectionLabel(businessName, row)}?`,
+    });
+  }
+
+  function confirmDeleteMatch() {
+    if (!deleteConfirmationState) {
+      return;
+    }
+
+    const row = tableRows.find(
+      (candidateRow) => candidateRow.id === deleteConfirmationState.matchId,
+    );
+
+    if (!row) {
+      setDeleteConfirmationState(null);
+      return;
+    }
+
+    const matchId = row.id;
+
+    setPendingMatchIds((currentIds) => [...currentIds, matchId]);
+
+    startTransition(async () => {
+      try {
+        const response = await fetch("/api/matches", {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ matchId }),
+        });
+
+        const payload = (await response.json().catch(() => null)) as {
+          error?: string;
+          message?: string;
+        } | null;
+
+        if (!response.ok) {
+          toast.error(payload?.error ?? "The match could not be deleted.");
+          return;
+        }
+
+        setTableRows((currentRows) =>
+          currentRows.filter((candidateRow) => candidateRow.id !== matchId),
+        );
+        setDeleteConfirmationState(null);
+        toast.success(payload?.message ?? "Match deleted.");
+        router.refresh();
+      } finally {
+        setPendingMatchIds((currentIds) =>
+          currentIds.filter((currentId) => currentId !== matchId),
+        );
+      }
+    });
+  }
+
   const visibleRows = tableRows
     .filter((row) => roleFilter === "all" || row.counterpartRole === roleFilter)
     .filter((row) => {
@@ -460,6 +549,13 @@ export function BusinessMatchesTable({
         </div>
 
         <div className="flex flex-wrap items-center justify-end gap-3">
+          <CreateBusinessMatchModal
+            currentBusiness={business}
+            existingCounterpartIds={tableRows.map((row) => row.counterpart.id)}
+            roundBatches={roundBatches}
+            selectableBusinesses={selectableBusinesses}
+          />
+
           <div className="inline-flex rounded-full border border-border bg-white/80 p-1">
             {roleFilterOptions.map((option) => (
               <button
@@ -592,12 +688,16 @@ export function BusinessMatchesTable({
                       sortKey="status"
                     />
                   </th>
-                  <th className="w-28 px-5 py-4 text-right sm:px-6">Draft</th>
+                  <th className="w-36 px-5 py-4 text-right sm:px-6">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {visibleRows.map((row) => {
                   const isPending = pendingMatchIds.includes(row.id);
+                  const draftButtonDisabledLabel =
+                    getMatchDraftCreationBlockedReason(row.status);
 
                   return (
                     <tr key={row.id} className="align-middle">
@@ -769,8 +869,14 @@ export function BusinessMatchesTable({
                         </div>
                       </td>
                       <td className="border-t border-border px-5 py-4 text-right sm:px-6">
-                        <div className="flex justify-end">
+                        <div className="flex justify-end gap-2">
                           <CreateEmailDraftButton
+                            disabled={isPending || draftButtonDisabledLabel !== null}
+                            disabledLabel={
+                              isPending
+                                ? "Match is being updated"
+                                : draftButtonDisabledLabel ?? undefined
+                            }
                             guestId={
                               row.counterpartRole === "guest"
                                 ? row.counterpart.id
@@ -781,7 +887,36 @@ export function BusinessMatchesTable({
                                 ? business.id
                                 : row.counterpart.id
                             }
+                            onCreated={() =>
+                              setTableRows((currentRows) =>
+                                currentRows.map((candidateRow) =>
+                                  candidateRow.id === row.id
+                                    ? {
+                                        ...candidateRow,
+                                        status: "Draft_Created",
+                                      }
+                                    : candidateRow,
+                                ),
+                              )
+                            }
                           />
+
+                          <span className="group relative inline-flex">
+                            <button
+                              aria-label="Delete match"
+                              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#efb1a8] bg-[#fff0ec] text-[#b55247] transition hover:-translate-y-0.5 hover:border-[#d38a81] hover:bg-[#ffe6e1] hover:text-[#983b33] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b55247]/20 disabled:cursor-not-allowed disabled:opacity-60"
+                              disabled={isPending}
+                              onClick={() => requestDeleteMatch(row)}
+                              type="button"
+                            >
+                              <TrashIcon />
+                            </button>
+                            <ActionTooltip
+                              label={
+                                isPending ? "Deleting match..." : "Delete match"
+                              }
+                            />
+                          </span>
                         </div>
                       </td>
                     </tr>
@@ -792,6 +927,20 @@ export function BusinessMatchesTable({
           </div>
         </div>
       )}
+
+      <ConfirmationDialog
+        confirmLabel="Delete Match"
+        description={deleteConfirmationState?.description ?? ""}
+        isBusy={
+          deleteConfirmationState !== null &&
+          pendingMatchIds.includes(deleteConfirmationState.matchId)
+        }
+        isOpen={deleteConfirmationState !== null}
+        onClose={() => setDeleteConfirmationState(null)}
+        onConfirm={confirmDeleteMatch}
+        title={deleteConfirmationState?.title ?? "Delete match?"}
+        tone="danger"
+      />
     </div>
   );
 }
