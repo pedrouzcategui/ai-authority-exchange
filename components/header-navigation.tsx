@@ -28,7 +28,10 @@ export function HeaderNavigation({ isAuthenticated }: HeaderNavigationProps) {
   }
 
   return (
-    <nav aria-label="Primary" className="flex flex-wrap items-center gap-2">
+    <nav
+      aria-label="Primary"
+      className="flex flex-wrap items-center gap-2 md:col-span-2 lg:col-span-1"
+    >
       {navigationItems.map((item) => {
         const isActive = item.matches(pathname);
 

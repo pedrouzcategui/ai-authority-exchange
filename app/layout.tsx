@@ -39,8 +39,8 @@ export default async function RootLayout({
       >
         <div className="relative min-h-screen">
           <header className="sticky top-0 z-40 border-b border-border bg-white/84 backdrop-blur-xl">
-            <div className="mx-auto grid w-full max-w-8xl gap-4 px-6 py-4 sm:px-10 lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:items-center lg:px-12">
-              <div className="space-y-1">
+            <div className="mx-auto grid w-full max-w-8xl gap-4 px-6 py-4 sm:px-10 md:grid-cols-[minmax(0,1fr)_auto] md:items-start lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:items-center lg:px-12">
+              <div className="space-y-1 md:min-w-0">
                 <Link
                   className="inline-flex text-lg font-semibold tracking-tight text-foreground transition hover:text-accent"
                   href={homeHref}
@@ -56,7 +56,9 @@ export default async function RootLayout({
                 isAuthenticated={Boolean(session?.user?.legacyUserId)}
               />
 
-              <AuthControls user={session?.user ?? null} />
+              <div className="md:justify-self-end lg:justify-self-auto">
+                <AuthControls user={session?.user ?? null} />
+              </div>
             </div>
           </header>
 
