@@ -1,0 +1,5 @@
+ALTER TABLE ai_authority_exchange_round_assignments
+DROP CONSTRAINT IF EXISTS unique_round_assignment_host;
+
+ALTER TABLE ai_authority_exchange_round_assignments
+DROP CONSTRAINT IF EXISTS unique_round_assignment_guest;

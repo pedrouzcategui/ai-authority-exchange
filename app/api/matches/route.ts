@@ -23,8 +23,8 @@ type UpdateMatchPayload = {
 const invalidOptionalNumericId = Symbol("invalidOptionalNumericId");
 
 const roundNotFoundErrorMessage = "The selected round does not exist.";
-const roundConflictErrorMessage =
-  "That round already uses one of these businesses in a different pairing.";
+const reverseRoundPairErrorMessage =
+  "That round already contains this pairing in the opposite direction.";
 
 const matchStatusValues: MatchStatus[] = [
   "Not_Started",
@@ -481,41 +481,25 @@ export async function PATCH(request: Request) {
           (assignmentId): assignmentId is number => assignmentId !== undefined,
         );
 
-        const [hostConflict, guestConflict] = await Promise.all([
-          database.roundAssignment.findFirst({
-            select: {
-              id: true,
-            },
-            where: {
-              hostBusinessId: nextHostId,
-              id:
-                excludedAssignmentIds.length === 0
-                  ? undefined
-                  : {
-                      notIn: excludedAssignmentIds,
-                    },
-              roundBatchId: nextRoundBatchId,
-            },
-          }),
-          database.roundAssignment.findFirst({
-            select: {
-              id: true,
-            },
-            where: {
-              guestBusinessId: nextGuestId,
-              id:
-                excludedAssignmentIds.length === 0
-                  ? undefined
-                  : {
-                      notIn: excludedAssignmentIds,
-                    },
-              roundBatchId: nextRoundBatchId,
-            },
-          }),
-        ]);
+        const reversePairAssignment = await database.roundAssignment.findFirst({
+          select: {
+            id: true,
+          },
+          where: {
+            guestBusinessId: nextHostId,
+            hostBusinessId: nextGuestId,
+            id:
+              excludedAssignmentIds.length === 0
+                ? undefined
+                : {
+                    notIn: excludedAssignmentIds,
+                  },
+            roundBatchId: nextRoundBatchId,
+          },
+        });
 
-        if (hostConflict || guestConflict) {
-          throw new Error(roundConflictErrorMessage);
+        if (reversePairAssignment) {
+          throw new Error(reverseRoundPairErrorMessage);
         }
       }
 
@@ -662,9 +646,9 @@ export async function PATCH(request: Request) {
       );
     }
 
-    if (error instanceof Error && error.message === roundConflictErrorMessage) {
+    if (error instanceof Error && error.message === reverseRoundPairErrorMessage) {
       return NextResponse.json(
-        { error: roundConflictErrorMessage },
+        { error: reverseRoundPairErrorMessage },
         { status: 409 },
       );
     }

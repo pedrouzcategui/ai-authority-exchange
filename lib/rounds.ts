@@ -195,10 +195,8 @@ export type RoundDraftRow = {
   businessId: number;
   businessName: string;
   domainRating: number | null;
-  publishedBy: RoundDraftCell | null;
-  publishedByOptions: RoundDraftOption[];
-  publishedFor: RoundDraftCell | null;
-  publishedForOptions: RoundDraftOption[];
+  publishedBy: RoundDraftCell[];
+  publishedFor: RoundDraftCell[];
   rowStatus: "complete" | "empty" | "partial";
 };
 
@@ -462,26 +460,6 @@ function isDirectedAssignmentEligible(params: {
     }
   }
 
-  const existingHostAssignment =
-    draftState.assignmentByHostId.get(hostBusinessId);
-
-  if (
-    existingHostAssignment &&
-    existingHostAssignment.id !== currentAssignmentId
-  ) {
-    return false;
-  }
-
-  const existingGuestAssignment =
-    draftState.assignmentByGuestId.get(guestBusinessId);
-
-  if (
-    existingGuestAssignment &&
-    existingGuestAssignment.id !== currentAssignmentId
-  ) {
-    return false;
-  }
-
   const duplicateAssignment = draftState.assignmentByPairKey.get(
     pairKey(hostBusinessId, guestBusinessId),
   );
@@ -673,6 +651,29 @@ function getBusinessesRepresentedInAssignments(
   return Array.from(businessesById.values()).toSorted(compareBusinesses);
 }
 
+function getDisplayedBusinessesForBatch(
+  activeBusinesses: RoundBusiness[],
+  assignments: RoundAssignmentRecord[],
+  status: RoundBatchStatus,
+) {
+  if (status !== "draft") {
+    return getBusinessesRepresentedInAssignments(assignments);
+  }
+
+  const businessesById = new Map<number, RoundBusiness>();
+
+  for (const business of activeBusinesses) {
+    businessesById.set(business.id, business);
+  }
+
+  for (const assignment of assignments) {
+    businessesById.set(assignment.hostBusiness.id, assignment.hostBusiness);
+    businessesById.set(assignment.guestBusiness.id, assignment.guestBusiness);
+  }
+
+  return Array.from(businessesById.values()).toSorted(compareBusinesses);
+}
+
 async function getActiveRoundBusinessesFromDatabase(
   database: PrismaClient = prisma,
 ) {
@@ -845,10 +846,8 @@ export const getRoundBatchView = cache(async (requestedBatchId?: number) => {
         businessId: business.id,
         businessName: business.business,
         domainRating: business.domain_rating,
-        publishedBy: null,
-        publishedByOptions: [],
-        publishedFor: null,
-        publishedForOptions: [],
+        publishedBy: [],
+        publishedFor: [],
         rowStatus: "empty" as const,
       })),
       selectableBusinesses: selectableBusinesses.map((business) =>
@@ -862,19 +861,12 @@ export const getRoundBatchView = cache(async (requestedBatchId?: number) => {
     (requestedBatchId === undefined
       ? batches[0]
       : batches.find((batch) => batch.id === requestedBatchId)) ?? batches[0];
-  const { assignments, historicalContext } = await getRoundManagementContext(
-    selectedBatch.id,
+  const { assignments } = await getRoundManagementContext(selectedBatch.id);
+  const displayedBusinesses = getDisplayedBusinessesForBatch(
+    activeBusinesses,
+    assignments,
+    selectedBatch.status,
   );
-  const displayedBusinesses =
-    selectedBatch.status === "draft"
-      ? activeBusinesses
-      : getBusinessesRepresentedInAssignments(assignments);
-  const roundBusinessesById = new Map(
-    [...selectableBusinesses, ...displayedBusinesses].map(
-      (business) => [business.id, business] as const,
-    ),
-  );
-  const draftState = buildRoundDraftState(assignments);
   const assignmentRows = assignments
     .toSorted((left, right) => {
       const hostComparison = compareBusinesses(
@@ -889,68 +881,47 @@ export const getRoundBatchView = cache(async (requestedBatchId?: number) => {
       return compareBusinesses(left.guestBusiness, right.guestBusiness);
     })
     .map((assignment) => toRoundDraftAssignmentRow(assignment));
+  const rowsByBusinessId = new Map<number, RoundDraftRow>(
+    displayedBusinesses.map((business) => [
+      business.id,
+      {
+        businessId: business.id,
+        businessName: business.business,
+        domainRating: business.domain_rating,
+        publishedBy: [],
+        publishedFor: [],
+        rowStatus: "empty" as const,
+      } satisfies RoundDraftRow,
+    ]),
+  );
+
+  for (const assignment of assignments) {
+    rowsByBusinessId
+      .get(assignment.guestBusinessId)
+      ?.publishedBy.push(toRoundDraftCell(assignment, "publishedBy"));
+    rowsByBusinessId
+      .get(assignment.hostBusinessId)
+      ?.publishedFor.push(toRoundDraftCell(assignment, "publishedFor"));
+  }
+
   const rows = displayedBusinesses.map((business) => {
-    const publishedByAssignment =
-      draftState.assignmentByGuestId.get(business.id) ?? null;
-    const publishedForAssignment =
-      draftState.assignmentByHostId.get(business.id) ?? null;
-    const publishedByOptions =
-      selectedBatch.status === "draft"
-        ? selectableBusinesses
-            .filter((candidateBusiness) =>
-              isDirectedAssignmentEligible({
-                currentAssignmentId: publishedByAssignment?.id,
-                draftState,
-                enforceExchangeRules: false,
-                guestBusinessId: business.id,
-                hostBusinessId: candidateBusiness.id,
-                pairedBusinessIdsByBusinessId:
-                  historicalContext.pairedBusinessIdsByBusinessId,
-                roundBusinessesById,
-              }),
-            )
-            .map((candidateBusiness) => toRoundDraftOption(candidateBusiness))
-        : [];
-    const publishedForOptions =
-      selectedBatch.status === "draft"
-        ? selectableBusinesses
-            .filter((candidateBusiness) =>
-              isDirectedAssignmentEligible({
-                currentAssignmentId: publishedForAssignment?.id,
-                draftState,
-                enforceExchangeRules: false,
-                guestBusinessId: candidateBusiness.id,
-                hostBusinessId: business.id,
-                pairedBusinessIdsByBusinessId:
-                  historicalContext.pairedBusinessIdsByBusinessId,
-                roundBusinessesById,
-              }),
-            )
-            .map((candidateBusiness) => toRoundDraftOption(candidateBusiness))
-        : [];
+    const row = rowsByBusinessId.get(business.id)!;
 
-    let rowStatus: RoundDraftRow["rowStatus"] = "complete";
+    row.publishedBy.sort((left, right) =>
+      businessNameCollator.compare(left.businessName, right.businessName),
+    );
+    row.publishedFor.sort((left, right) =>
+      businessNameCollator.compare(left.businessName, right.businessName),
+    );
 
-    if (!publishedByAssignment && !publishedForAssignment) {
-      rowStatus = "empty";
-    } else if (!publishedByAssignment || !publishedForAssignment) {
-      rowStatus = "partial";
-    }
+    row.rowStatus =
+      row.publishedBy.length === 0 && row.publishedFor.length === 0
+        ? "empty"
+        : row.publishedBy.length === 0 || row.publishedFor.length === 0
+          ? "partial"
+          : "complete";
 
-    return {
-      businessId: business.id,
-      businessName: business.business,
-      domainRating: business.domain_rating,
-      publishedBy: publishedByAssignment
-        ? toRoundDraftCell(publishedByAssignment, "publishedBy")
-        : null,
-      publishedByOptions,
-      publishedFor: publishedForAssignment
-        ? toRoundDraftCell(publishedForAssignment, "publishedFor")
-        : null,
-      publishedForOptions,
-      rowStatus,
-    } satisfies RoundDraftRow;
+    return row;
   });
 
   return {
@@ -1129,7 +1100,7 @@ export async function updateRoundAssignment(
       })
     ) {
       throw new Error(
-        "That draft pairing is blocked by directionality or round capacity.",
+        "That draft pairing is blocked by directionality or duplication.",
       );
     }
 
@@ -1219,7 +1190,7 @@ export async function upsertRoundAssignmentRow(
       })
     ) {
       throw new Error(
-        "That draft pairing is blocked by directionality or round capacity.",
+        "That draft pairing is blocked by directionality or duplication.",
       );
     }
 

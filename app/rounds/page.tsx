@@ -152,6 +152,7 @@ export default async function RoundsPage({ searchParams }: RoundsPageProps) {
           assignmentRows={roundBatchView.assignmentRows}
           key={roundBatchView.batch.id}
           roundBatchId={roundBatchView.batch.id}
+          rows={roundBatchView.rows}
           roundStatus={roundBatchView.batch.status}
           selectableBusinesses={roundBatchView.selectableBusinesses}
           unresolvedBusinessCount={roundBatchView.unresolvedBusinessCount}

@@ -264,8 +264,6 @@ export type RoundAssignmentOrderByWithRelationInput = {
 
 export type RoundAssignmentWhereUniqueInput = Prisma.AtLeast<{
   id?: number
-  roundBatchId_hostBusinessId?: Prisma.RoundAssignmentRoundBatchIdHostBusinessIdCompoundUniqueInput
-  roundBatchId_guestBusinessId?: Prisma.RoundAssignmentRoundBatchIdGuestBusinessIdCompoundUniqueInput
   roundBatchId_hostBusinessId_guestBusinessId?: Prisma.RoundAssignmentRoundBatchIdHostBusinessIdGuestBusinessIdCompoundUniqueInput
   AND?: Prisma.RoundAssignmentWhereInput | Prisma.RoundAssignmentWhereInput[]
   OR?: Prisma.RoundAssignmentWhereInput[]
@@ -279,7 +277,7 @@ export type RoundAssignmentWhereUniqueInput = Prisma.AtLeast<{
   guestBusiness?: Prisma.XOR<Prisma.BusinessScalarRelationFilter, Prisma.BusinessWhereInput>
   hostBusiness?: Prisma.XOR<Prisma.BusinessScalarRelationFilter, Prisma.BusinessWhereInput>
   roundBatch?: Prisma.XOR<Prisma.RoundBatchScalarRelationFilter, Prisma.RoundBatchWhereInput>
-}, "id" | "roundBatchId_hostBusinessId" | "roundBatchId_guestBusinessId" | "roundBatchId_hostBusinessId_guestBusinessId">
+}, "id" | "roundBatchId_hostBusinessId_guestBusinessId">
 
 export type RoundAssignmentOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -381,16 +379,6 @@ export type RoundAssignmentListRelationFilter = {
 
 export type RoundAssignmentOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
-}
-
-export type RoundAssignmentRoundBatchIdHostBusinessIdCompoundUniqueInput = {
-  roundBatchId: number
-  hostBusinessId: number
-}
-
-export type RoundAssignmentRoundBatchIdGuestBusinessIdCompoundUniqueInput = {
-  roundBatchId: number
-  guestBusinessId: number
 }
 
 export type RoundAssignmentRoundBatchIdHostBusinessIdGuestBusinessIdCompoundUniqueInput = {

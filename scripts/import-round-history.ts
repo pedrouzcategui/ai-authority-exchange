@@ -288,8 +288,6 @@ function buildImportedAssignments(
   options: CliOptions,
 ) {
   const assignmentsByPairKey = new Map<string, ImportedAssignment>();
-  const guestAssignmentByBusinessId = new Map<number, ImportedAssignment>();
-  const hostAssignmentByBusinessId = new Map<number, ImportedAssignment>();
   let skippedInactiveRowCount = 0;
 
   function registerAssignment(
@@ -317,26 +315,6 @@ function buildImportedAssignments(
       );
     }
 
-    const existingGuestAssignment = guestAssignmentByBusinessId.get(
-      guestBusiness.id,
-    );
-
-    if (existingGuestAssignment) {
-      throw new Error(
-        `Row ${rowNumber} gives ${guestBusiness.business} two published_by businesses in the same round.`,
-      );
-    }
-
-    const existingHostAssignment = hostAssignmentByBusinessId.get(
-      hostBusiness.id,
-    );
-
-    if (existingHostAssignment) {
-      throw new Error(
-        `Row ${rowNumber} gives ${hostBusiness.business} two published_for businesses in the same round.`,
-      );
-    }
-
     const importedAssignment = {
       guestBusinessId: guestBusiness.id,
       guestBusinessName: guestBusiness.business,
@@ -345,8 +323,6 @@ function buildImportedAssignments(
     } satisfies ImportedAssignment;
 
     assignmentsByPairKey.set(pairKey, importedAssignment);
-    guestAssignmentByBusinessId.set(guestBusiness.id, importedAssignment);
-    hostAssignmentByBusinessId.set(hostBusiness.id, importedAssignment);
   }
 
   rows.forEach((row, index) => {

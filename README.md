@@ -106,7 +106,8 @@ Interpretation rules:
 
 - `published_by` means another business hosted this row's business in that round
 - `published_for` means this row's business hosted another business in that round
-- each business can appear at most once as a host and once as a guest within the imported round
+- rounds are imported as collections of directed pairings, so a business can appear multiple times within the same round
+- exact duplicate and reverse-direction duplicate pairs are still rejected within the same imported round
 - rows marked inactive can be skipped with `--active-column` or `--status-column`
 
 Useful flags:

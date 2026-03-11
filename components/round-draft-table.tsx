@@ -16,11 +16,16 @@ import type {
 } from "@/generated/prisma/client";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { getBusinessProfileHref } from "@/lib/business-profile-route";
-import type { RoundDraftAssignmentRow, RoundDraftOption } from "@/lib/rounds";
+import type {
+  RoundDraftAssignmentRow,
+  RoundDraftOption,
+  RoundDraftRow,
+} from "@/lib/rounds";
 
 type RoundDraftTableProps = {
   assignmentRows: RoundDraftAssignmentRow[];
   roundBatchId: number;
+  rows: RoundDraftRow[];
   roundStatus: RoundBatchStatus;
   selectableBusinesses: RoundDraftOption[];
   unresolvedBusinessCount: number;
@@ -70,6 +75,7 @@ function createEditableAssignmentRow(
 export function RoundDraftTable({
   assignmentRows,
   roundBatchId,
+  rows,
   roundStatus,
   selectableBusinesses,
   unresolvedBusinessCount,
@@ -159,19 +165,10 @@ export function RoundDraftTable({
   function getHostOptions(row: EditableAssignmentRow) {
     const currentHostBusinessId = parseSelectedId(row.hostBusinessId);
     const currentGuestBusinessId = parseSelectedId(row.guestBusinessId);
-    const usedHostBusinessIds = new Set(
-      getRowsExcluding(row.clientId)
-        .map((candidateRow) => parseSelectedId(candidateRow.hostBusinessId))
-        .filter((businessId): businessId is number => businessId !== null),
-    );
 
     return selectableBusinesses.filter((business) => {
       if (business.businessId === currentHostBusinessId) {
         return true;
-      }
-
-      if (usedHostBusinessIds.has(business.businessId)) {
-        return false;
       }
 
       if (
@@ -199,19 +196,10 @@ export function RoundDraftTable({
   function getGuestOptions(row: EditableAssignmentRow) {
     const currentHostBusinessId = parseSelectedId(row.hostBusinessId);
     const currentGuestBusinessId = parseSelectedId(row.guestBusinessId);
-    const usedGuestBusinessIds = new Set(
-      getRowsExcluding(row.clientId)
-        .map((candidateRow) => parseSelectedId(candidateRow.guestBusinessId))
-        .filter((businessId): businessId is number => businessId !== null),
-    );
 
     return selectableBusinesses.filter((business) => {
       if (business.businessId === currentGuestBusinessId) {
         return true;
-      }
-
-      if (usedGuestBusinessIds.has(business.businessId)) {
-        return false;
       }
 
       if (
@@ -247,24 +235,6 @@ export function RoundDraftTable({
 
     if (hostBusinessId === guestBusinessId) {
       return "A business cannot be matched to itself.";
-    }
-
-    if (
-      otherRows.some(
-        (candidateRow) =>
-          parseSelectedId(candidateRow.hostBusinessId) === hostBusinessId,
-      )
-    ) {
-      return `${getBusinessLabel(hostBusinessId)} is already used as Published By in another row.`;
-    }
-
-    if (
-      otherRows.some(
-        (candidateRow) =>
-          parseSelectedId(candidateRow.guestBusinessId) === guestBusinessId,
-      )
-    ) {
-      return `${getBusinessLabel(guestBusinessId)} is already used as Published For in another row.`;
     }
 
     if (
@@ -462,20 +432,180 @@ export function RoundDraftTable({
     );
   }
 
+  function getOverviewStatusClassName(status: RoundDraftRow["rowStatus"]) {
+    switch (status) {
+      case "complete":
+        return "border-[#8cc6a7] bg-[#e9f8ef] text-[#276b4a]";
+      case "partial":
+        return "border-[#efc28b] bg-[#fff5e8] text-[#9b6527]";
+      case "empty":
+      default:
+        return "border-border bg-white/75 text-muted";
+    }
+  }
+
+  function getOverviewStatusLabel(status: RoundDraftRow["rowStatus"]) {
+    switch (status) {
+      case "complete":
+        return "Complete";
+      case "partial":
+        return "Partial";
+      case "empty":
+      default:
+        return "Unassigned";
+    }
+  }
+
+  function renderRelationshipList(
+    businesses: RoundDraftRow["publishedBy"],
+    emptyLabel: string,
+    tone: "accent" | "neutral",
+  ) {
+    if (businesses.length === 0) {
+      return <p className="text-sm leading-7 text-muted">{emptyLabel}</p>;
+    }
+
+    return (
+      <div className="flex flex-wrap gap-2">
+        {businesses.map((entry) => (
+          <Link
+            className={
+              tone === "accent"
+                ? "inline-flex items-center rounded-full border border-accent/20 bg-accent/10 px-2.5 py-1 text-[13px] font-medium text-accent-strong transition hover:border-accent/35 hover:bg-accent/14"
+                : "inline-flex items-center rounded-full border border-border bg-brand-deep-soft/55 px-2.5 py-1 text-[13px] font-medium text-foreground transition hover:border-accent/35 hover:text-accent"
+            }
+            href={getBusinessProfileHref(entry.businessId)}
+            key={`${tone}-${entry.assignmentId}-${entry.businessId}`}
+          >
+            {entry.businessName}
+          </Link>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <>
+      <section className="overflow-hidden rounded-4xl border border-border bg-surface shadow-(--shadow) backdrop-blur-md">
+        <div className="flex flex-col gap-4 border-b border-border px-6 py-5 sm:px-8">
+          <div className="space-y-2">
+            <p className="text-sm font-medium tracking-[0.16em] text-muted uppercase">
+              Round Overview
+            </p>
+            <p className="max-w-3xl text-sm leading-7 text-muted sm:text-base">
+              This groups the selected round by business, similar to the Notion
+              sheet. Each company can have multiple Published By and Published
+              For relationships inside the same round.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2 text-xs font-semibold tracking-[0.08em] uppercase">
+            <span className="inline-flex items-center rounded-full border border-border bg-white/70 px-3 py-1 text-muted">
+              One-way Directionality
+            </span>
+            <span className="inline-flex items-center rounded-full border border-border bg-white/70 px-3 py-1 text-muted">
+              Multiple Links Per Business Allowed
+            </span>
+            <span className="inline-flex items-center rounded-full border border-border bg-white/70 px-3 py-1 text-muted">
+              No Duplicate Or Reversed Pair
+            </span>
+          </div>
+        </div>
+
+        {rows.length === 0 ? (
+          <div className="px-6 py-12 text-center sm:px-8">
+            <p className="text-lg font-medium text-foreground">
+              No businesses are represented in this round yet.
+            </p>
+            <p className="mt-2 text-sm leading-7 text-muted">
+              {isDraft
+                ? "Generate a draft or add pairing rows to build this round overview."
+                : "This applied round does not contain any grouped relationships yet."}
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full border-separate border-spacing-0">
+              <thead>
+                <tr className="bg-brand-deep-soft/75 text-left text-xs font-semibold tracking-[0.16em] text-muted uppercase">
+                  <th className="px-5 py-4 sm:px-6">Business Name</th>
+                  <th className="px-5 py-4 sm:px-6">Published For</th>
+                  <th className="px-5 py-4 sm:px-6">Published By</th>
+                  <th className="px-5 py-4 sm:px-6">Placement</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr key={row.businessId} className="align-top">
+                    <td className="border-t border-border px-5 py-4 sm:px-6">
+                      <div className="space-y-1.5">
+                        <Link
+                          className="block text-sm font-semibold text-foreground transition hover:text-accent"
+                          href={getBusinessProfileHref(row.businessId)}
+                        >
+                          {row.businessName}
+                        </Link>
+                        <span className="inline-flex items-center rounded-full border border-border bg-brand-deep-soft/55 px-2.5 py-0.5 text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">
+                          {row.domainRating === null
+                            ? "No DR"
+                            : `DR ${row.domainRating}`}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="border-t border-border px-5 py-4 sm:px-6">
+                      <div className="space-y-2">
+                        {renderRelationshipList(
+                          row.publishedFor,
+                          "No Published For relationships in this round yet.",
+                          "accent",
+                        )}
+                        {row.publishedFor.length > 1 ? (
+                          <p className="text-xs leading-6 text-muted">
+                            {row.publishedFor.length} linked businesses
+                          </p>
+                        ) : null}
+                      </div>
+                    </td>
+                    <td className="border-t border-border px-5 py-4 sm:px-6">
+                      <div className="space-y-2">
+                        {renderRelationshipList(
+                          row.publishedBy,
+                          "No Published By relationships in this round yet.",
+                          "neutral",
+                        )}
+                        {row.publishedBy.length > 1 ? (
+                          <p className="text-xs leading-6 text-muted">
+                            {row.publishedBy.length} linked businesses
+                          </p>
+                        ) : null}
+                      </div>
+                    </td>
+                    <td className="border-t border-border px-5 py-4 sm:px-6">
+                      <span
+                        className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold tracking-[0.08em] uppercase ${getOverviewStatusClassName(row.rowStatus)}`}
+                      >
+                        {getOverviewStatusLabel(row.rowStatus)}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
       <section className="overflow-hidden rounded-4xl border border-border bg-surface shadow-(--shadow) backdrop-blur-md">
         <div className="flex flex-col gap-4 border-b border-border px-6 py-5 sm:px-8">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-2">
               <p className="text-sm font-medium tracking-[0.16em] text-muted uppercase">
-                Draft Assignment Table
+                Pairing Rows
               </p>
               <p className="max-w-3xl text-sm leading-7 text-muted sm:text-base">
-                Treat this like a lightweight Notion-style round table: add a
-                row, edit either side, or delete a row. The app still enforces
-                one-way directionality, one host slot, one guest slot, and no
-                duplicate or reversed pair inside the same draft.
+                These are the underlying directed pairings saved for the
+                selected round. Draft rounds can still be edited row by row,
+                while applied rounds stay read-only.
               </p>
             </div>
 
@@ -497,12 +627,6 @@ export function RoundDraftTable({
           <div className="flex flex-wrap gap-2 text-xs font-semibold tracking-[0.08em] uppercase">
             <span className="inline-flex items-center rounded-full border border-border bg-white/70 px-3 py-1 text-muted">
               No Reverse Pair
-            </span>
-            <span className="inline-flex items-center rounded-full border border-border bg-white/70 px-3 py-1 text-muted">
-              One Host Per Round
-            </span>
-            <span className="inline-flex items-center rounded-full border border-border bg-white/70 px-3 py-1 text-muted">
-              One Guest Per Round
             </span>
             <span className="inline-flex items-center rounded-full border border-border bg-white/70 px-3 py-1 text-muted">
               No Duplicate Or Reversed Pair
@@ -691,7 +815,7 @@ export function RoundDraftTable({
 
                             <p className="text-xs leading-6 text-center text-muted">
                               {validationMessage ??
-                                "The server will still block self-pairs, duplicate rows, reversed pairs, and reused host or guest slots."}
+                                "The server will still block self-pairs, duplicate rows, and reversed pairs."}
                             </p>
                           </div>
                         ) : (

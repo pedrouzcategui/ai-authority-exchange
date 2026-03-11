@@ -92,8 +92,6 @@ model RoundAssignment {
   hostBusiness    Business              @relation("RoundAssignmentHostBusiness", fields: [hostBusinessId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   roundBatch      RoundBatch            @relation(fields: [roundBatchId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@unique([roundBatchId, hostBusinessId], map: "unique_round_assignment_host")
-  @@unique([roundBatchId, guestBusinessId], map: "unique_round_assignment_guest")
   @@unique([roundBatchId, hostBusinessId, guestBusinessId], map: "unique_round_assignment_pair")
   @@index([roundBatchId], map: "idx_round_assignments_round_batch_id")
   @@map("ai_authority_exchange_round_assignments")
