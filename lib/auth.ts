@@ -1,4 +1,5 @@
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import type { AuthUserRole } from "@/generated/prisma/client";
 import type { NextAuthOptions } from "next-auth";
 import type { Adapter, AdapterUser } from "next-auth/adapters";
 import GoogleProvider from "next-auth/providers/google";
@@ -86,6 +87,7 @@ function createApprovedUsersAdapter(): Adapter {
           image: userData.image ?? null,
           legacyUserId: legacyUser.id,
           name: buildDisplayName(legacyUser, userData.name),
+          role: "user",
         },
       }) as Promise<AdapterUser>;
     },
@@ -110,12 +112,14 @@ export const authOptions: NextAuthOptions = {
         token.legacyUserId = (
           user as typeof user & { legacyUserId?: number }
         ).legacyUserId;
+        token.role = (user as typeof user & { role?: AuthUserRole }).role;
       }
 
-      if (token.legacyUserId === undefined && token.email) {
+      if (token.email) {
         const authUser = await prisma.user.findFirst({
           select: {
             legacyUserId: true,
+            role: true,
           },
           where: {
             email: {
@@ -127,6 +131,7 @@ export const authOptions: NextAuthOptions = {
 
         if (authUser) {
           token.legacyUserId = authUser.legacyUserId;
+          token.role = authUser.role;
         }
       }
 
@@ -139,6 +144,10 @@ export const authOptions: NextAuthOptions = {
           typeof token.legacyUserId === "number"
             ? token.legacyUserId
             : undefined;
+        session.user.role =
+          token.role === "admin" || token.role === "user"
+            ? token.role
+            : "user";
         session.user.email = token.email ?? session.user.email;
         session.user.name = token.name ?? session.user.name;
       }

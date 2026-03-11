@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
-import { requireLegacyUserSession } from "@/lib/auth-session";
+import { requireAuthSession } from "@/lib/auth-session";
 import {
   applyRoundBatch,
   clearRoundBatch,
   deleteRoundBatch,
   generateRoundDraftForBatch,
 } from "@/lib/rounds";
+import { getUserRoleForSessionUser, isAdminRole } from "@/lib/user-role";
 
 type RouteContext = {
   params: Promise<{
@@ -23,7 +24,7 @@ function parseNumericId(value: string) {
 }
 
 export async function PATCH(request: Request, context: RouteContext) {
-  const session = await requireLegacyUserSession();
+  const session = await requireAuthSession();
 
   if (!session) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
@@ -62,14 +63,26 @@ export async function PATCH(request: Request, context: RouteContext) {
     );
   }
 
+  const role = await getUserRoleForSessionUser(session.user);
+
+  if (
+    (payload.action === "clear" || payload.action === "delete") &&
+    !isAdminRole(role)
+  ) {
+    return NextResponse.json(
+      { error: "Only admins can clear or delete rounds." },
+      { status: 403 },
+    );
+  }
+
   try {
     if (payload.action === "delete") {
       const result = await deleteRoundBatch(roundBatchId);
 
       return NextResponse.json({
         message:
-          result.detachedMatchCount > 0
-            ? `Round ${result.roundSequenceNumber} was deleted. ${result.detachedMatchCount} match${result.detachedMatchCount === 1 ? " kept" : "es kept"} their records and had the round link removed.`
+          result.deletedMatchCount > 0
+            ? `Round ${result.roundSequenceNumber} was deleted along with ${result.deletedMatchCount} linked match${result.deletedMatchCount === 1 ? "" : "es"}.`
             : `Round ${result.roundSequenceNumber} was deleted.`,
       });
     }

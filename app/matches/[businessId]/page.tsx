@@ -4,8 +4,6 @@ import { notFound } from "next/navigation";
 import {
   ActionTooltip,
   BackIcon,
-  CategoryIcon,
-  CategorySectorIcon,
   ExternalLinkIcon,
 } from "@/components/action-icons";
 import { BusinessMatchAnalysisToast } from "@/components/business-match-analysis-toast";
@@ -16,7 +14,6 @@ import {
   getLocalBusinessMatchCandidates,
   type BusinessMatchLookupResult,
   type LocalBusinessMatchCandidate,
-  type MatchSearchScope,
 } from "@/lib/business-match-finder";
 import {
   getBusinessById,
@@ -29,9 +26,6 @@ export const dynamic = "force-dynamic";
 type BusinessMatchesPageProps = {
   params: Promise<{
     businessId: string;
-  }>;
-  searchParams?: Promise<{
-    scope?: string | string[];
   }>;
 };
 
@@ -74,30 +68,6 @@ function formatDomainRating(domainRating: number | null) {
   return domainRating === null ? "No DR" : `DR ${domainRating}`;
 }
 
-function parseMatchSearchScope(
-  value: string | string[] | undefined,
-): MatchSearchScope {
-  const candidate = Array.isArray(value) ? value[0] : value;
-
-  return candidate === "same-category-or-sector"
-    ? "same-category-or-sector"
-    : "same-category";
-}
-
-function buildBusinessMatchesHref(businessId: number, scope: MatchSearchScope) {
-  const searchParams = new URLSearchParams();
-
-  if (scope !== "same-category") {
-    searchParams.set("scope", scope);
-  }
-
-  const query = searchParams.toString();
-
-  return query.length === 0
-    ? `/matches/${businessId}`
-    : `/matches/${businessId}?${query}`;
-}
-
 function WaitingSparkIcon() {
   return (
     <svg
@@ -121,6 +91,36 @@ function WaitingSparkIcon() {
 
 function normalizeName(value: string) {
   return value.trim().toLowerCase();
+}
+
+function getMatchingMethodClassName(
+  method: LocalBusinessMatchCandidate["matchMethod"],
+) {
+  switch (method) {
+    case "same-subcategory":
+      return "border-[#8fc2b1] bg-[#e9f7f1] text-[#256150]";
+    case "same-category":
+      return "border-[#9bb7dd] bg-[#edf4fd] text-[#31557f]";
+    case "related-category":
+      return "border-[#d7b4e6] bg-[#f8effc] text-[#6d3f83]";
+    case "related-sector":
+      return "border-[#efc28b] bg-[#fff5e8] text-[#9b6527]";
+  }
+}
+
+function getMatchingMethodLabel(
+  method: LocalBusinessMatchCandidate["matchMethod"],
+) {
+  switch (method) {
+    case "same-subcategory":
+      return "Same Subcategory";
+    case "same-category":
+      return "Same Category";
+    case "related-category":
+      return "Related Category";
+    case "related-sector":
+      return "Related Sector";
+  }
 }
 
 function getCandidateForMatch(
@@ -153,7 +153,7 @@ function LocalShortlistTable({
   if (localCandidates.length === 0) {
     return (
       <div className="rounded-3xl border border-border bg-white/75 p-5 text-sm leading-7 text-muted">
-        No businesses matched the selected search scope.
+        No businesses qualified under the strict exchange priority ladder.
       </div>
     );
   }
@@ -165,6 +165,7 @@ function LocalShortlistTable({
           <thead>
             <tr className="bg-brand-deep-soft/75 text-left text-xs font-semibold tracking-[0.16em] text-muted uppercase">
               <th className="px-5 py-4 sm:px-6">Business Name</th>
+              <th className="px-5 py-4 sm:px-6">Matching Method</th>
               <th className="px-5 py-4 sm:px-6">Category Name</th>
               <th className="px-5 py-4 sm:px-6">Subcategory Name</th>
               <th className="px-5 py-4 sm:px-6">Domain Rating</th>
@@ -194,6 +195,13 @@ function LocalShortlistTable({
                       </a>
                     ) : null}
                   </div>
+                </td>
+                <td className="border-t border-border px-5 py-4 text-sm leading-7 text-foreground sm:px-6">
+                  <span
+                    className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold tracking-[0.12em] uppercase ${getMatchingMethodClassName(candidate.matchMethod)}`}
+                  >
+                    {getMatchingMethodLabel(candidate.matchMethod)}
+                  </span>
                 </td>
                 <td className="border-t border-border px-5 py-4 text-sm leading-7 text-foreground sm:px-6">
                   {candidate.categoryName ?? "Unknown"}
@@ -334,10 +342,8 @@ function PreviousMatchHistory({
 
 function PendingAnalysisSection({
   localCandidates,
-  scope,
 }: {
   localCandidates: LocalBusinessMatchCandidate[];
-  scope: MatchSearchScope;
 }) {
   return (
     <section className="rounded-4xl border border-accent/15 bg-[linear-gradient(135deg,rgba(232,93,79,0.08),rgba(255,255,255,0.92))] p-6 shadow-(--shadow) backdrop-blur-md sm:p-8">
@@ -356,9 +362,7 @@ function PendingAnalysisSection({
         Local shortlist is ready
       </h2>
       <p className="mt-3 max-w-3xl text-sm leading-7 text-muted sm:text-base">
-        {scope === "same-category"
-          ? `The table above was built from businesses in the same category. ${localCandidates.length} candidate${localCandidates.length === 1 ? " is" : "s are"} ready, and the only pending step now is the LLM-generated rationale, scoring, and topic suggestions.`
-          : `The table above was built from businesses in the same category or the same sector. ${localCandidates.length} candidate${localCandidates.length === 1 ? " is" : "s are"} ready, and the only pending step now is the LLM-generated rationale, scoring, and topic suggestions.`}
+        {`The table above was built with the same strict matching ladder used for round drafts: same subcategory, then same category, then related categories, then related sector. ${localCandidates.length} candidate${localCandidates.length === 1 ? " is" : "s are"} ready, and the only pending step now is the LLM-generated rationale, scoring, and topic suggestions.`}
       </p>
 
       <div className="mt-5 flex flex-wrap items-center gap-3 text-sm text-muted">
@@ -380,12 +384,10 @@ async function ResolvedAnalysisSection({
   businessName,
   localCandidates,
   matchLookupPromise,
-  scope,
 }: {
   businessName: string;
   localCandidates: LocalBusinessMatchCandidate[];
   matchLookupPromise: Promise<BusinessMatchLookupResult>;
-  scope: MatchSearchScope;
 }) {
   const matchLookup = await matchLookupPromise;
   const candidatesById = new Map(
@@ -424,9 +426,7 @@ async function ResolvedAnalysisSection({
                     </h2>
                     <p className="mt-2 max-w-3xl text-sm leading-7 text-muted sm:text-base">
                       {matchLookup.matches.length > 0
-                        ? scope === "same-category"
-                          ? "The shortlist was loaded from the same business category, and the AI rationale is now attached to each partner below."
-                          : "The shortlist was loaded from the same business category or sector, and the AI rationale is now attached to each partner below."
+                        ? "The shortlist was loaded with the same strict round-matching priorities, and the AI rationale is now attached to each partner below."
                         : "The workflow returned a response successfully. You can review the full transcript below."}
                     </p>
                   </div>
@@ -715,12 +715,9 @@ async function ResolvedAnalysisSection({
 
 export default async function BusinessMatchesPage({
   params,
-  searchParams,
 }: BusinessMatchesPageProps) {
   const { businessId: rawBusinessId } = await params;
-  const resolvedSearchParams = (await searchParams) ?? {};
   const businessId = parseBusinessId(rawBusinessId);
-  const scope = parseMatchSearchScope(resolvedSearchParams.scope);
 
   if (businessId === null) {
     notFound();
@@ -734,7 +731,7 @@ export default async function BusinessMatchesPage({
 
   const matchLookupPromise = findBusinessMatches(business);
   const [localCandidates, relationshipRows] = await Promise.all([
-    getLocalBusinessMatchCandidates(business.id, scope),
+    getLocalBusinessMatchCandidates(business.id),
     getBusinessRelationshipRows(undefined, undefined, business.id),
   ]);
   const relationshipRow = relationshipRows[0] ?? null;
@@ -752,38 +749,16 @@ export default async function BusinessMatchesPage({
             </h1>
             <p className="max-w-3xl text-base leading-7 text-muted sm:text-lg">
               This page runs your n8n match-finder workflow for the selected
-              business and renders the response using the schema you shared.
+              business and uses the same strict shortlist priority as round
+              drafts before rendering the AI response.
             </p>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center justify-end gap-2">
-          <span className="group relative inline-flex">
-            <Link
-              aria-label="Same category"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-white/80 text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
-              href={buildBusinessMatchesHref(business.id, "same-category")}
-              prefetch={false}
-            >
-              <CategoryIcon />
-            </Link>
-            <ActionTooltip label="Same category" />
-          </span>
-
-          <span className="group relative inline-flex">
-            <Link
-              aria-label="Same category or sector"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-white/80 text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
-              href={buildBusinessMatchesHref(
-                business.id,
-                "same-category-or-sector",
-              )}
-              prefetch={false}
-            >
-              <CategorySectorIcon />
-            </Link>
-            <ActionTooltip label="Same category or sector" />
-          </span>
+          <div className="rounded-full border border-accent/15 bg-white/85 px-4 py-2 text-sm font-semibold text-accent-strong">
+            Same Subcategory - Same Category - Related Category - Related Sector
+          </div>
 
           {business.websiteUrl ? (
             <span className="group relative inline-flex">
@@ -837,10 +812,10 @@ export default async function BusinessMatchesPage({
                     Candidate partners for {business.business}
                   </h2>
                   <p className="mt-2 max-w-3xl text-sm leading-7 text-muted sm:text-base">
-                    {scope === "same-category"
-                      ? "These candidates come directly from the database using the same-category and historical-blocklist rules."
-                      : "These candidates come directly from the database using the same-category-or-sector and historical-blocklist rules."}{" "}
-                    AI scoring and rationale load separately below.
+                    These candidates come directly from the database using the
+                    same strict priority ladder as round drafts plus the
+                    historical blocklist. AI scoring and rationale load
+                    separately below.
                   </p>
                 </div>
                 <div className="inline-flex items-center gap-3 self-start rounded-full border border-accent/15 bg-white/85 px-4 py-2 text-sm font-semibold text-accent-strong">
@@ -860,18 +835,12 @@ export default async function BusinessMatchesPage({
       </section>
 
       <Suspense
-        fallback={
-          <PendingAnalysisSection
-            localCandidates={localCandidates}
-            scope={scope}
-          />
-        }
+        fallback={<PendingAnalysisSection localCandidates={localCandidates} />}
       >
         <ResolvedAnalysisSection
           businessName={business.business}
           localCandidates={localCandidates}
           matchLookupPromise={matchLookupPromise}
-          scope={scope}
         />
       </Suspense>
     </main>

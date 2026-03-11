@@ -1,5 +1,10 @@
 import { google } from "googleapis";
 import { type MatchStatus } from "@/generated/prisma/client";
+import {
+  getMatchDraftCreationBlockedReason,
+  isMatchDraftCreationAllowed,
+} from "@/lib/match-draft-status";
+import { getRoundDraftCompletenessBlockedReason } from "@/lib/round-email-draft-eligibility";
 import { formatDatabaseError, withDatabaseRetry } from "@/lib/prisma";
 
 const GMAIL_COMPOSE_SCOPE = "https://www.googleapis.com/auth/gmail.compose";
@@ -24,6 +29,7 @@ type DraftBusiness = {
 type CreateMatchDraftParams = {
   guestId: number;
   hostId: number;
+  roundBatchId?: number | null;
   userId: string;
 };
 
@@ -34,6 +40,8 @@ type GmailAccount = {
   refreshToken: string | null;
   scope: string | null;
 };
+
+const createdDraftMatchStatus: MatchStatus = "Draft_Created";
 
 function hasGmailComposeScope(scope: string | null) {
   if (!scope) {
@@ -209,6 +217,92 @@ async function persistUpdatedGoogleAccountTokens(
   );
 }
 
+async function markMatchDraftCreated(hostId: number, guestId: number) {
+  await withDatabaseRetry((database) =>
+    database.match.update({
+      data: {
+        status: createdDraftMatchStatus,
+      },
+      where: {
+        hostId_guestId: {
+          guestId,
+          hostId,
+        },
+      },
+    }),
+  );
+}
+
+async function getMatchForDraft(hostId: number, guestId: number) {
+  const match = await withDatabaseRetry((database) =>
+    database.match.findUnique({
+      select: {
+        roundBatchId: true,
+        status: true,
+      },
+      where: {
+        hostId_guestId: {
+          guestId,
+          hostId,
+        },
+      },
+    }),
+  );
+
+  if (!match) {
+    throw new GmailDraftError(
+      "No saved match exists for the selected businesses.",
+      404,
+    );
+  }
+
+  return match;
+}
+
+async function assertRoundDraftBusinessIsComplete(params: {
+  hostId: number;
+  roundBatchId: number;
+}) {
+  const { hostId, roundBatchId } = params;
+  const assignments = await withDatabaseRetry((database) =>
+    database.roundAssignment.findMany({
+      select: {
+        guestBusinessId: true,
+        hostBusinessId: true,
+      },
+      where: {
+        OR: [
+          {
+            guestBusinessId: hostId,
+          },
+          {
+            hostBusinessId: hostId,
+          },
+        ],
+        roundBatchId,
+      },
+    }),
+  );
+
+  const hasIncomingAssignment = assignments.some(
+    (assignment) => assignment.guestBusinessId === hostId,
+  );
+  const hasOutgoingAssignment = assignments.some(
+    (assignment) => assignment.hostBusinessId === hostId,
+  );
+  const placementStatus =
+    hasIncomingAssignment && hasOutgoingAssignment
+      ? "complete"
+      : hasIncomingAssignment || hasOutgoingAssignment
+        ? "partial"
+        : "empty";
+  const blockedReason = getRoundDraftCompletenessBlockedReason(placementStatus);
+
+  if (blockedReason) {
+    throw new GmailDraftError(blockedReason, 409);
+  }
+}
+
 export function getGmailReconnectMessage() {
   return "Your Google connection does not have Gmail draft permissions yet. Sign out and sign back in with Google to grant Gmail access, then try again.";
 }
@@ -216,12 +310,36 @@ export function getGmailReconnectMessage() {
 export async function createEmailDraftForMatch({
   guestId,
   hostId,
+  roundBatchId,
   userId,
 }: CreateMatchDraftParams) {
-  const [account, { guestBusiness, hostBusiness }] = await Promise.all([
+  const [account, match, { guestBusiness, hostBusiness }] = await Promise.all([
     getGoogleAccountForUser(userId),
+    getMatchForDraft(hostId, guestId),
     getDraftBusinesses(hostId, guestId),
   ]);
+
+  if (!isMatchDraftCreationAllowed(match.status)) {
+    throw new GmailDraftError(
+      getMatchDraftCreationBlockedReason(match.status) ??
+        "Email drafts can only be created for matches marked Not Started.",
+      409,
+    );
+  }
+
+  if (roundBatchId !== null && roundBatchId !== undefined) {
+    if (match.roundBatchId !== roundBatchId) {
+      throw new GmailDraftError(
+        "This match does not belong to the selected applied round.",
+        409,
+      );
+    }
+
+    await assertRoundDraftBusinessIsComplete({
+      hostId,
+      roundBatchId,
+    });
+  }
 
   if (!hasGmailComposeScope(account.scope)) {
     throw new GmailDraftError(getGmailReconnectMessage(), 403);
@@ -266,6 +384,8 @@ export async function createEmailDraftForMatch({
       userId: "me",
     });
 
+    await markMatchDraftCreated(hostId, guestId);
+
     return {
       body,
       draftId: draft.data.id ?? null,
@@ -285,4 +405,4 @@ export async function createEmailDraftForMatch({
   }
 }
 
-export const defaultMatchDraftStatus: MatchStatus = "In_Progress";
+export const defaultMatchDraftStatus: MatchStatus = createdDraftMatchStatus;

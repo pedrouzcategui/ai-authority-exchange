@@ -1,12 +1,16 @@
 import { cache } from "react";
 import type {
+  MatchStatus,
   Prisma,
   PrismaClient,
   RoundAssignmentSource,
   RoundBatchStatus,
 } from "@/generated/prisma/client";
+import { getRoundMatchMethod } from "@/lib/round-match-method";
 import { isExchangeParticipationActive } from "@/lib/ai-authority-exchange";
 import { prisma, withDatabaseRetry } from "@/lib/prisma";
+
+type RoundDatabaseClient = PrismaClient | Prisma.TransactionClient;
 
 const businessNameCollator = new Intl.Collator(undefined, {
   numeric: true,
@@ -27,6 +31,8 @@ const roundBusinessSelect = {
   domain_rating: true,
   id: true,
   isActiveOnAiAuthorityExchange: true,
+  related_category_ids: true,
+  subcategory: true,
   websiteUrl: true,
 } as const;
 
@@ -75,6 +81,8 @@ type RoundBusiness = {
   domain_rating: number | null;
   id: number;
   isActiveOnAiAuthorityExchange: boolean;
+  related_category_ids: number[];
+  subcategory: string | null;
   websiteUrl: string | null;
 };
 
@@ -89,6 +97,8 @@ function toRoundBusiness(business: RawRoundBusiness): RoundBusiness {
     domain_rating: business.domain_rating,
     id: business.id,
     isActiveOnAiAuthorityExchange: isExchangeParticipationActive(business),
+    related_category_ids: business.related_category_ids,
+    subcategory: business.subcategory,
     websiteUrl: business.websiteUrl,
   };
 }
@@ -161,6 +171,23 @@ type DraftAssignmentCandidate = {
   score: number;
 };
 
+type RoundBusinessRelation =
+  | "same-category"
+  | "related-category"
+  | "same-sector";
+
+const roundBusinessRelationPriority = [
+  "same-category",
+  "related-category",
+  "same-sector",
+] as const satisfies readonly RoundBusinessRelation[];
+
+const roundBusinessRelationScore: Record<RoundBusinessRelation, number> = {
+  "related-category": 80,
+  "same-category": 100,
+  "same-sector": 60,
+};
+
 export type RoundBatchSummary = {
   appliedAt: string | null;
   assignmentCount: number;
@@ -173,7 +200,11 @@ export type RoundBatchSummary = {
 export type RoundDraftOption = {
   businessId: number;
   businessName: string;
+  businessCategoryId: number | null;
   domainRating: number | null;
+  relatedCategoryIds: number[];
+  sectorId: number | null;
+  subcategory: string | null;
 };
 
 export type RoundDraftCell = {
@@ -181,6 +212,7 @@ export type RoundDraftCell = {
   businessId: number;
   businessName: string;
   domainRating: number | null;
+  matchStatus: MatchStatus | null;
   source: RoundAssignmentSource;
 };
 
@@ -188,6 +220,7 @@ export type RoundDraftAssignmentRow = {
   assignmentId: number;
   guestBusiness: RoundDraftOption;
   hostBusiness: RoundDraftOption;
+  matchStatus: MatchStatus | null;
   source: RoundAssignmentSource;
 };
 
@@ -253,26 +286,36 @@ function formatRoundBatchSummary(
   };
 }
 
-function getCategoryRelation(
+function getRoundBusinessRelation(
   hostBusiness: RoundBusiness,
   guestBusiness: RoundBusiness,
-) {
-  if (
-    hostBusiness.business_category_id !== null &&
-    hostBusiness.business_category_id === guestBusiness.business_category_id
+): RoundBusinessRelation | null {
+  switch (
+    getRoundMatchMethod(
+      {
+        businessCategoryId: hostBusiness.business_category_id,
+        relatedCategoryIds: hostBusiness.related_category_ids,
+        sectorId: hostBusiness.business_categories?.sector_id ?? null,
+        subcategory: hostBusiness.subcategory,
+      },
+      {
+        businessCategoryId: guestBusiness.business_category_id,
+        relatedCategoryIds: guestBusiness.related_category_ids,
+        sectorId: guestBusiness.business_categories?.sector_id ?? null,
+        subcategory: guestBusiness.subcategory,
+      },
+    )
   ) {
-    return "same-category";
+    case "same-subcategory":
+    case "same-category":
+      return "same-category";
+    case "related-category":
+      return "related-category";
+    case "related-sector":
+      return "same-sector";
+    default:
+      return null;
   }
-
-  if (
-    hostBusiness.business_categories?.sector_id !== null &&
-    hostBusiness.business_categories?.sector_id ===
-      guestBusiness.business_categories?.sector_id
-  ) {
-    return "same-sector";
-  }
-
-  return null;
 }
 
 function getDirectionalContribution(
@@ -301,13 +344,8 @@ function getDraftCandidateScore(
   hostBusiness: RoundBusiness,
   guestBusiness: RoundBusiness,
   balanceByBusinessId: Map<number, number | null>,
+  relation: RoundBusinessRelation,
 ) {
-  const categoryRelation = getCategoryRelation(hostBusiness, guestBusiness);
-
-  if (!categoryRelation) {
-    return null;
-  }
-
   const hostContribution = getDirectionalContribution(
     hostBusiness.domain_rating,
     guestBusiness.domain_rating,
@@ -322,7 +360,7 @@ function getDraftCandidateScore(
     balanceByBusinessId.get(guestBusiness.id) ?? null,
     guestContribution,
   );
-  const relevanceScore = categoryRelation === "same-category" ? 100 : 60;
+  const relevanceScore = roundBusinessRelationScore[relation];
   const domainRatingScore = hostContribution === null ? 0 : 5;
   const proximityScore =
     hostContribution === null ? 0 : -Math.abs(hostContribution) / 100;
@@ -410,22 +448,67 @@ function buildRoundDraftState(
   };
 }
 
+function addRoundAssignmentToState(
+  draftState: RoundDraftState,
+  assignment: RoundAssignmentRecord,
+) {
+  draftState.assignments.push(assignment);
+  draftState.assignmentByHostId.set(assignment.hostBusinessId, assignment);
+  draftState.assignmentByGuestId.set(assignment.guestBusinessId, assignment);
+  draftState.assignmentByPairKey.set(
+    pairKey(assignment.hostBusinessId, assignment.guestBusinessId),
+    assignment,
+  );
+}
+
+function sortDraftAssignmentCandidates(
+  candidateAssignments: DraftAssignmentCandidate[],
+  roundBusinessesById: Map<number, RoundBusiness>,
+) {
+  candidateAssignments.sort((left, right) => {
+    if (right.score !== left.score) {
+      return right.score - left.score;
+    }
+
+    const leftHostBusiness = roundBusinessesById.get(left.hostBusinessId)!;
+    const rightHostBusiness = roundBusinessesById.get(right.hostBusinessId)!;
+    const hostComparison = compareBusinesses(
+      leftHostBusiness,
+      rightHostBusiness,
+    );
+
+    if (hostComparison !== 0) {
+      return hostComparison;
+    }
+
+    const leftGuestBusiness = roundBusinessesById.get(left.guestBusinessId)!;
+    const rightGuestBusiness = roundBusinessesById.get(right.guestBusinessId)!;
+    return compareBusinesses(leftGuestBusiness, rightGuestBusiness);
+  });
+
+  return candidateAssignments;
+}
+
 function isDirectedAssignmentEligible(params: {
   currentAssignmentId?: number;
   draftState: RoundDraftState;
   enforceExchangeRules?: boolean;
+  enforceSingleSlotPerDirection?: boolean;
   guestBusinessId: number;
   hostBusinessId: number;
   pairedBusinessIdsByBusinessId: Map<number, Set<number>>;
+  requiredRelation?: RoundBusinessRelation;
   roundBusinessesById: Map<number, RoundBusiness>;
 }) {
   const {
     currentAssignmentId,
     draftState,
     enforceExchangeRules = true,
+    enforceSingleSlotPerDirection = false,
     guestBusinessId,
     hostBusinessId,
     pairedBusinessIdsByBusinessId,
+    requiredRelation,
     roundBusinessesById,
   } = params;
 
@@ -440,6 +523,12 @@ function isDirectedAssignmentEligible(params: {
     return false;
   }
 
+  const relation = getRoundBusinessRelation(hostBusiness, guestBusiness);
+
+  if (requiredRelation && relation !== requiredRelation) {
+    return false;
+  }
+
   if (enforceExchangeRules) {
     if (
       !hostBusiness.isActiveOnAiAuthorityExchange ||
@@ -448,13 +537,37 @@ function isDirectedAssignmentEligible(params: {
       return false;
     }
 
-    if (!getCategoryRelation(hostBusiness, guestBusiness)) {
+    if (!relation) {
       return false;
     }
 
     if (
       pairedBusinessIdsByBusinessId.get(hostBusinessId)?.has(guestBusinessId) ||
       pairedBusinessIdsByBusinessId.get(guestBusinessId)?.has(hostBusinessId)
+    ) {
+      return false;
+    }
+  }
+
+  if (enforceSingleSlotPerDirection) {
+    const existingHostAssignment = draftState.assignmentByHostId.get(
+      hostBusinessId,
+    );
+
+    if (
+      existingHostAssignment &&
+      existingHostAssignment.id !== currentAssignmentId
+    ) {
+      return false;
+    }
+
+    const existingGuestAssignment = draftState.assignmentByGuestId.get(
+      guestBusinessId,
+    );
+
+    if (
+      existingGuestAssignment &&
+      existingGuestAssignment.id !== currentAssignmentId
     ) {
       return false;
     }
@@ -479,6 +592,60 @@ function isDirectedAssignmentEligible(params: {
   return true;
 }
 
+function buildCandidateAssignmentsForRelation(params: {
+  activeBusinesses: RoundBusiness[];
+  balanceByBusinessId: Map<number, number | null>;
+  draftState: RoundDraftState;
+  pairedBusinessIdsByBusinessId: Map<number, Set<number>>;
+  relation: RoundBusinessRelation;
+  roundBusinessesById: Map<number, RoundBusiness>;
+}) {
+  const {
+    activeBusinesses,
+    balanceByBusinessId,
+    draftState,
+    pairedBusinessIdsByBusinessId,
+    relation,
+    roundBusinessesById,
+  } = params;
+  const candidateAssignments: DraftAssignmentCandidate[] = [];
+
+  for (const hostBusiness of activeBusinesses) {
+    if (draftState.assignmentByHostId.has(hostBusiness.id)) {
+      continue;
+    }
+
+    for (const guestBusiness of activeBusinesses) {
+      if (
+        draftState.assignmentByGuestId.has(guestBusiness.id) ||
+        hostBusiness.id === guestBusiness.id ||
+        pairedBusinessIdsByBusinessId
+          .get(hostBusiness.id)
+          ?.has(guestBusiness.id)
+      ) {
+        continue;
+      }
+
+      if (getRoundBusinessRelation(hostBusiness, guestBusiness) !== relation) {
+        continue;
+      }
+
+      candidateAssignments.push({
+        guestBusinessId: guestBusiness.id,
+        hostBusinessId: hostBusiness.id,
+        score: getDraftCandidateScore(
+          hostBusiness,
+          guestBusiness,
+          balanceByBusinessId,
+          relation,
+        ),
+      });
+    }
+  }
+
+  return sortDraftAssignmentCandidates(candidateAssignments, roundBusinessesById);
+}
+
 function buildAutomaticRoundAssignments(params: {
   activeBusinesses: RoundBusiness[];
   balanceByBusinessId: Map<number, number | null>;
@@ -492,106 +659,56 @@ function buildAutomaticRoundAssignments(params: {
   const roundBusinessesById = new Map(
     activeBusinesses.map((business) => [business.id, business] as const),
   );
-  const candidateAssignments: DraftAssignmentCandidate[] = [];
-
-  for (const hostBusiness of activeBusinesses) {
-    for (const guestBusiness of activeBusinesses) {
-      if (
-        hostBusiness.id === guestBusiness.id ||
-        pairedBusinessIdsByBusinessId
-          .get(hostBusiness.id)
-          ?.has(guestBusiness.id)
-      ) {
-        continue;
-      }
-
-      const score = getDraftCandidateScore(
-        hostBusiness,
-        guestBusiness,
-        balanceByBusinessId,
-      );
-
-      if (score === null) {
-        continue;
-      }
-
-      candidateAssignments.push({
-        guestBusinessId: guestBusiness.id,
-        hostBusinessId: hostBusiness.id,
-        score,
-      });
-    }
-  }
-
-  candidateAssignments.sort((left, right) => {
-    if (right.score !== left.score) {
-      return right.score - left.score;
-    }
-
-    const leftHostBusiness = roundBusinessesById.get(left.hostBusinessId)!;
-    const rightHostBusiness = roundBusinessesById.get(right.hostBusinessId)!;
-    const hostComparison = compareBusinesses(
-      leftHostBusiness,
-      rightHostBusiness,
-    );
-
-    if (hostComparison !== 0) {
-      return hostComparison;
-    }
-
-    const leftGuestBusiness = roundBusinessesById.get(left.guestBusinessId)!;
-    const rightGuestBusiness = roundBusinessesById.get(right.guestBusinessId)!;
-    return compareBusinesses(leftGuestBusiness, rightGuestBusiness);
-  });
 
   const selectedAssignments: RoundAssignmentRecord[] = [];
   const selectedState = buildRoundDraftState([]);
 
-  for (const candidateAssignment of candidateAssignments) {
-    if (
-      !isDirectedAssignmentEligible({
-        draftState: selectedState,
-        guestBusinessId: candidateAssignment.guestBusinessId,
-        hostBusinessId: candidateAssignment.hostBusinessId,
-        pairedBusinessIdsByBusinessId,
-        roundBusinessesById,
-      })
-    ) {
-      continue;
+  for (const relation of roundBusinessRelationPriority) {
+    const candidateAssignments = buildCandidateAssignmentsForRelation({
+      activeBusinesses,
+      balanceByBusinessId,
+      draftState: selectedState,
+      pairedBusinessIdsByBusinessId,
+      relation,
+      roundBusinessesById,
+    });
+
+    for (const candidateAssignment of candidateAssignments) {
+      if (
+        !isDirectedAssignmentEligible({
+          draftState: selectedState,
+          enforceSingleSlotPerDirection: true,
+          guestBusinessId: candidateAssignment.guestBusinessId,
+          hostBusinessId: candidateAssignment.hostBusinessId,
+          pairedBusinessIdsByBusinessId,
+          requiredRelation: relation,
+          roundBusinessesById,
+        })
+      ) {
+        continue;
+      }
+
+      const hostBusiness = roundBusinessesById.get(
+        candidateAssignment.hostBusinessId,
+      )!;
+      const guestBusiness = roundBusinessesById.get(
+        candidateAssignment.guestBusinessId,
+      )!;
+      const nextAssignment = {
+        createdAt: new Date(0),
+        guestBusiness,
+        guestBusinessId: guestBusiness.id,
+        hostBusiness,
+        hostBusinessId: hostBusiness.id,
+        id: selectedAssignments.length * -1 - 1,
+        roundBatchId: 0,
+        source: "auto" as const,
+        updatedAt: new Date(0),
+      } satisfies RoundAssignmentRecord;
+
+      selectedAssignments.push(nextAssignment);
+      addRoundAssignmentToState(selectedState, nextAssignment);
     }
-
-    const hostBusiness = roundBusinessesById.get(
-      candidateAssignment.hostBusinessId,
-    )!;
-    const guestBusiness = roundBusinessesById.get(
-      candidateAssignment.guestBusinessId,
-    )!;
-    const nextAssignment = {
-      createdAt: new Date(0),
-      guestBusiness,
-      guestBusinessId: guestBusiness.id,
-      hostBusiness,
-      hostBusinessId: hostBusiness.id,
-      id: selectedAssignments.length * -1 - 1,
-      roundBatchId: 0,
-      source: "auto" as const,
-      updatedAt: new Date(0),
-    } satisfies RoundAssignmentRecord;
-
-    selectedAssignments.push(nextAssignment);
-    selectedState.assignments.push(nextAssignment);
-    selectedState.assignmentByHostId.set(
-      nextAssignment.hostBusinessId,
-      nextAssignment,
-    );
-    selectedState.assignmentByGuestId.set(
-      nextAssignment.guestBusinessId,
-      nextAssignment,
-    );
-    selectedState.assignmentByPairKey.set(
-      pairKey(nextAssignment.hostBusinessId, nextAssignment.guestBusinessId),
-      nextAssignment,
-    );
   }
 
   return selectedAssignments.map((assignment) => ({
@@ -605,13 +722,18 @@ function toRoundDraftOption(business: RoundBusiness): RoundDraftOption {
   return {
     businessId: business.id,
     businessName: business.business,
+    businessCategoryId: business.business_category_id,
     domainRating: business.domain_rating,
+    relatedCategoryIds: business.related_category_ids,
+    sectorId: business.business_categories?.sector_id ?? null,
+    subcategory: business.subcategory,
   };
 }
 
 function toRoundDraftCell(
   assignment: RoundAssignmentRecord,
   direction: "publishedBy" | "publishedFor",
+  matchStatus: MatchStatus | null,
 ): RoundDraftCell {
   const counterpartBusiness =
     direction === "publishedBy"
@@ -623,17 +745,20 @@ function toRoundDraftCell(
     businessId: counterpartBusiness.id,
     businessName: counterpartBusiness.business,
     domainRating: counterpartBusiness.domain_rating,
+    matchStatus,
     source: assignment.source,
   };
 }
 
 function toRoundDraftAssignmentRow(
   assignment: RoundAssignmentRecord,
+  matchStatus: MatchStatus | null,
 ): RoundDraftAssignmentRow {
   return {
     assignmentId: assignment.id,
     guestBusiness: toRoundDraftOption(assignment.guestBusiness),
     hostBusiness: toRoundDraftOption(assignment.hostBusiness),
+    matchStatus,
     source: assignment.source,
   };
 }
@@ -675,7 +800,7 @@ function getDisplayedBusinessesForBatch(
 }
 
 async function getActiveRoundBusinessesFromDatabase(
-  database: PrismaClient = prisma,
+  database: RoundDatabaseClient = prisma,
 ) {
   const businesses = await database.business.findMany({
     select: roundBusinessSelect,
@@ -701,7 +826,7 @@ async function getActiveRoundBusinessesFromDatabase(
 }
 
 async function getSelectableRoundBusinessesFromDatabase(
-  database: PrismaClient = prisma,
+  database: RoundDatabaseClient = prisma,
 ) {
   const businesses = await database.business.findMany({
     select: roundBusinessSelect,
@@ -713,7 +838,7 @@ async function getSelectableRoundBusinessesFromDatabase(
 }
 
 async function getHistoricalMatchesForBusinesses(
-  database: PrismaClient,
+  database: RoundDatabaseClient,
   businessIds: number[],
 ): Promise<HistoricalMatchRecord[]> {
   if (businessIds.length === 0) {
@@ -758,7 +883,7 @@ async function getHistoricalMatchesForBusinesses(
 
 async function getRoundManagementContext(
   roundBatchId: number,
-  database: PrismaClient = prisma,
+  database: RoundDatabaseClient = prisma,
 ) {
   const [batch, activeBusinesses, selectableBusinesses, assignments] =
     await Promise.all([
@@ -819,7 +944,7 @@ export const getRoundBatchSummaries = cache(async () => {
   return batches.map((batch) => formatRoundBatchSummary(batch));
 });
 
-async function getNextRoundSequenceNumber(database: PrismaClient) {
+async function getNextRoundSequenceNumber(database: RoundDatabaseClient) {
   const aggregateResult = await database.roundBatch.aggregate({
     _max: {
       sequenceNumber: true,
@@ -827,6 +952,19 @@ async function getNextRoundSequenceNumber(database: PrismaClient) {
   });
 
   return (aggregateResult._max.sequenceNumber ?? 0) + 1;
+}
+
+async function getLatestRoundBatch(database: RoundDatabaseClient) {
+  return database.roundBatch.findFirst({
+    orderBy: {
+      sequenceNumber: "desc",
+    },
+    select: {
+      id: true,
+      sequenceNumber: true,
+      status: true,
+    },
+  });
 }
 
 export const getRoundBatchView = cache(async (requestedBatchId?: number) => {
@@ -860,8 +998,29 @@ export const getRoundBatchView = cache(async (requestedBatchId?: number) => {
   const selectedBatch =
     (requestedBatchId === undefined
       ? batches[0]
-      : batches.find((batch) => batch.id === requestedBatchId)) ?? batches[0];
-  const { assignments } = await getRoundManagementContext(selectedBatch.id);
+      : batches.find((batch) => batch.sequenceNumber === requestedBatchId) ??
+        batches.find((batch) => batch.id === requestedBatchId)) ?? batches[0];
+  const [{ assignments }, appliedMatches] = await Promise.all([
+    getRoundManagementContext(selectedBatch.id),
+    selectedBatch.status === "applied"
+      ? prisma.match.findMany({
+          select: {
+            guestId: true,
+            hostId: true,
+            status: true,
+          },
+          where: {
+            roundBatchId: selectedBatch.id,
+          },
+        })
+      : Promise.resolve([]),
+  ]);
+  const matchStatusByPairKey = new Map(
+    appliedMatches.map((match) => [
+      pairKey(match.hostId, match.guestId),
+      match.status ?? null,
+    ] as const),
+  );
   const displayedBusinesses = getDisplayedBusinessesForBatch(
     activeBusinesses,
     assignments,
@@ -880,7 +1039,14 @@ export const getRoundBatchView = cache(async (requestedBatchId?: number) => {
 
       return compareBusinesses(left.guestBusiness, right.guestBusiness);
     })
-    .map((assignment) => toRoundDraftAssignmentRow(assignment));
+    .map((assignment) =>
+      toRoundDraftAssignmentRow(
+        assignment,
+        matchStatusByPairKey.get(
+          pairKey(assignment.hostBusinessId, assignment.guestBusinessId),
+        ) ?? null,
+      ),
+    );
   const rowsByBusinessId = new Map<number, RoundDraftRow>(
     displayedBusinesses.map((business) => [
       business.id,
@@ -896,12 +1062,21 @@ export const getRoundBatchView = cache(async (requestedBatchId?: number) => {
   );
 
   for (const assignment of assignments) {
+    const matchStatus =
+      matchStatusByPairKey.get(
+        pairKey(assignment.hostBusinessId, assignment.guestBusinessId),
+      ) ?? null;
+
     rowsByBusinessId
       .get(assignment.guestBusinessId)
-      ?.publishedBy.push(toRoundDraftCell(assignment, "publishedBy"));
+      ?.publishedBy.push(
+        toRoundDraftCell(assignment, "publishedBy", matchStatus),
+      );
     rowsByBusinessId
       .get(assignment.hostBusinessId)
-      ?.publishedFor.push(toRoundDraftCell(assignment, "publishedFor"));
+      ?.publishedFor.push(
+        toRoundDraftCell(assignment, "publishedFor", matchStatus),
+      );
   }
 
   const rows = displayedBusinesses.map((business) => {
@@ -923,9 +1098,12 @@ export const getRoundBatchView = cache(async (requestedBatchId?: number) => {
 
     return row;
   });
+  const unresolvedBusinessCount = rows.filter(
+    (row) => row.rowStatus !== "complete",
+  ).length;
 
   return {
-    activeBusinessCount: activeBusinesses.length,
+    activeBusinessCount: assignmentRows.length + unresolvedBusinessCount,
     assignmentRows,
     batch: selectedBatch,
     batches,
@@ -933,31 +1111,75 @@ export const getRoundBatchView = cache(async (requestedBatchId?: number) => {
     selectableBusinesses: selectableBusinesses.map((business) =>
       toRoundDraftOption(business),
     ),
-    unresolvedBusinessCount:
-      selectedBatch.status === "draft"
-        ? rows.filter((row) => row.rowStatus !== "complete").length
-        : 0,
+    unresolvedBusinessCount,
   } satisfies RoundBatchView;
 });
 
-export async function createRoundBatch() {
+export async function createRoundDraftBatch() {
   return withDatabaseRetry(async (database) => {
-    const nextSequenceNumber = await getNextRoundSequenceNumber(database);
-    const batch = await database.roundBatch.create({
-      data: {
-        sequenceNumber: nextSequenceNumber,
-      },
-      select: {
-        id: true,
-        sequenceNumber: true,
-      },
-    });
+    return database.$transaction(async (transaction) => {
+      const latestBatch = await getLatestRoundBatch(transaction);
 
-    return {
-      assignmentCount: 0,
-      id: batch.id,
-      sequenceNumber: batch.sequenceNumber,
-    };
+      if (latestBatch?.status === "draft") {
+        throw new Error(
+          `Round ${latestBatch.sequenceNumber} is still a draft. Apply or delete it before creating a new round.`,
+        );
+      }
+
+      const activeBusinesses = await getActiveRoundBusinessesFromDatabase(
+        transaction,
+      );
+
+      if (activeBusinesses.length === 0) {
+        throw new Error(
+          "No businesses are active in the AI Authority Exchange yet.",
+        );
+      }
+
+      const nextSequenceNumber = await getNextRoundSequenceNumber(transaction);
+      const batch = await transaction.roundBatch.create({
+        data: {
+          sequenceNumber: nextSequenceNumber,
+        },
+        select: {
+          id: true,
+          sequenceNumber: true,
+        },
+      });
+
+      const historicalMatches = await getHistoricalMatchesForBusinesses(
+        transaction,
+        activeBusinesses.map((business) => business.id),
+      );
+      const historicalContext = buildHistoricalContext(
+        activeBusinesses,
+        historicalMatches,
+      );
+      const generatedAssignments = buildAutomaticRoundAssignments({
+        activeBusinesses,
+        balanceByBusinessId: historicalContext.balanceByBusinessId,
+        pairedBusinessIdsByBusinessId:
+          historicalContext.pairedBusinessIdsByBusinessId,
+      });
+
+      if (generatedAssignments.length > 0) {
+        await transaction.roundAssignment.createMany({
+          data: generatedAssignments.map((assignment) => ({
+            guestBusinessId: assignment.guestBusinessId,
+            hostBusinessId: assignment.hostBusinessId,
+            roundBatchId: batch.id,
+            source: assignment.source,
+          })),
+        });
+      }
+
+      return {
+        activeBusinessCount: activeBusinesses.length,
+        assignmentCount: generatedAssignments.length,
+        id: batch.id,
+        sequenceNumber: batch.sequenceNumber,
+      };
+    });
   });
 }
 
@@ -1336,6 +1558,12 @@ export async function deleteRoundBatch(roundBatchId: number) {
       throw new Error("The selected round does not exist.");
     }
 
+    const deletedMatches = await database.match.deleteMany({
+      where: {
+        roundBatchId,
+      },
+    });
+
     await database.roundBatch.delete({
       where: {
         id: roundBatchId,
@@ -1344,7 +1572,7 @@ export async function deleteRoundBatch(roundBatchId: number) {
 
     return {
       deletedAssignmentCount: batch._count.assignments,
-      detachedMatchCount: batch._count.matches,
+      deletedMatchCount: deletedMatches.count,
       roundSequenceNumber: batch.sequenceNumber,
       status: batch.status,
     };

@@ -1,9 +1,23 @@
 import { cache } from "react";
 import { isExchangeParticipationActive } from "@/lib/ai-authority-exchange";
+import {
+  getRoundMatchMethod,
+  type RoundMatchMethod,
+} from "@/lib/round-match-method";
 import { prisma } from "@/lib/prisma";
 import type { BusinessOption } from "@/lib/matches";
 
 const WEBHOOK_TIMEOUT_MS = 60_000;
+const localBusinessMatchNameCollator = new Intl.Collator(undefined, {
+  numeric: true,
+  sensitivity: "base",
+});
+const localBusinessMatchMethodPriority: Record<RoundMatchMethod, number> = {
+  "related-category": 2,
+  "related-sector": 3,
+  "same-category": 1,
+  "same-subcategory": 0,
+};
 
 export type BusinessMatchSuggestion = {
   competitionRationale: string | null;
@@ -21,14 +35,13 @@ export type LocalBusinessMatchCandidate = {
   domainRating: number | null;
   id: number;
   isActiveOnAiAuthorityExchange: boolean;
+  matchMethod: RoundMatchMethod;
   name: string;
   relatedCategoryNames: string[];
   sectorName: string | null;
   subcategoryName: string | null;
   websiteUrl: string | null;
 };
-
-export type MatchSearchScope = "same-category" | "same-category-or-sector";
 
 export type BusinessMatchLookupResult =
   | {
@@ -279,8 +292,48 @@ function createWebhookRequest(
   };
 }
 
+function compareNullableNumberDesc(left: number | null, right: number | null) {
+  if (left === right) {
+    return 0;
+  }
+
+  if (left === null) {
+    return 1;
+  }
+
+  if (right === null) {
+    return -1;
+  }
+
+  return right - left;
+}
+
+function compareLocalBusinessMatchCandidates(
+  left: LocalBusinessMatchCandidate,
+  right: LocalBusinessMatchCandidate,
+) {
+  const methodDifference =
+    localBusinessMatchMethodPriority[left.matchMethod] -
+    localBusinessMatchMethodPriority[right.matchMethod];
+
+  if (methodDifference !== 0) {
+    return methodDifference;
+  }
+
+  const domainRatingDifference = compareNullableNumberDesc(
+    left.domainRating,
+    right.domainRating,
+  );
+
+  if (domainRatingDifference !== 0) {
+    return domainRatingDifference;
+  }
+
+  return localBusinessMatchNameCollator.compare(left.name, right.name);
+}
+
 export const getLocalBusinessMatchCandidates = cache(
-  async (businessId: number, scope: MatchSearchScope) => {
+  async (businessId: number) => {
     const [hostBusiness, existingMatches] = await Promise.all([
       prisma.business.findUnique({
         where: {
@@ -293,6 +346,8 @@ export const getLocalBusinessMatchCandidates = cache(
             },
           },
           business_category_id: true,
+          related_category_ids: true,
+          subcategory: true,
         },
       }),
       prisma.match.findMany({
@@ -324,27 +379,6 @@ export const getLocalBusinessMatchCandidates = cache(
       blockedBusinessIds.add(match.guestId);
     }
 
-    const hostSectorId = hostBusiness.business_categories?.sector_id ?? null;
-    const categoryOrSectorWhere =
-      scope === "same-category-or-sector" && hostSectorId !== null
-        ? {
-            OR: [
-              {
-                business_categories: {
-                  is: {
-                    sector_id: hostSectorId,
-                  },
-                },
-              },
-              {
-                business_category_id: hostBusiness.business_category_id,
-              },
-            ],
-          }
-        : {
-            business_category_id: hostBusiness.business_category_id,
-          };
-
     const candidates = await prisma.business.findMany({
       orderBy: [{ domain_rating: "desc" }, { created_at: "desc" }],
       select: {
@@ -359,9 +393,12 @@ export const getLocalBusinessMatchCandidates = cache(
               },
             },
             name: true,
+            sector_id: true,
           },
         },
+        business_category_id: true,
         clientType: true,
+        created_at: true,
         domain_rating: true,
         id: true,
         isActiveOnAiAuthorityExchange: true,
@@ -369,9 +406,7 @@ export const getLocalBusinessMatchCandidates = cache(
         subcategory: true,
         websiteUrl: true,
       },
-      take: 5,
       where: {
-        ...categoryOrSectorWhere,
         aiAuthorityExchangeRetiredAt: null,
         client_status: "active",
         id: {
@@ -390,9 +425,50 @@ export const getLocalBusinessMatchCandidates = cache(
       },
     });
 
+    const hostMatchBusiness = {
+      businessCategoryId: hostBusiness.business_category_id,
+      relatedCategoryIds: hostBusiness.related_category_ids,
+      sectorId: hostBusiness.business_categories?.sector_id ?? null,
+      subcategory: hostBusiness.subcategory,
+    };
+    const shortlistedCandidates = candidates
+      .flatMap((candidate) => {
+        const matchMethod = getRoundMatchMethod(hostMatchBusiness, {
+          businessCategoryId: candidate.business_category_id,
+          relatedCategoryIds: candidate.related_category_ids,
+          sectorId: candidate.business_categories?.sector_id ?? null,
+          subcategory: candidate.subcategory,
+        });
+
+        if (matchMethod === null) {
+          return [];
+        }
+
+        return [
+          {
+            categoryName: candidate.business_categories?.name ?? null,
+            clientType: candidate.clientType,
+            domainRating: candidate.domain_rating,
+            id: candidate.id,
+            isActiveOnAiAuthorityExchange: isExchangeParticipationActive(
+              candidate,
+            ),
+            matchMethod,
+            name: candidate.business,
+            relatedCategoryIds: candidate.related_category_ids,
+            relatedCategoryNames: [] as string[],
+            sectorName: candidate.business_categories?.economic_sectors?.name ?? null,
+            subcategoryName: candidate.subcategory,
+            websiteUrl: candidate.websiteUrl,
+          },
+        ];
+      })
+      .sort(compareLocalBusinessMatchCandidates)
+      .slice(0, 5);
+
     const relatedCategoryIds = [
       ...new Set(
-        candidates.flatMap((candidate) => candidate.related_category_ids),
+        shortlistedCandidates.flatMap((candidate) => candidate.relatedCategoryIds),
       ),
     ];
     const relatedCategories =
@@ -415,20 +491,21 @@ export const getLocalBusinessMatchCandidates = cache(
       ),
     );
 
-    return candidates.map((candidate) => ({
-      categoryName: candidate.business_categories?.name ?? null,
+    return shortlistedCandidates.map((candidate) => ({
+      categoryName: candidate.categoryName,
       clientType: candidate.clientType,
-      domainRating: candidate.domain_rating,
+      domainRating: candidate.domainRating,
       id: candidate.id,
-      isActiveOnAiAuthorityExchange: isExchangeParticipationActive(candidate),
-      name: candidate.business,
-      relatedCategoryNames: candidate.related_category_ids
+      isActiveOnAiAuthorityExchange: candidate.isActiveOnAiAuthorityExchange,
+      matchMethod: candidate.matchMethod,
+      name: candidate.name,
+      relatedCategoryNames: candidate.relatedCategoryIds
         .map((categoryId) => relatedCategoryNameById.get(categoryId))
         .filter((categoryName): categoryName is string =>
           Boolean(categoryName),
         ),
-      sectorName: candidate.business_categories?.economic_sectors?.name ?? null,
-      subcategoryName: candidate.subcategory,
+      sectorName: candidate.sectorName,
+      subcategoryName: candidate.subcategoryName,
       websiteUrl: candidate.websiteUrl,
     })) satisfies LocalBusinessMatchCandidate[];
   },

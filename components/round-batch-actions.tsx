@@ -17,8 +17,8 @@ type ConfirmationState = {
 type RoundBatchActionsProps = {
   canApply: boolean;
   canClear: boolean;
+  canCreateRoundDraft: boolean;
   canDelete: boolean;
-  canGenerate: boolean;
   roundBatchId: number | null;
   roundSequenceNumber: number | null;
   roundStatus: RoundBatchStatus | null;
@@ -27,8 +27,8 @@ type RoundBatchActionsProps = {
 export function RoundBatchActions({
   canApply,
   canClear,
+  canCreateRoundDraft,
   canDelete,
-  canGenerate,
   roundBatchId,
   roundSequenceNumber,
   roundStatus,
@@ -38,7 +38,7 @@ export function RoundBatchActions({
   const [confirmationState, setConfirmationState] =
     useState<ConfirmationState>(null);
 
-  function createRound() {
+  function createRoundDraft() {
     startTransition(async () => {
       const response = await fetch("/api/rounds", {
         method: "POST",
@@ -47,49 +47,21 @@ export function RoundBatchActions({
       const payload = (await response.json().catch(() => null)) as {
         batch?: {
           id: number;
+          sequenceNumber: number;
         };
         error?: string;
         message?: string;
       } | null;
 
       if (!response.ok || !payload?.batch) {
-        toast.error(payload?.error ?? "The round could not be created.");
-        return;
-      }
-
-      toast.success(payload.message ?? "Round created successfully.");
-      router.push(`/rounds?batch=${payload.batch.id}`);
-      router.refresh();
-    });
-  }
-
-  function generateRoundDraft() {
-    if (!roundBatchId) {
-      return;
-    }
-
-    startTransition(async () => {
-      const response = await fetch(`/api/rounds/${roundBatchId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ action: "generate" }),
-      });
-
-      const payload = (await response.json().catch(() => null)) as {
-        error?: string;
-        message?: string;
-      } | null;
-
-      if (!response.ok) {
         toast.error(
-          payload?.error ?? "The round draft could not be generated.",
+          payload?.error ?? "The round draft could not be created.",
         );
         return;
       }
 
-      toast.success(payload?.message ?? "Round draft generated.");
+      toast.success(payload.message ?? "Round draft created successfully.");
+      router.push(`/rounds?batch=${payload.batch.sequenceNumber}`);
       router.refresh();
     });
   }
@@ -174,8 +146,8 @@ export function RoundBatchActions({
 
     const confirmationMessage =
       roundStatus === "applied"
-        ? `Delete round ${roundSequenceNumber ?? ""}? Existing matches will stay in the matches table, but their round number link will be removed.`
-        : `Delete round ${roundSequenceNumber ?? ""}? This will remove the batch and all assignments in it.`;
+        ? `Delete round ${roundSequenceNumber ?? ""}? This will remove the batch, its assignments, and every match linked to that round.`
+        : `Delete round ${roundSequenceNumber ?? ""}? This will remove the batch, all assignments in it, and any linked matches.`;
 
     setConfirmationState({
       confirmLabel: "Delete Round",
@@ -216,23 +188,17 @@ export function RoundBatchActions({
       <div className="flex flex-wrap items-center justify-end gap-3">
         <button
           className="inline-flex min-h-11 items-center justify-center rounded-full border border-border bg-white/80 px-5 py-3 text-sm font-medium text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-60"
-          disabled={isPending}
-          onClick={createRound}
+          disabled={isPending || !canCreateRoundDraft}
+          onClick={createRoundDraft}
+          title={
+            canCreateRoundDraft
+              ? "Create the next round draft"
+              : "Apply or delete the latest draft round before creating a new one"
+          }
           type="button"
         >
-          {isPending ? "Creating round..." : "Create Round"}
+          {isPending ? "Creating round draft..." : "Create Round Draft"}
         </button>
-
-        {canGenerate && roundBatchId ? (
-          <button
-            className="inline-flex min-h-11 items-center justify-center rounded-full border border-border bg-white/80 px-5 py-3 text-sm font-medium text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-60"
-            disabled={isPending}
-            onClick={generateRoundDraft}
-            type="button"
-          >
-            {isPending ? "Generating draft..." : "Generate Draft"}
-          </button>
-        ) : null}
 
         {canClear && roundBatchId ? (
           <button
@@ -263,7 +229,7 @@ export function RoundBatchActions({
             onClick={applyRoundDraft}
             type="button"
           >
-            {isPending ? "Applying round..." : "Apply Round Draft"}
+            {isPending ? "Applying round..." : "Apply Round"}
           </button>
         ) : null}
       </div>

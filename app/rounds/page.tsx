@@ -2,7 +2,9 @@ import Link from "next/link";
 import { RoundBatchPicker } from "@/components/round-batch-picker";
 import { RoundBatchActions } from "@/components/round-batch-actions";
 import { RoundDraftTable } from "@/components/round-draft-table";
+import { getAuthSession } from "@/lib/auth-session";
 import { getRoundBatchView } from "@/lib/rounds";
+import { getUserRoleForSessionUser, isAdminRole } from "@/lib/user-role";
 
 export const dynamic = "force-dynamic";
 
@@ -32,8 +34,14 @@ function formatBatchTimestamp(value: string) {
 export default async function RoundsPage({ searchParams }: RoundsPageProps) {
   const resolvedSearchParams = (await searchParams) ?? {};
   const requestedBatchId = parseBatchId(resolvedSearchParams.batch);
-  const roundBatchView = await getRoundBatchView(requestedBatchId);
+  const [session, roundBatchView] = await Promise.all([
+    getAuthSession(),
+    getRoundBatchView(requestedBatchId),
+  ]);
+  const role = await getUserRoleForSessionUser(session?.user);
+  const isAdmin = isAdminRole(role);
   const batchIsDraft = roundBatchView.batch?.status === "draft";
+  const latestBatchIsDraft = roundBatchView.batches[0]?.status === "draft";
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-8 px-6 py-10 sm:px-10 lg:px-12 lg:py-14">
@@ -47,9 +55,10 @@ export default async function RoundsPage({ searchParams }: RoundsPageProps) {
               AI Authority Exchange rounds
             </h1>
             <p className="max-w-3xl text-base leading-7 text-muted sm:text-lg">
-              Create a round first, then generate a suggested draft into that
-              batch or build it manually. Once the rows look right, you can
-              finalize the round from the same view.
+              Create the next round draft in one step, refine any pairings that
+              need manual changes, then apply the round once it is ready.
+              New rounds stay locked until the latest draft is explicitly
+              applied or deleted.
             </p>
           </div>
 
@@ -63,9 +72,9 @@ export default async function RoundsPage({ searchParams }: RoundsPageProps) {
 
         <RoundBatchActions
           canApply={batchIsDraft}
-          canClear={batchIsDraft}
-          canDelete={Boolean(roundBatchView.batch)}
-          canGenerate={batchIsDraft}
+          canClear={batchIsDraft && isAdmin}
+          canCreateRoundDraft={!latestBatchIsDraft}
+          canDelete={Boolean(roundBatchView.batch) && isAdmin}
           roundBatchId={roundBatchView.batch?.id ?? null}
           roundSequenceNumber={roundBatchView.batch?.sequenceNumber ?? null}
           roundStatus={roundBatchView.batch?.status ?? null}
@@ -75,7 +84,7 @@ export default async function RoundsPage({ searchParams }: RoundsPageProps) {
       <section className="grid gap-4 md:grid-cols-3 xl:grid-cols-4">
         <div className="rounded-4xl border border-border bg-surface p-5 shadow-(--shadow) backdrop-blur-md sm:p-6">
           <p className="text-sm font-medium tracking-[0.16em] text-muted uppercase">
-            Active Businesses
+            Active Businesses In Round
           </p>
           <p className="mt-3 text-4xl font-semibold tracking-tight text-foreground">
             {roundBatchView.activeBusinessCount}
@@ -121,7 +130,9 @@ export default async function RoundsPage({ searchParams }: RoundsPageProps) {
             </div>
             <RoundBatchPicker
               batches={roundBatchView.batches}
-              selectedBatchId={roundBatchView.batch?.id ?? null}
+              selectedBatchSequenceNumber={
+                roundBatchView.batch?.sequenceNumber ?? null
+              }
             />
           </div>
 
@@ -150,8 +161,10 @@ export default async function RoundsPage({ searchParams }: RoundsPageProps) {
       {roundBatchView.batch ? (
         <RoundDraftTable
           assignmentRows={roundBatchView.assignmentRows}
+          canDeleteAssignments={isAdmin}
           key={roundBatchView.batch.id}
           roundBatchId={roundBatchView.batch.id}
+          roundSequenceNumber={roundBatchView.batch.sequenceNumber}
           rows={roundBatchView.rows}
           roundStatus={roundBatchView.batch.status}
           selectableBusinesses={roundBatchView.selectableBusinesses}
@@ -163,8 +176,8 @@ export default async function RoundsPage({ searchParams }: RoundsPageProps) {
             No round drafts have been created yet.
           </p>
           <p className="mt-2 text-sm leading-7 text-muted">
-            Use Create Round to open the first batch, then generate a draft into
-            it or start adding rows manually.
+            Use Create Round Draft to open the first batch with the suggested
+            pairings already generated.
           </p>
         </section>
       )}

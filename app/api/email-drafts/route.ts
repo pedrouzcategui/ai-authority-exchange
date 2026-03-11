@@ -8,6 +8,7 @@ import {
 type CreateEmailDraftPayload = {
   guestId?: unknown;
   hostId?: unknown;
+  roundBatchId?: unknown;
 };
 
 function parseNumericId(value: unknown) {
@@ -46,6 +47,7 @@ export async function POST(request: Request) {
 
   const hostId = parseNumericId(payload.hostId);
   const guestId = parseNumericId(payload.guestId);
+  const roundBatchId = parseNumericId(payload.roundBatchId);
 
   if (hostId === null || guestId === null || hostId === guestId) {
     return NextResponse.json(
@@ -58,13 +60,14 @@ export async function POST(request: Request) {
     const draft = await createEmailDraftForMatch({
       guestId,
       hostId,
+      roundBatchId,
       userId: session.user.id,
     });
 
     return NextResponse.json(
       {
         draftId: draft.draftId,
-        message: `Email draft created for ${draft.hostBusiness.business} and ${draft.guestBusiness.business}.`,
+        message: `Email draft created for ${draft.hostBusiness.business} and ${draft.guestBusiness.business}. Match status updated to Draft Created.`,
       },
       { status: 201 },
     );

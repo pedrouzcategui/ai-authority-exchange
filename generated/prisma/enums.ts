@@ -17,8 +17,17 @@ export const BusinessRoleType = {
 export type BusinessRoleType = (typeof BusinessRoleType)[keyof typeof BusinessRoleType]
 
 
+export const AuthUserRole = {
+  user: 'user',
+  admin: 'admin'
+} as const
+
+export type AuthUserRole = (typeof AuthUserRole)[keyof typeof AuthUserRole]
+
+
 export const MatchStatus = {
   Not_Started: 'Not_Started',
+  Draft_Created: 'Draft_Created',
   In_Progress: 'In_Progress',
   Done: 'Done',
   Leaving: 'Leaving',

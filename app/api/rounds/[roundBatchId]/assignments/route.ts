@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-import { requireLegacyUserSession } from "@/lib/auth-session";
+import { requireAuthSession } from "@/lib/auth-session";
 import {
   deleteRoundAssignmentRow,
   updateRoundAssignment,
   upsertRoundAssignmentRow,
 } from "@/lib/rounds";
+import { getUserRoleForSessionUser, isAdminRole } from "@/lib/user-role";
 
 type RouteContext = {
   params: Promise<{
@@ -51,7 +52,7 @@ function parseAction(value: unknown) {
 }
 
 export async function PATCH(request: Request, context: RouteContext) {
-  const session = await requireLegacyUserSession();
+  const session = await requireAuthSession();
 
   if (!session) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
@@ -85,6 +86,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   const assignmentId = parseNumericId(payload.assignmentId);
   const guestBusinessId = parseNumericId(payload.guestBusinessId);
   const hostBusinessId = parseNumericId(payload.hostBusinessId);
+  const role = await getUserRoleForSessionUser(session.user);
 
   if (action === "upsertRow") {
     if (
@@ -122,6 +124,13 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   if (action === "deleteRow") {
+    if (!isAdminRole(role)) {
+      return NextResponse.json(
+        { error: "Only admins can delete round rows." },
+        { status: 403 },
+      );
+    }
+
     if (assignmentId === undefined || assignmentId === null) {
       return NextResponse.json(
         { error: "Please provide a valid round row to delete." },

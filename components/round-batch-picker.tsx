@@ -6,7 +6,7 @@ import type { RoundBatchSummary } from "@/lib/rounds";
 
 type RoundBatchPickerProps = {
   batches: RoundBatchSummary[];
-  selectedBatchId: number | null;
+  selectedBatchSequenceNumber: number | null;
 };
 
 function formatBatchLabel(batch: RoundBatchSummary) {
@@ -16,20 +16,20 @@ function formatBatchLabel(batch: RoundBatchSummary) {
 
 export function RoundBatchPicker({
   batches,
-  selectedBatchId,
+  selectedBatchSequenceNumber,
 }: RoundBatchPickerProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const recentBatches = batches.slice(0, 4);
-  const selectedValue = selectedBatchId?.toString() ?? "";
+  const selectedValue = selectedBatchSequenceNumber?.toString() ?? "";
 
-  function selectBatch(batchId: string) {
-    if (!batchId) {
+  function selectBatch(batchSequenceNumber: string) {
+    if (!batchSequenceNumber) {
       return;
     }
 
     startTransition(() => {
-      router.push(`/rounds?batch=${batchId}`);
+      router.push(`/rounds?batch=${batchSequenceNumber}`);
     });
   }
 
@@ -45,7 +45,7 @@ export function RoundBatchPicker({
           value={selectedValue}
         >
           {batches.map((batch) => (
-            <option key={batch.id} value={batch.id}>
+            <option key={batch.id} value={batch.sequenceNumber}>
               {formatBatchLabel(batch)}
             </option>
           ))}
@@ -57,12 +57,15 @@ export function RoundBatchPicker({
           <button
             key={batch.id}
             className={
-              batch.id === selectedBatchId
+              batch.sequenceNumber === selectedBatchSequenceNumber
                 ? "inline-flex items-center rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white"
                 : "inline-flex items-center rounded-full border border-border bg-white/80 px-4 py-2 text-sm font-medium text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-60"
             }
-            disabled={isPending || batch.id === selectedBatchId}
-            onClick={() => selectBatch(batch.id.toString())}
+            disabled={
+              isPending ||
+              batch.sequenceNumber === selectedBatchSequenceNumber
+            }
+            onClick={() => selectBatch(batch.sequenceNumber.toString())}
             type="button"
           >
             Round {batch.sequenceNumber}

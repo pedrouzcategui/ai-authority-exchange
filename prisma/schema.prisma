@@ -155,6 +155,7 @@ model User {
   legacyUserId  Int       @unique @map("legacy_user_id")
   name          String?
   email         String    @unique
+  role          AuthUserRole @default(user)
   emailVerified DateTime? @map("email_verified")
   image         String?
   createdAt     DateTime  @default(now()) @map("created_at")
@@ -217,8 +218,16 @@ enum BusinessRoleType {
   @@map("business_role_type")
 }
 
+enum AuthUserRole {
+  user
+  admin
+
+  @@map("auth_user_role")
+}
+
 enum MatchStatus {
   Not_Started     @map("Not Started")
+  Draft_Created   @map("Draft Created")
   In_Progress     @map("In Progress")
   Done
   Leaving

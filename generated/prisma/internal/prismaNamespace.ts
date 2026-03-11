@@ -1552,6 +1552,7 @@ export const UserScalarFieldEnum = {
   legacyUserId: 'legacyUserId',
   name: 'name',
   email: 'email',
+  role: 'role',
   emailVerified: 'emailVerified',
   image: 'image',
   createdAt: 'createdAt',
@@ -1762,6 +1763,20 @@ export type Enumpage_typeFieldRefInput<$PrismaModel> = FieldRefInputType<$Prisma
  * Reference to a field of type 'page_type[]'
  */
 export type ListEnumpage_typeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'page_type[]'>
+    
+
+
+/**
+ * Reference to a field of type 'AuthUserRole'
+ */
+export type EnumAuthUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AuthUserRole'>
+    
+
+
+/**
+ * Reference to a field of type 'AuthUserRole[]'
+ */
+export type ListEnumAuthUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AuthUserRole[]'>
     
 
 
