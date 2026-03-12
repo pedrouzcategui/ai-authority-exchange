@@ -115,7 +115,15 @@ export const authOptions: NextAuthOptions = {
         token.role = (user as typeof user & { role?: AuthUserRole }).role;
       }
 
-      if (token.email) {
+      const normalizedEmail = user?.email
+        ? normalizeEmail(user.email)
+        : token.email
+          ? normalizeEmail(token.email)
+          : null;
+
+      if (normalizedEmail) {
+        token.email = normalizedEmail;
+
         const authUser = await prisma.user.findFirst({
           select: {
             legacyUserId: true,
@@ -123,7 +131,7 @@ export const authOptions: NextAuthOptions = {
           },
           where: {
             email: {
-              equals: normalizeEmail(token.email),
+              equals: normalizedEmail,
               mode: "insensitive",
             },
           },

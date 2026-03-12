@@ -284,6 +284,20 @@ export function ManageBusinessRelationshipsModal({
                 </div>
 
                 <div className="mt-8 grid gap-5 lg:grid-cols-2">
+                    <RelationshipSelector
+                      description="Select the businesses this business publishes for. Businesses already selected under Published By are shown but disabled here."
+                      disabledIds={publishedByIds}
+                      emptyLabel="No businesses matched that search."
+                      onQueryChange={setPublishedForQuery}
+                      onToggleSelection={(businessId) =>
+                        toggleSelection(businessId, setPublishedForIds)
+                      }
+                      options={filteredPublishedForOptions}
+                      query={publishedForQuery}
+                      selectedIds={publishedForIds}
+                      title="Published For"
+                    />
+
                   <RelationshipSelector
                     description="Select the businesses that publish this business. Businesses already selected under Published For are shown but disabled here."
                     disabledIds={publishedForIds}
@@ -296,20 +310,6 @@ export function ManageBusinessRelationshipsModal({
                     query={publishedByQuery}
                     selectedIds={publishedByIds}
                     title="Published By"
-                  />
-
-                  <RelationshipSelector
-                    description="Select the businesses this business publishes for. Businesses already selected under Published By are shown but disabled here."
-                    disabledIds={publishedByIds}
-                    emptyLabel="No businesses matched that search."
-                    onQueryChange={setPublishedForQuery}
-                    onToggleSelection={(businessId) =>
-                      toggleSelection(businessId, setPublishedForIds)
-                    }
-                    options={filteredPublishedForOptions}
-                    query={publishedForQuery}
-                    selectedIds={publishedForIds}
-                    title="Published For"
                   />
                 </div>
 

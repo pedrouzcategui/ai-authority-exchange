@@ -297,8 +297,8 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                 <tr className="bg-brand-deep-soft/75 text-left text-sm font-medium tracking-[0.16em] text-muted uppercase">
                   <th className="px-6 py-4 sm:px-8">Business</th>
                   <th className="px-6 py-4 sm:px-8">Client Type</th>
-                  <th className="px-6 py-4 sm:px-8">Published By</th>
                   <th className="px-6 py-4 sm:px-8">Published For</th>
+                  <th className="px-6 py-4 sm:px-8">Published By</th>
                   <th className="w-42 px-6 py-4 text-right sm:px-8">Actions</th>
                 </tr>
               </thead>
@@ -318,16 +318,16 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                     </td>
                     <td className="border-t border-border px-6 py-5 sm:px-8">
                       <RelationshipPills
-                        businesses={row.publishedBy}
-                        emptyLabel="No publishers yet."
-                        tone="neutral"
+                        businesses={row.publishedFor}
+                        emptyLabel="Not published for any businesses yet."
+                        tone="accent"
                       />
                     </td>
                     <td className="border-t border-border px-6 py-5 sm:px-8">
                       <RelationshipPills
-                        businesses={row.publishedFor}
-                        emptyLabel="Not published for any businesses yet."
-                        tone="accent"
+                        businesses={row.publishedBy}
+                        emptyLabel="No publishers yet."
+                        tone="neutral"
                       />
                     </td>
                     <td className="w-42 border-t border-border px-6 py-5 text-right align-middle sm:px-8">
