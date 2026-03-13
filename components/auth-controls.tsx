@@ -69,21 +69,19 @@ export function AuthControls({ user, variant = "header" }: AuthControlsProps) {
   }
 
   const displayName = getDisplayName(user);
-  const wrapperClassName =
-    isPageVariant
-      ? "flex flex-wrap items-center justify-end gap-3"
-      : "flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-end";
-  const cardClassName =
-    isPageVariant
-      ? "rounded-3xl border border-border bg-white/78 px-4 py-3 text-right shadow-sm backdrop-blur-sm"
-      : "w-full rounded-3xl border border-border bg-white/78 px-4 py-3 text-left shadow-sm backdrop-blur-sm sm:w-auto sm:text-right";
+  const wrapperClassName = isPageVariant
+    ? "flex flex-wrap items-center justify-end gap-3"
+    : "flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-end";
+  const cardClassName = isPageVariant
+    ? "rounded-3xl border border-border bg-white/78 px-4 py-3 text-right shadow-sm backdrop-blur-sm"
+    : "w-full rounded-3xl border border-border bg-white/78 px-4 py-3 text-left shadow-sm backdrop-blur-sm sm:w-auto sm:text-right";
 
   return (
     <div className={wrapperClassName}>
       <div className={cardClassName}>
-        <p className="text-xs font-medium tracking-[0.14em] text-muted uppercase">
+        {/* <p className="text-xs font-medium tracking-[0.14em] text-muted uppercase">
           Approved Access
-        </p>
+        </p> */}
         <p className="mt-1 text-sm font-semibold text-foreground">
           {displayName}
         </p>
