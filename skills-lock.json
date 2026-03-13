@@ -1,6 +1,11 @@
 {
   "version": 1,
   "skills": {
+    "prisma-expert": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "computedHash": "c24cb9aebbe977a75b1bfe207440d604ac54e1802b8f3ad24aad66c001125a60"
+    },
     "react-expert": {
       "source": "reactjs/react.dev",
       "sourceType": "github",
