@@ -2,12 +2,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BusinessExchangeParticipationToggle } from "@/components/business-exchange-participation-toggle";
 import { BusinessMatchesTable } from "@/components/business-matches-table";
+import { ForbiddenBusinessesModal } from "@/components/forbidden-businesses-modal";
 import { BusinessRoleBadge } from "@/components/business-role-badge";
 import { EditBusinessModal } from "@/components/edit-business-modal";
 import {
   getBusinessByIdentifier,
   getBusinesses,
   getBusinessMatchBoard,
+  getForbiddenBusinessesForBusiness,
   getBusinessProfileDetails,
 } from "@/lib/matches";
 import { getRoundBatchSummaries } from "@/lib/rounds";
@@ -50,12 +52,17 @@ export default async function BusinessProfilePage({
     notFound();
   }
 
-  const [rows, roundBatches, profileDetails, selectableBusinesses] = await Promise.all([
-    getBusinessMatchBoard(business.id),
-    getRoundBatchSummaries(),
-    getBusinessProfileDetails(business.id),
-    getBusinesses(),
-  ]);
+  const [rows, roundBatches, profileDetails, selectableBusinesses, forbiddenBusinesses] =
+    await Promise.all([
+      getBusinessMatchBoard(business.id),
+      getRoundBatchSummaries(),
+      getBusinessProfileDetails(business.id),
+      getBusinesses(),
+      getForbiddenBusinessesForBusiness(business.id),
+    ]);
+  const forbiddenCounterpartIds = forbiddenBusinesses.map(
+    (forbiddenBusiness) => forbiddenBusiness.id,
+  );
   const businessDomainRating = business.domain_rating;
   const guestCount = rows.filter(
     (row) => row.counterpartRole === "guest",
@@ -217,10 +224,13 @@ export default async function BusinessProfilePage({
               Category details for {business.business}
             </h2>
           </div>
-          <p className="max-w-2xl text-sm leading-7 text-muted sm:text-right sm:text-base">
-            These fields drive the exchange matching logic and explain how the
-            business connects to adjacent categories.
-          </p>
+          <div className="flex flex-col gap-3 sm:items-end">
+            <p className="max-w-2xl text-sm leading-7 text-muted sm:text-right sm:text-base">
+              These fields drive the exchange matching logic and explain how the
+              business connects to adjacent categories.
+            </p>
+            <EditBusinessModal business={business} triggerVariant="icon" />
+          </div>
         </div>
 
         <div className="mt-6 grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
@@ -290,6 +300,47 @@ export default async function BusinessProfilePage({
         initialStatus={business.aiAuthorityExchangeParticipationStatus}
       />
 
+      <section className="rounded-4xl border border-border bg-surface p-6 shadow-(--shadow) backdrop-blur-md sm:p-8">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="max-w-3xl space-y-3">
+            <p className="text-sm font-medium tracking-[0.16em] text-accent uppercase">
+              Forbidden Competitors
+            </p>
+            <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+              Blocked pairings for {business.business}
+            </h2>
+            <p className="text-sm leading-7 text-muted sm:text-base">
+              These businesses are excluded when creating new matches from this
+              business profile.
+            </p>
+          </div>
+
+          <ForbiddenBusinessesModal
+            business={business}
+            businesses={selectableBusinesses}
+            forbiddenBusinesses={forbiddenBusinesses}
+          />
+        </div>
+
+        {forbiddenBusinesses.length > 0 ? (
+          <div className="mt-6 flex flex-wrap gap-2.5">
+            {forbiddenBusinesses.map((forbiddenBusiness) => (
+              <span
+                key={forbiddenBusiness.id}
+                className="inline-flex items-center gap-2 rounded-full border border-border bg-white px-3.5 py-2 text-sm font-medium text-foreground"
+              >
+                <span>{forbiddenBusiness.business}</span>
+                <BusinessRoleBadge role={forbiddenBusiness.clientType} />
+              </span>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-6 rounded-3xl border border-dashed border-border bg-white/60 px-5 py-6 text-sm leading-7 text-muted">
+            No forbidden competitors are saved for this business yet.
+          </div>
+        )}
+      </section>
+
       <section className="rounded-4xl border border-accent/15 bg-[linear-gradient(135deg,rgba(232,93,79,0.08),rgba(255,255,255,0.92))] p-6 shadow-(--shadow) backdrop-blur-md sm:p-8">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-3xl space-y-3">
@@ -343,6 +394,7 @@ export default async function BusinessProfilePage({
       <section className="rounded-4xl border border-border bg-surface p-6 shadow-(--shadow) backdrop-blur-md sm:p-8">
         <BusinessMatchesTable
           business={business}
+          forbiddenCounterpartIds={forbiddenCounterpartIds}
           roundBatches={roundBatches.map((batch) => ({
             id: batch.id,
             sequenceNumber: batch.sequenceNumber,

@@ -22,6 +22,7 @@ type BusinessMatchesTableRoundBatch = {
 type BusinessMatchesTableProps = {
   selectableBusinesses: Pick<BusinessOption, "business" | "clientType" | "id">[];
   business: BusinessOption;
+  forbiddenCounterpartIds: number[];
   roundBatches: BusinessMatchesTableRoundBatch[];
   rows: BusinessMatchBoardRow[];
 };
@@ -233,6 +234,7 @@ function SortHeaderButton({
 export function BusinessMatchesTable({
   selectableBusinesses,
   business,
+  forbiddenCounterpartIds,
   roundBatches,
   rows,
 }: BusinessMatchesTableProps) {
@@ -552,6 +554,7 @@ export function BusinessMatchesTable({
           <CreateBusinessMatchModal
             currentBusiness={business}
             existingCounterpartIds={tableRows.map((row) => row.counterpart.id)}
+            forbiddenCounterpartIds={forbiddenCounterpartIds}
             roundBatches={roundBatches}
             selectableBusinesses={selectableBusinesses}
           />

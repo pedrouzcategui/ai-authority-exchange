@@ -19,6 +19,7 @@ type RoundOption = {
 type CreateBusinessMatchModalProps = {
   currentBusiness: SelectableBusiness;
   existingCounterpartIds: number[];
+  forbiddenCounterpartIds: number[];
   roundBatches: RoundOption[];
   selectableBusinesses: SelectableBusiness[];
 };
@@ -28,6 +29,7 @@ type CurrentBusinessRole = "guest" | "host";
 export function CreateBusinessMatchModal({
   currentBusiness,
   existingCounterpartIds,
+  forbiddenCounterpartIds,
   roundBatches,
   selectableBusinesses,
 }: CreateBusinessMatchModalProps) {
@@ -41,10 +43,12 @@ export function CreateBusinessMatchModal({
   const portalTarget = typeof document === "undefined" ? null : document.body;
 
   const existingCounterpartIdSet = new Set(existingCounterpartIds);
+  const forbiddenCounterpartIdSet = new Set(forbiddenCounterpartIds);
   const availableCounterparts = selectableBusinesses.filter(
     (business) =>
       business.id !== currentBusiness.id &&
-      !existingCounterpartIdSet.has(business.id),
+      !existingCounterpartIdSet.has(business.id) &&
+      !forbiddenCounterpartIdSet.has(business.id),
   );
   const selectedCounterpart =
     availableCounterparts.find(
@@ -129,7 +133,7 @@ export function CreateBusinessMatchModal({
         onClick={openModal}
         title={
           availableCounterparts.length === 0
-            ? "This business is already matched with every other available business."
+            ? "No additional businesses are currently eligible for a new match from this profile."
             : undefined
         }
         type="button"
@@ -245,7 +249,7 @@ export function CreateBusinessMatchModal({
               <div className="flex flex-col gap-4 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm leading-7 text-muted">
                   {availableCounterparts.length === 0
-                    ? "No additional businesses are available for a new match from this profile."
+                    ? "No additional businesses are currently eligible for a new match from this profile."
                     : `${availableCounterparts.length} businesses are available to match with ${currentBusiness.business}.${roundBatchId ? " The new match will be linked to the selected round." : ""}`}
                 </p>
 

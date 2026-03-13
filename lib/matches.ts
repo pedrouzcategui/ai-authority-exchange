@@ -6,6 +6,7 @@ import type {
 } from "@/generated/prisma/client";
 import { getExchangeParticipationStatus } from "@/lib/ai-authority-exchange";
 import { getBusinessProfileSlug } from "@/lib/business-profile-route";
+import { getForbiddenBusinessIdsForBusiness } from "@/lib/forbidden-business-pairs";
 import { prisma } from "@/lib/prisma";
 
 const businessSelection = {
@@ -100,6 +101,18 @@ export const getBusinesses = cache(async () => {
     .map((business) => toBusinessOption(business))
     .toSorted(compareBusinessNames);
 });
+
+export const getForbiddenBusinessesForBusiness = cache(
+  async (businessId: number) => {
+    const [businesses, forbiddenBusinessIds] = await Promise.all([
+      getBusinesses(),
+      getForbiddenBusinessIdsForBusiness(businessId),
+    ]);
+    const forbiddenBusinessIdSet = new Set(forbiddenBusinessIds);
+
+    return businesses.filter((business) => forbiddenBusinessIdSet.has(business.id));
+  },
+);
 
 export const getExplicitlyActiveExchangeBusinesses = cache(async () => {
   const businesses = await prisma.business.findMany({
@@ -292,6 +305,7 @@ export const getMatches = cache(async (hostId?: number, guestId?: number) => {
 type MatchWithBusinesses = Awaited<ReturnType<typeof getMatches>>[number];
 
 export type BusinessRelationshipRow = BusinessOption & {
+  forbiddenBusinesses: BusinessOption[];
   publishedBy: BusinessOption[];
   publishedFor: BusinessOption[];
 };
@@ -318,10 +332,13 @@ export type BusinessMatchBoardRow = {
 function buildBusinessRelationshipRows(
   businesses: BusinessOption[],
   matches: MatchWithBusinesses[],
+  forbiddenBusinessesByBusinessId: Map<number, BusinessOption[]>,
 ) {
   const relationshipRows: BusinessRelationshipRow[] = businesses.map(
     (business) => ({
       ...business,
+      forbiddenBusinesses:
+        forbiddenBusinessesByBusinessId.get(business.id) ?? [],
       publishedBy: [],
       publishedFor: [],
     }),
@@ -336,11 +353,28 @@ function buildBusinessRelationshipRows(
   }
 
   for (const row of relationshipRows) {
+    row.forbiddenBusinesses.sort(compareBusinessNames);
     row.publishedBy.sort(compareBusinessNames);
     row.publishedFor.sort(compareBusinessNames);
   }
 
   return relationshipRows;
+}
+
+async function getForbiddenBusinessesByBusinessId(
+  businesses: Pick<BusinessOption, "id">[],
+) {
+  const entries = await Promise.all(
+    businesses.map(async (business) => {
+      const forbiddenBusinesses = await getForbiddenBusinessesForBusiness(
+        business.id,
+      );
+
+      return [business.id, forbiddenBusinesses] as const;
+    }),
+  );
+
+  return new Map(entries);
 }
 
 export const getBusinessMatchBoard = cache(async (businessId: number) => {
@@ -398,7 +432,7 @@ export const getBusinessMatchBoard = cache(async (businessId: number) => {
 export const getBusinessRelationshipRows = cache(
   async (hostId?: number, guestId?: number, businessId?: number) => {
     if (businessId !== undefined) {
-      const [businesses, matches] = await Promise.all([
+      const [businesses, matches, forbiddenBusinesses] = await Promise.all([
         getExplicitlyActiveExchangeBusinesses(),
         prisma.match.findMany({
           include: {
@@ -430,6 +464,7 @@ export const getBusinessRelationshipRows = cache(
             id: "desc",
           },
         }),
+        getForbiddenBusinessesForBusiness(businessId),
       ]);
       const normalizedMatches = matches.map((match) =>
         toMatchWithBusinesses(match),
@@ -444,6 +479,7 @@ export const getBusinessRelationshipRows = cache(
 
       const relationshipRow: BusinessRelationshipRow = {
         ...business,
+        forbiddenBusinesses,
         publishedBy: [],
         publishedFor: [],
       };
@@ -464,13 +500,21 @@ export const getBusinessRelationshipRows = cache(
       return [relationshipRow];
     }
 
-    const [businesses, matches] = await Promise.all([
-      getExplicitlyActiveExchangeBusinesses(),
-      getMatches(),
-    ]);
+    const businessesPromise = getExplicitlyActiveExchangeBusinesses();
+    const matchesPromise = getMatches();
+    const forbiddenBusinessesByBusinessIdPromise = businessesPromise.then(
+      getForbiddenBusinessesByBusinessId,
+    );
+    const [businesses, matches, forbiddenBusinessesByBusinessId] =
+      await Promise.all([
+        businessesPromise,
+        matchesPromise,
+        forbiddenBusinessesByBusinessIdPromise,
+      ]);
     const relationshipRows = buildBusinessRelationshipRows(
       businesses,
       matches,
+      forbiddenBusinessesByBusinessId,
     );
 
     if (hostId === undefined && guestId === undefined) {

@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
 type RelationshipPillsProps = {
   businesses: BusinessOption[];
   emptyLabel: string;
-  tone: "accent" | "neutral";
+  tone: "accent" | "danger" | "neutral";
 };
 
 type MatchesPageProps = {
@@ -124,6 +124,8 @@ function RelationshipPills({
           className={
             tone === "accent"
               ? "inline-flex items-center rounded-full border border-accent/20 bg-accent/10 px-2.5 py-0.5 text-[13px] font-medium text-accent-strong"
+              : tone === "danger"
+                ? "inline-flex items-center rounded-full border border-danger-strong/15 bg-danger-soft px-2.5 py-0.5 text-[13px] font-medium text-danger-strong"
               : "inline-flex items-center rounded-full border border-border bg-brand-deep-soft/55 px-2.5 py-0.5 text-[13px] font-medium text-foreground"
           }
         >
@@ -299,6 +301,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                   <th className="px-6 py-4 sm:px-8">Client Type</th>
                   <th className="px-6 py-4 sm:px-8">Published For</th>
                   <th className="px-6 py-4 sm:px-8">Published By</th>
+                  <th className="px-6 py-4 sm:px-8">Forbidden Competitors</th>
                   <th className="w-42 px-6 py-4 text-right sm:px-8">Actions</th>
                 </tr>
               </thead>
@@ -328,6 +331,13 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                         businesses={row.publishedBy}
                         emptyLabel="No publishers yet."
                         tone="neutral"
+                      />
+                    </td>
+                    <td className="border-t border-border px-6 py-5 sm:px-8">
+                      <RelationshipPills
+                        businesses={row.forbiddenBusinesses}
+                        emptyLabel="No forbidden competitors."
+                        tone="danger"
                       />
                     </td>
                     <td className="w-42 border-t border-border px-6 py-5 text-right align-middle sm:px-8">
