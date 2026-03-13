@@ -8,36 +8,38 @@ datasource db {
 }
 
 model Business {
-  id                                       Int                  @id(map: "clients_pkey") @default(autoincrement()) @map("id")
-  business                                 String               @unique(map: "clients_name_unique_idx") @map("name")
-  websiteUrl                               String?              @unique @map("website_url")
-  isActiveOnAiAuthorityExchange            Boolean              @default(false) @map("is_active_on_ai_authority_exchange")
-  aiAuthorityExchangeJoinedAt              DateTime?            @map("ai_authority_exchange_joined_at") @db.Timestamp(6)
-  aiAuthorityExchangeRetiredAt             DateTime?            @map("ai_authority_exchange_retired_at") @db.Timestamp(6)
-  aiAuthorityExchangeRetiredInRoundBatchId Int?                 @map("ai_authority_exchange_retired_in_round_batch_id")
-  google_drive_folder_url                  String?
-  writer_411_document_url                  String?
-  discovery_packet_document_url            String?
-  client_status                            client_status        @default(active)
-  created_at                               DateTime             @default(now()) @db.Date
-  updated_at                               DateTime             @default(now()) @db.Date
-  subcategory                              String?              @db.VarChar
-  description                              String?
-  writing_topics                           String[]
-  target_audience                          String?
-  business_category_id                     Int?
-  domain_rating                            Int?
-  related_category_ids                     Int[]
-  related_categories_reasoning             String?
-  clientType                               BusinessRoleType?    @default(partner) @map("role")
-  guestMatches                             Match[]              @relation("GuestBusiness")
-  hostedMatches                            Match[]              @relation("HostBusiness")
-  aiAuthorityExchangeRetiredInRoundBatch   RoundBatch?          @relation("RetiredBusinesses", fields: [aiAuthorityExchangeRetiredInRoundBatchId], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  incomingRoundAssignments                 RoundAssignment[]    @relation("RoundAssignmentGuestBusiness")
-  outgoingRoundAssignments                 RoundAssignment[]    @relation("RoundAssignmentHostBusiness")
-  business_categories                      business_categories? @relation(fields: [business_category_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "business_category_id")
-  client_details                           client_details?
-  publications                             publications[]
+  id                                                                                                                           Int                                              @id(map: "clients_pkey") @default(autoincrement()) @map("id")
+  business                                                                                                                     String                                           @unique(map: "clients_name_unique_idx") @map("name")
+  websiteUrl                                                                                                                   String?                                          @unique @map("website_url")
+  google_drive_folder_url                                                                                                      String?
+  writer_411_document_url                                                                                                      String?
+  discovery_packet_document_url                                                                                                String?
+  client_status                                                                                                                client_status                                    @default(active)
+  created_at                                                                                                                   DateTime                                         @default(now()) @db.Date
+  updated_at                                                                                                                   DateTime                                         @default(now()) @db.Date
+  subcategory                                                                                                                  String?                                          @db.VarChar
+  description                                                                                                                  String?
+  writing_topics                                                                                                               String[]
+  target_audience                                                                                                              String?
+  business_category_id                                                                                                         Int?
+  domain_rating                                                                                                                Int?
+  related_category_ids                                                                                                         Int[]
+  related_categories_reasoning                                                                                                 String?
+  clientType                                                                                                                   BusinessRoleType?                                @default(partner) @map("role")
+  isActiveOnAiAuthorityExchange                                                                                                Boolean                                          @default(false) @map("is_active_on_ai_authority_exchange")
+  aiAuthorityExchangeJoinedAt                                                                                                  DateTime?                                        @map("ai_authority_exchange_joined_at") @db.Timestamp(6)
+  aiAuthorityExchangeRetiredAt                                                                                                 DateTime?                                        @map("ai_authority_exchange_retired_at") @db.Timestamp(6)
+  aiAuthorityExchangeRetiredInRoundBatchId                                                                                     Int?                                             @map("ai_authority_exchange_retired_in_round_batch_id")
+  ai_authority_exchange_forbidden_business_pairs_ai_authority_exchange_forbidden_business_pairs_higher_business_idTobusinesses ai_authority_exchange_forbidden_business_pairs[] @relation("ai_authority_exchange_forbidden_business_pairs_higher_business_idTobusinesses")
+  ai_authority_exchange_forbidden_business_pairs_ai_authority_exchange_forbidden_business_pairs_lower_business_idTobusinesses  ai_authority_exchange_forbidden_business_pairs[] @relation("ai_authority_exchange_forbidden_business_pairs_lower_business_idTobusinesses")
+  guestMatches                                                                                                                 Match[]                                          @relation("GuestBusiness")
+  hostedMatches                                                                                                                Match[]                                          @relation("HostBusiness")
+  incomingRoundAssignments                                                                                                     RoundAssignment[]                                @relation("RoundAssignmentGuestBusiness")
+  outgoingRoundAssignments                                                                                                     RoundAssignment[]                                @relation("RoundAssignmentHostBusiness")
+  business_categories                                                                                                          business_categories?                             @relation(fields: [business_category_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "business_category_id")
+  aiAuthorityExchangeRetiredInRoundBatch                                                                                       RoundBatch?                                      @relation("RetiredBusinesses", fields: [aiAuthorityExchangeRetiredInRoundBatchId], references: [id], onUpdate: NoAction)
+  client_details                                                                                                               client_details?
+  publications                                                                                                                 publications[]
 
   @@index([aiAuthorityExchangeRetiredInRoundBatchId], map: "idx_businesses_retired_round_batch_id")
   @@index([related_category_ids], map: "idx_clients_related_categories", type: Gin)
@@ -49,7 +51,6 @@ model Match {
   id                          Int          @id(map: "matches_pkey") @default(autoincrement()) @map("id")
   hostId                      Int          @map("publisher_id")
   guestId                     Int          @map("guest_id")
-  roundBatchId                Int?         @map("round_batch_id")
   status                      MatchStatus? @default(Not_Started) @map("status")
   interview_sent              Boolean?     @default(false)
   interview_published         Boolean?     @default(false)
@@ -57,9 +58,10 @@ model Match {
   partner_interview_published Boolean?     @default(false)
   notes                       String?
   created_at                  DateTime?    @default(now()) @db.Timestamp(6)
+  roundBatchId                Int?         @map("round_batch_id")
+  roundBatch                  RoundBatch?  @relation(fields: [roundBatchId], references: [id], onUpdate: NoAction)
   guest                       Business     @relation("GuestBusiness", fields: [guestId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "matches_matched_id_fkey")
   host                        Business     @relation("HostBusiness", fields: [hostId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "matches_subject_id_fkey")
-  roundBatch                  RoundBatch?  @relation(fields: [roundBatchId], references: [id], onDelete: SetNull, onUpdate: NoAction)
 
   @@unique([hostId, guestId], map: "unique_match_pair")
   @@index([roundBatchId], map: "idx_matches_round_batch_id")
@@ -72,9 +74,9 @@ model RoundBatch {
   status            RoundBatchStatus  @default(draft)
   appliedAt         DateTime?         @map("applied_at") @db.Timestamp(6)
   createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt         DateTime          @updatedAt @map("updated_at") @db.Timestamp(6)
-  assignments       RoundAssignment[]
+  updatedAt         DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
   matches           Match[]
+  assignments       RoundAssignment[]
   retiredBusinesses Business[]        @relation("RetiredBusinesses")
 
   @@map("ai_authority_exchange_round_batches")
@@ -87,7 +89,7 @@ model RoundAssignment {
   guestBusinessId Int                   @map("guest_business_id")
   source          RoundAssignmentSource @default(auto)
   createdAt       DateTime              @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt       DateTime              @updatedAt @map("updated_at") @db.Timestamp(6)
+  updatedAt       DateTime              @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
   guestBusiness   Business              @relation("RoundAssignmentGuestBusiness", fields: [guestBusinessId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   hostBusiness    Business              @relation("RoundAssignmentHostBusiness", fields: [hostBusinessId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   roundBatch      RoundBatch            @relation(fields: [roundBatchId], references: [id], onDelete: Cascade, onUpdate: NoAction)
@@ -151,18 +153,18 @@ model users {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  legacyUserId  Int       @unique @map("legacy_user_id")
+  id            String       @id @default(cuid())
+  legacyUserId  Int          @unique @map("legacy_user_id")
   name          String?
-  email         String    @unique
-  role          AuthUserRole @default(user)
-  emailVerified DateTime? @map("email_verified")
+  email         String       @unique
+  emailVerified DateTime?    @map("email_verified")
   image         String?
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+  role          AuthUserRole @default(user)
   accounts      Account[]
-  legacyUser    users     @relation("LegacyUserAuthLink", fields: [legacyUserId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   sessions      Session[]
+  legacyUser    users        @relation("LegacyUserAuthLink", fields: [legacyUserId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@map("auth_users")
 }
@@ -173,19 +175,19 @@ model Account {
   type              String
   provider          String
   providerAccountId String   @map("provider_account_id")
-  refresh_token     String?  @db.Text
-  access_token      String?  @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String?  @db.Text
+  id_token          String?
   session_state     String?
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
   user              User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@unique([provider, providerAccountId])
-  @@index([userId], map: "auth_accounts_user_id_idx")
+  @@index([userId])
   @@map("auth_accounts")
 }
 
@@ -198,7 +200,7 @@ model Session {
   updatedAt    DateTime @updatedAt @map("updated_at")
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@index([userId], map: "auth_sessions_user_id_idx")
+  @@index([userId])
   @@map("auth_sessions")
 }
 
@@ -209,6 +211,20 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("auth_verification_tokens")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model ai_authority_exchange_forbidden_business_pairs {
+  id                                                                                       Int      @id @default(autoincrement())
+  lower_business_id                                                                        Int
+  higher_business_id                                                                       Int
+  created_at                                                                               DateTime @default(now()) @db.Timestamp(6)
+  businesses_ai_authority_exchange_forbidden_business_pairs_higher_business_idTobusinesses Business @relation("ai_authority_exchange_forbidden_business_pairs_higher_business_idTobusinesses", fields: [higher_business_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "ai_authority_exchange_forbidden_busines_higher_business_id_fkey")
+  businesses_ai_authority_exchange_forbidden_business_pairs_lower_business_idTobusinesses  Business @relation("ai_authority_exchange_forbidden_business_pairs_lower_business_idTobusinesses", fields: [lower_business_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "ai_authority_exchange_forbidden_business_lower_business_id_fkey")
+
+  @@unique([lower_business_id, higher_business_id], map: "unique_forbidden_business_pair")
+  @@index([higher_business_id], map: "idx_forbidden_business_pairs_higher")
+  @@index([lower_business_id], map: "idx_forbidden_business_pairs_lower")
 }
 
 enum BusinessRoleType {
@@ -227,11 +243,11 @@ enum AuthUserRole {
 
 enum MatchStatus {
   Not_Started     @map("Not Started")
-  Draft_Created   @map("Draft Created")
   In_Progress     @map("In Progress")
   Done
   Leaving
   Partner_Leaving @map("Partner Leaving")
+  Draft_Created   @map("Draft Created")
 
   @@map("match_status")
 }
