@@ -1,10 +1,14 @@
 "use client";
 
-import { useState, useTransition, type FormEvent } from "react";
+import { useEffect, useState, useTransition, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ActionTooltip, EditBusinessIcon } from "@/components/action-icons";
+import {
+  BusinessTaxonomyFields,
+  type BusinessTaxonomyCategoryOption,
+} from "@/components/business-taxonomy-fields";
 import { ExchangeParticipationFields } from "@/components/exchange-participation-fields";
 import type { ExchangeParticipationStatus } from "@/lib/ai-authority-exchange";
 import type { BusinessOption } from "@/lib/matches";
@@ -12,6 +16,15 @@ import type { BusinessOption } from "@/lib/matches";
 type EditBusinessModalProps = {
   business: BusinessOption;
   triggerVariant?: "default" | "icon";
+};
+
+type BusinessTaxonomyResponse = {
+  businessCategoryId: number | null;
+  businessId: number;
+  categories: BusinessTaxonomyCategoryOption[];
+  relatedCategoriesReasoning: string | null;
+  relatedCategoryIds: number[];
+  subcategory: string | null;
 };
 
 const roleOptions = [
@@ -54,6 +67,20 @@ export function EditBusinessModal({
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [taxonomyReloadKey, setTaxonomyReloadKey] = useState(0);
+  const [isTaxonomyLoading, setIsTaxonomyLoading] = useState(false);
+  const [isTaxonomyReady, setIsTaxonomyReady] = useState(false);
+  const [taxonomyError, setTaxonomyError] = useState<string | null>(null);
+  const [taxonomyCategories, setTaxonomyCategories] = useState<
+    BusinessTaxonomyCategoryOption[]
+  >([]);
+  const [businessCategoryId, setBusinessCategoryId] = useState<number | null>(
+    null,
+  );
+  const [subcategory, setSubcategory] = useState("");
+  const [relatedCategoryIds, setRelatedCategoryIds] = useState<number[]>([]);
+  const [relatedCategoriesReasoning, setRelatedCategoriesReasoning] =
+    useState("");
   const [exchangeParticipationStatus, setExchangeParticipationStatus] =
     useState<ExchangeParticipationStatus>(
       business.aiAuthorityExchangeParticipationStatus,
@@ -73,6 +100,66 @@ export function EditBusinessModal({
   const [websiteUrl, setWebsiteUrl] = useState(business.websiteUrl ?? "");
   const portalTarget = typeof document === "undefined" ? null : document.body;
 
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const abortController = new AbortController();
+
+    async function loadTaxonomy() {
+      setIsTaxonomyLoading(true);
+      setIsTaxonomyReady(false);
+      setTaxonomyError(null);
+
+      try {
+        const response = await fetch(`/api/businesses/${business.id}/taxonomy`, {
+          signal: abortController.signal,
+        });
+        const payload = (await response.json().catch(() => null)) as
+          | ({ error?: string } & Partial<BusinessTaxonomyResponse>)
+          | null;
+
+        if (!response.ok) {
+          throw new Error(
+            payload?.error ?? "The business taxonomy could not be loaded.",
+          );
+        }
+
+        setBusinessCategoryId(payload?.businessCategoryId ?? null);
+        setSubcategory(payload?.subcategory ?? "");
+        setRelatedCategoryIds(payload?.relatedCategoryIds ?? []);
+        setRelatedCategoriesReasoning(
+          payload?.relatedCategoriesReasoning ?? "",
+        );
+        setTaxonomyCategories(payload?.categories ?? []);
+        setIsTaxonomyReady(true);
+      } catch (error) {
+        if (abortController.signal.aborted) {
+          return;
+        }
+
+        const message =
+          error instanceof Error
+            ? error.message
+            : "The business taxonomy could not be loaded.";
+
+        setTaxonomyCategories([]);
+        setTaxonomyError(message);
+      } finally {
+        if (!abortController.signal.aborted) {
+          setIsTaxonomyLoading(false);
+        }
+      }
+    }
+
+    void loadTaxonomy();
+
+    return () => {
+      abortController.abort();
+    };
+  }, [business.id, isOpen, taxonomyReloadKey]);
+
   function syncFormWithBusiness() {
     setExchangeParticipationStatus(
       business.aiAuthorityExchangeParticipationStatus,
@@ -87,6 +174,14 @@ export function EditBusinessModal({
         "",
     );
     setWebsiteUrl(business.websiteUrl ?? "");
+    setBusinessCategoryId(null);
+    setSubcategory("");
+    setRelatedCategoryIds([]);
+    setRelatedCategoriesReasoning("");
+    setTaxonomyCategories([]);
+    setTaxonomyError(null);
+    setIsTaxonomyLoading(false);
+    setIsTaxonomyReady(false);
   }
 
   function openModal() {
@@ -101,6 +196,31 @@ export function EditBusinessModal({
 
     setIsOpen(false);
     syncFormWithBusiness();
+  }
+
+  function retryTaxonomy() {
+    if (isPending || isTaxonomyLoading) {
+      return;
+    }
+
+    setTaxonomyReloadKey((currentValue) => currentValue + 1);
+  }
+
+  function handleBusinessCategoryIdChange(nextValue: number | null) {
+    setBusinessCategoryId(nextValue);
+    setRelatedCategoryIds((currentValue) =>
+      nextValue === null
+        ? currentValue
+        : currentValue.filter((categoryId) => categoryId !== nextValue),
+    );
+  }
+
+  function handleToggleRelatedCategory(categoryId: number) {
+    setRelatedCategoryIds((currentValue) =>
+      currentValue.includes(categoryId)
+        ? currentValue.filter((currentId) => currentId !== categoryId)
+        : [...currentValue, categoryId],
+    );
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -138,6 +258,29 @@ export function EditBusinessModal({
 
     const normalizedWebsiteUrl = normalizeWebsiteInput(websiteUrl);
     setWebsiteUrl(normalizedWebsiteUrl);
+    const updatePayload: Record<string, unknown> = {
+      aiAuthorityExchangeRetiredAt:
+        exchangeParticipationStatus === "retired"
+          ? aiAuthorityExchangeRetiredAt
+          : null,
+      aiAuthorityExchangeRetiredRoundSequenceNumber:
+        exchangeParticipationStatus === "retired" &&
+        aiAuthorityExchangeRetiredRoundSequenceNumber.trim() !== ""
+          ? Number(aiAuthorityExchangeRetiredRoundSequenceNumber)
+          : null,
+      businessId: business.id,
+      exchangeParticipationStatus,
+      name,
+      role,
+      websiteUrl: normalizedWebsiteUrl,
+    };
+
+    if (isTaxonomyReady) {
+      updatePayload.businessCategoryId = businessCategoryId;
+      updatePayload.relatedCategoriesReasoning = relatedCategoriesReasoning;
+      updatePayload.relatedCategoryIds = relatedCategoryIds;
+      updatePayload.subcategory = subcategory;
+    }
 
     startTransition(async () => {
       const response = await fetch("/api/businesses", {
@@ -145,22 +288,7 @@ export function EditBusinessModal({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          aiAuthorityExchangeRetiredAt:
-            exchangeParticipationStatus === "retired"
-              ? aiAuthorityExchangeRetiredAt
-              : null,
-          aiAuthorityExchangeRetiredRoundSequenceNumber:
-            exchangeParticipationStatus === "retired" &&
-            aiAuthorityExchangeRetiredRoundSequenceNumber.trim() !== ""
-              ? Number(aiAuthorityExchangeRetiredRoundSequenceNumber)
-              : null,
-          businessId: business.id,
-          exchangeParticipationStatus,
-          name,
-          role,
-          websiteUrl: normalizedWebsiteUrl,
-        }),
+        body: JSON.stringify(updatePayload),
       });
 
       const payload = (await response.json().catch(() => null)) as {
@@ -207,7 +335,7 @@ export function EditBusinessModal({
       {portalTarget && isOpen
         ? createPortal(
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(51,71,91,0.36)] px-4 py-8 backdrop-blur-sm">
-              <div className="w-full max-w-2xl rounded-4xl border border-border bg-surface p-6 shadow-(--shadow) sm:p-8">
+              <div className="h-[80vh] w-full max-w-2xl overflow-y-auto rounded-4xl border border-border bg-surface p-6 shadow-(--shadow) sm:p-8">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="space-y-3">
                     <p className="text-sm font-medium tracking-[0.16em] text-accent uppercase">
@@ -217,8 +345,8 @@ export function EditBusinessModal({
                       Update business details for {business.business}
                     </h2>
                     <p className="max-w-xl text-sm leading-7 text-muted sm:text-base">
-                      Edit the business name, website, or role without leaving
-                      the relationships table.
+                      Edit the business record, participation details, and
+                      taxonomy without leaving this page.
                     </p>
                   </div>
 
@@ -306,6 +434,24 @@ export function EditBusinessModal({
                       aiAuthorityExchangeRetiredRoundSequenceNumber
                     }
                     status={exchangeParticipationStatus}
+                  />
+
+                  <BusinessTaxonomyFields
+                    businessCategoryId={businessCategoryId}
+                    categories={taxonomyCategories}
+                    disabled={isPending}
+                    errorMessage={taxonomyError}
+                    isLoading={isTaxonomyLoading}
+                    onBusinessCategoryIdChange={handleBusinessCategoryIdChange}
+                    onRelatedCategoriesReasoningChange={
+                      setRelatedCategoriesReasoning
+                    }
+                    onRetry={retryTaxonomy}
+                    onSubcategoryChange={setSubcategory}
+                    onToggleRelatedCategory={handleToggleRelatedCategory}
+                    relatedCategoriesReasoning={relatedCategoriesReasoning}
+                    relatedCategoryIds={relatedCategoryIds}
+                    subcategory={subcategory}
                   />
 
                   <div className="flex flex-col gap-4 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">

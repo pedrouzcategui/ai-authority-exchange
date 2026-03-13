@@ -16,7 +16,11 @@ type CreateBusinessPayload = {
 };
 
 type UpdateBusinessPayload = CreateBusinessPayload & {
+  businessCategoryId?: unknown;
   businessId?: unknown;
+  relatedCategoriesReasoning?: unknown;
+  relatedCategoryIds?: unknown;
+  subcategory?: unknown;
 };
 
 const hasProtocolPattern = /^[a-z][a-z\d+.-]*:\/\//i;
@@ -144,6 +148,65 @@ function parsePositiveInteger(value: unknown) {
   }
 
   return parsedValue;
+}
+
+function normalizeNullablePositiveInteger(value: unknown) {
+  if (value === null || value === undefined || value === "") {
+    return { isValid: true, value: null } as const;
+  }
+
+  const parsedValue = parsePositiveInteger(value);
+
+  if (parsedValue === null) {
+    return { isValid: false, value: null } as const;
+  }
+
+  return { isValid: true, value: parsedValue } as const;
+}
+
+function normalizeNullableText(value: unknown) {
+  if (value === null || value === undefined || value === "") {
+    return { isValid: true, value: null } as const;
+  }
+
+  if (typeof value !== "string") {
+    return { isValid: false, value: null } as const;
+  }
+
+  const trimmedValue = value.trim();
+
+  return {
+    isValid: true,
+    value: trimmedValue.length > 0 ? trimmedValue : null,
+  } as const;
+}
+
+function normalizeRelatedCategoryIds(value: unknown) {
+  if (value === null) {
+    return { isValid: true, value: [] } as const;
+  }
+
+  if (!Array.isArray(value)) {
+    return { isValid: false, value: [] } as const;
+  }
+
+  const normalizedIds: number[] = [];
+  const seenIds = new Set<number>();
+
+  for (const item of value) {
+    const parsedValue = parsePositiveInteger(item);
+
+    if (parsedValue === null) {
+      return { isValid: false, value: [] } as const;
+    }
+
+    if (!seenIds.has(parsedValue)) {
+      seenIds.add(parsedValue);
+      normalizedIds.push(parsedValue);
+    }
+  }
+
+  return { isValid: true, value: normalizedIds } as const;
 }
 
 async function resolveRetiredRoundBatchId(sequenceNumber: number | null) {
@@ -340,6 +403,22 @@ export async function PATCH(request: Request) {
   const businessId = parseNumericId(payload.businessId);
   const name = normalizeString(payload.name);
   const role = normalizeRole(payload.role);
+  const hasBusinessCategoryId = Object.prototype.hasOwnProperty.call(
+    payload,
+    "businessCategoryId",
+  );
+  const hasRelatedCategoriesReasoning = Object.prototype.hasOwnProperty.call(
+    payload,
+    "relatedCategoriesReasoning",
+  );
+  const hasRelatedCategoryIds = Object.prototype.hasOwnProperty.call(
+    payload,
+    "relatedCategoryIds",
+  );
+  const hasSubcategory = Object.prototype.hasOwnProperty.call(
+    payload,
+    "subcategory",
+  );
   const legacyIsActiveOnAiAuthorityExchange = normalizeOptionalBoolean(
     payload.isActiveOnAiAuthorityExchange,
   );
@@ -353,6 +432,18 @@ export async function PATCH(request: Request) {
   const retiredRoundSequenceNumber = parsePositiveInteger(
     payload.aiAuthorityExchangeRetiredRoundSequenceNumber,
   );
+  const businessCategoryId = hasBusinessCategoryId
+    ? normalizeNullablePositiveInteger(payload.businessCategoryId)
+    : null;
+  const relatedCategoriesReasoning = hasRelatedCategoriesReasoning
+    ? normalizeNullableText(payload.relatedCategoriesReasoning)
+    : null;
+  const relatedCategoryIds = hasRelatedCategoryIds
+    ? normalizeRelatedCategoryIds(payload.relatedCategoryIds)
+    : null;
+  const subcategory = hasSubcategory
+    ? normalizeNullableText(payload.subcategory)
+    : null;
   const websiteUrl = normalizeWebsiteUrl(payload.websiteUrl);
 
   if (
@@ -395,12 +486,29 @@ export async function PATCH(request: Request) {
     );
   }
 
+  if (
+    (businessCategoryId && !businessCategoryId.isValid) ||
+    (subcategory && !subcategory.isValid) ||
+    (relatedCategoryIds && !relatedCategoryIds.isValid) ||
+    (relatedCategoriesReasoning && !relatedCategoriesReasoning.isValid)
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "Please provide valid business taxonomy values before saving this business.",
+      },
+      { status: 400 },
+    );
+  }
+
   try {
     const [currentBusiness, retiredRoundBatchId] = await Promise.all([
       prisma.business.findUnique({
         select: {
           aiAuthorityExchangeJoinedAt: true,
+          business_category_id: true,
           id: true,
+          related_category_ids: true,
         },
         where: {
           id: businessId,
@@ -425,26 +533,92 @@ export async function PATCH(request: Request) {
       );
     }
 
+    const effectiveBusinessCategoryId = hasBusinessCategoryId
+      ? businessCategoryId!.value
+      : currentBusiness.business_category_id;
+    const nextRelatedCategoryIds = hasRelatedCategoryIds
+      ? relatedCategoryIds!.value.filter(
+          (categoryId) => categoryId !== effectiveBusinessCategoryId,
+        )
+      : hasBusinessCategoryId && effectiveBusinessCategoryId !== null
+        ? currentBusiness.related_category_ids.filter(
+            (categoryId) => categoryId !== effectiveBusinessCategoryId,
+          )
+        : currentBusiness.related_category_ids;
+    const referencedCategoryIds = new Set<number>();
+
+    if (hasBusinessCategoryId && businessCategoryId!.value !== null) {
+      referencedCategoryIds.add(businessCategoryId!.value);
+    }
+
+    if (hasRelatedCategoryIds) {
+      for (const categoryId of nextRelatedCategoryIds) {
+        referencedCategoryIds.add(categoryId);
+      }
+    }
+
+    if (referencedCategoryIds.size > 0) {
+      const existingCategories = await prisma.business_categories.findMany({
+        select: {
+          id: true,
+        },
+        where: {
+          id: {
+            in: [...referencedCategoryIds],
+          },
+        },
+      });
+
+      if (existingCategories.length !== referencedCategoryIds.size) {
+        return NextResponse.json(
+          {
+            error:
+              "One or more selected business categories are no longer available.",
+          },
+          { status: 400 },
+        );
+      }
+    }
+
     const exchangeLifecycleFields = buildExchangeLifecycleFields({
       currentJoinedAt: currentBusiness.aiAuthorityExchangeJoinedAt,
       retiredAt: retiredAt.value,
       retiredRoundBatchId,
       status: exchangeParticipationStatus,
     });
+    const updateData: Prisma.BusinessUpdateInput = {
+      aiAuthorityExchangeJoinedAt:
+        exchangeLifecycleFields.aiAuthorityExchangeJoinedAt,
+      aiAuthorityExchangeRetiredAt:
+        exchangeLifecycleFields.aiAuthorityExchangeRetiredAt,
+      aiAuthorityExchangeRetiredInRoundBatchId:
+        exchangeLifecycleFields.aiAuthorityExchangeRetiredInRoundBatchId,
+      business: name,
+      clientType: role,
+      isActiveOnAiAuthorityExchange:
+        exchangeLifecycleFields.isActiveOnAiAuthorityExchange,
+      websiteUrl,
+    };
+
+    if (hasBusinessCategoryId) {
+      updateData.business_category_id = businessCategoryId!.value;
+    }
+
+    if (hasSubcategory) {
+      updateData.subcategory = subcategory!.value;
+    }
+
+    if (hasRelatedCategoryIds || hasBusinessCategoryId) {
+      updateData.related_category_ids = nextRelatedCategoryIds;
+    }
+
+    if (hasRelatedCategoriesReasoning) {
+      updateData.related_categories_reasoning =
+        relatedCategoriesReasoning!.value;
+    }
+
     const business = await prisma.business.update({
-      data: {
-        aiAuthorityExchangeJoinedAt:
-          exchangeLifecycleFields.aiAuthorityExchangeJoinedAt,
-        aiAuthorityExchangeRetiredAt:
-          exchangeLifecycleFields.aiAuthorityExchangeRetiredAt,
-        aiAuthorityExchangeRetiredInRoundBatchId:
-          exchangeLifecycleFields.aiAuthorityExchangeRetiredInRoundBatchId,
-        business: name,
-        clientType: role,
-        isActiveOnAiAuthorityExchange:
-          exchangeLifecycleFields.isActiveOnAiAuthorityExchange,
-        websiteUrl,
-      },
+      data: updateData,
       select: {
         business: true,
         id: true,
