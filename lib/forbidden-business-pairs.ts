@@ -7,6 +7,11 @@ type ForbiddenBusinessPairRow = {
   counterpartBusinessId: number;
 };
 
+type ForbiddenBusinessPairIdsRow = {
+  higherBusinessId: number;
+  lowerBusinessId: number;
+};
+
 export function normalizeForbiddenBusinessPair(
   firstBusinessId: number,
   secondBusinessId: number,
@@ -36,6 +41,46 @@ export async function getForbiddenBusinessIdsForBusiness(
   `);
 
   return pairs.map((pair) => pair.counterpartBusinessId);
+}
+
+export async function getForbiddenBusinessIdsByBusinessIds(
+  businessIds: number[],
+  database: DatabaseClient = prisma,
+) {
+  const uniqueBusinessIds = [...new Set(businessIds)].filter(
+    (businessId) => Number.isInteger(businessId) && businessId > 0,
+  );
+
+  if (uniqueBusinessIds.length === 0) {
+    return new Map<number, number[]>();
+  }
+
+  const pairs = await database.$queryRaw<ForbiddenBusinessPairIdsRow[]>(
+    Prisma.sql`
+      SELECT
+        higher_business_id AS "higherBusinessId",
+        lower_business_id AS "lowerBusinessId"
+      FROM ai_authority_exchange_forbidden_business_pairs
+      WHERE lower_business_id IN (${Prisma.join(uniqueBusinessIds)})
+        OR higher_business_id IN (${Prisma.join(uniqueBusinessIds)})
+      ORDER BY lower_business_id ASC, higher_business_id ASC
+    `,
+  );
+
+  const forbiddenBusinessIdsByBusinessId = new Map(
+    uniqueBusinessIds.map((businessId) => [businessId, [] as number[]] as const),
+  );
+
+  for (const pair of pairs) {
+    forbiddenBusinessIdsByBusinessId
+      .get(pair.lowerBusinessId)
+      ?.push(pair.higherBusinessId);
+    forbiddenBusinessIdsByBusinessId
+      .get(pair.higherBusinessId)
+      ?.push(pair.lowerBusinessId);
+  }
+
+  return forbiddenBusinessIdsByBusinessId;
 }
 
 export async function replaceForbiddenBusinessesForBusiness(

@@ -32,6 +32,7 @@ import type {
 type RoundDraftTableProps = {
   assignmentRows: RoundDraftAssignmentRow[];
   canDeleteAssignments: boolean;
+  forbiddenBusinessIdsByBusinessId: Record<number, number[]>;
   roundBatchId: number;
   roundSequenceNumber: number | null;
   rows: RoundDraftRow[];
@@ -267,6 +268,7 @@ function buildDraftOverviewRows(params: {
 export function RoundDraftTable({
   assignmentRows,
   canDeleteAssignments,
+  forbiddenBusinessIdsByBusinessId,
   roundBatchId,
   roundSequenceNumber,
   rows,
@@ -291,6 +293,14 @@ export function RoundDraftTable({
   const businessById = new Map(
     selectableBusinesses.map(
       (business) => [business.businessId, business] as const,
+    ),
+  );
+  const forbiddenBusinessIdSetByBusinessId = new Map(
+    Object.entries(forbiddenBusinessIdsByBusinessId).map(
+      ([businessId, forbiddenBusinessIds]) => [
+        Number.parseInt(businessId, 10),
+        new Set(forbiddenBusinessIds),
+      ] as const,
     ),
   );
 
@@ -392,6 +402,17 @@ export function RoundDraftTable({
     });
   }
 
+  function isForbiddenPair(hostBusinessId: number, guestBusinessId: number) {
+    return (
+      forbiddenBusinessIdSetByBusinessId
+        .get(hostBusinessId)
+        ?.has(guestBusinessId) === true ||
+      forbiddenBusinessIdSetByBusinessId
+        .get(guestBusinessId)
+        ?.has(hostBusinessId) === true
+    );
+  }
+
   function getHostOptions(row: EditableAssignmentRow) {
     const currentHostBusinessId = parseSelectedId(row.hostBusinessId);
     const currentGuestBusinessId = parseSelectedId(row.guestBusinessId);
@@ -404,6 +425,13 @@ export function RoundDraftTable({
       if (
         currentGuestBusinessId !== null &&
         business.businessId === currentGuestBusinessId
+      ) {
+        return false;
+      }
+
+      if (
+        currentGuestBusinessId !== null &&
+        isForbiddenPair(business.businessId, currentGuestBusinessId)
       ) {
         return false;
       }
@@ -441,6 +469,13 @@ export function RoundDraftTable({
 
       if (
         currentHostBusinessId !== null &&
+        isForbiddenPair(currentHostBusinessId, business.businessId)
+      ) {
+        return false;
+      }
+
+      if (
+        currentHostBusinessId !== null &&
         hasPairConflict(
           row.clientId,
           currentHostBusinessId,
@@ -465,6 +500,10 @@ export function RoundDraftTable({
 
     if (hostBusinessId === guestBusinessId) {
       return "A business cannot be matched to itself.";
+    }
+
+    if (isForbiddenPair(hostBusinessId, guestBusinessId)) {
+      return "This business pair is blocked in forbidden matches.";
     }
 
     if (
@@ -843,7 +882,7 @@ export function RoundDraftTable({
 
             <p className="text-xs leading-6 text-muted">
               {validationMessage ??
-                "The server will still block self-pairs, duplicate rows, and reversed pairs."}
+                "The server will still block forbidden pairs, self-pairs, duplicate rows, and reversed pairs."}
             </p>
           </div>
 

@@ -8,6 +8,7 @@ import type {
 } from "@/generated/prisma/client";
 import { getRoundMatchMethod } from "@/lib/round-match-method";
 import { isExchangeParticipationActive } from "@/lib/ai-authority-exchange";
+import { getForbiddenBusinessIdsByBusinessIds } from "@/lib/forbidden-business-pairs";
 import { prisma, withDatabaseRetry } from "@/lib/prisma";
 
 type RoundDatabaseClient = PrismaClient | Prisma.TransactionClient;
@@ -155,6 +156,7 @@ type RoundBatchSummaryRecord = {
 
 type HistoricalContext = {
   balanceByBusinessId: Map<number, number | null>;
+  forbiddenBusinessIdsByBusinessId: Map<number, Set<number>>;
   pairedBusinessIdsByBusinessId: Map<number, Set<number>>;
 };
 
@@ -238,6 +240,7 @@ export type RoundBatchView = {
   assignmentRows: RoundDraftAssignmentRow[];
   batch: RoundBatchSummary | null;
   batches: RoundBatchSummary[];
+  forbiddenBusinessIdsByBusinessId: Record<number, number[]>;
   rows: RoundDraftRow[];
   selectableBusinesses: RoundDraftOption[];
   unresolvedBusinessCount: number;
@@ -374,8 +377,52 @@ function getDraftCandidateScore(
   );
 }
 
+function toForbiddenBusinessIdSetMap(
+  forbiddenBusinessIdsByBusinessId: Map<number, number[]>,
+) {
+  return new Map(
+    Array.from(forbiddenBusinessIdsByBusinessId.entries(), ([businessId, ids]) => [
+      businessId,
+      new Set(ids),
+    ]),
+  );
+}
+
+function serializeForbiddenBusinessIdsByBusinessId(
+  forbiddenBusinessIdsByBusinessId: Map<number, number[]>,
+) {
+  return Object.fromEntries(
+    Array.from(forbiddenBusinessIdsByBusinessId.entries(), ([businessId, ids]) => [
+      businessId,
+      ids,
+    ]),
+  ) as Record<number, number[]>;
+}
+
+function isForbiddenRoundPair(params: {
+  forbiddenBusinessIdsByBusinessId: Map<number, Set<number>>;
+  guestBusinessId: number;
+  hostBusinessId: number;
+}) {
+  const {
+    forbiddenBusinessIdsByBusinessId,
+    guestBusinessId,
+    hostBusinessId,
+  } = params;
+
+  return (
+    forbiddenBusinessIdsByBusinessId
+      .get(hostBusinessId)
+      ?.has(guestBusinessId) === true ||
+    forbiddenBusinessIdsByBusinessId
+      .get(guestBusinessId)
+      ?.has(hostBusinessId) === true
+  );
+}
+
 function buildHistoricalContext(
   activeBusinesses: RoundBusiness[],
+  forbiddenBusinessIdsByBusinessId: Map<number, Set<number>>,
   matches: HistoricalMatchRecord[],
 ): HistoricalContext {
   const pairedBusinessIdsByBusinessId = new Map<number, Set<number>>();
@@ -417,6 +464,7 @@ function buildHistoricalContext(
 
   return {
     balanceByBusinessId,
+    forbiddenBusinessIdsByBusinessId,
     pairedBusinessIdsByBusinessId,
   };
 }
@@ -494,6 +542,7 @@ function isDirectedAssignmentEligible(params: {
   draftState: RoundDraftState;
   enforceExchangeRules?: boolean;
   enforceSingleSlotPerDirection?: boolean;
+  forbiddenBusinessIdsByBusinessId: Map<number, Set<number>>;
   guestBusinessId: number;
   hostBusinessId: number;
   pairedBusinessIdsByBusinessId: Map<number, Set<number>>;
@@ -505,6 +554,7 @@ function isDirectedAssignmentEligible(params: {
     draftState,
     enforceExchangeRules = true,
     enforceSingleSlotPerDirection = false,
+    forbiddenBusinessIdsByBusinessId,
     guestBusinessId,
     hostBusinessId,
     pairedBusinessIdsByBusinessId,
@@ -526,6 +576,16 @@ function isDirectedAssignmentEligible(params: {
   const relation = getRoundBusinessRelation(hostBusiness, guestBusiness);
 
   if (requiredRelation && relation !== requiredRelation) {
+    return false;
+  }
+
+  if (
+    isForbiddenRoundPair({
+      forbiddenBusinessIdsByBusinessId,
+      guestBusinessId,
+      hostBusinessId,
+    })
+  ) {
     return false;
   }
 
@@ -596,6 +656,7 @@ function buildCandidateAssignmentsForRelation(params: {
   activeBusinesses: RoundBusiness[];
   balanceByBusinessId: Map<number, number | null>;
   draftState: RoundDraftState;
+  forbiddenBusinessIdsByBusinessId: Map<number, Set<number>>;
   pairedBusinessIdsByBusinessId: Map<number, Set<number>>;
   relation: RoundBusinessRelation;
   roundBusinessesById: Map<number, RoundBusiness>;
@@ -604,6 +665,7 @@ function buildCandidateAssignmentsForRelation(params: {
     activeBusinesses,
     balanceByBusinessId,
     draftState,
+    forbiddenBusinessIdsByBusinessId,
     pairedBusinessIdsByBusinessId,
     relation,
     roundBusinessesById,
@@ -619,6 +681,11 @@ function buildCandidateAssignmentsForRelation(params: {
       if (
         draftState.assignmentByGuestId.has(guestBusiness.id) ||
         hostBusiness.id === guestBusiness.id ||
+        isForbiddenRoundPair({
+          forbiddenBusinessIdsByBusinessId,
+          guestBusinessId: guestBusiness.id,
+          hostBusinessId: hostBusiness.id,
+        }) ||
         pairedBusinessIdsByBusinessId
           .get(hostBusiness.id)
           ?.has(guestBusiness.id)
@@ -649,11 +716,13 @@ function buildCandidateAssignmentsForRelation(params: {
 function buildAutomaticRoundAssignments(params: {
   activeBusinesses: RoundBusiness[];
   balanceByBusinessId: Map<number, number | null>;
+  forbiddenBusinessIdsByBusinessId: Map<number, Set<number>>;
   pairedBusinessIdsByBusinessId: Map<number, Set<number>>;
 }) {
   const {
     activeBusinesses,
     balanceByBusinessId,
+    forbiddenBusinessIdsByBusinessId,
     pairedBusinessIdsByBusinessId,
   } = params;
   const roundBusinessesById = new Map(
@@ -668,6 +737,7 @@ function buildAutomaticRoundAssignments(params: {
       activeBusinesses,
       balanceByBusinessId,
       draftState: selectedState,
+      forbiddenBusinessIdsByBusinessId,
       pairedBusinessIdsByBusinessId,
       relation,
       roundBusinessesById,
@@ -678,6 +748,7 @@ function buildAutomaticRoundAssignments(params: {
         !isDirectedAssignmentEligible({
           draftState: selectedState,
           enforceSingleSlotPerDirection: true,
+          forbiddenBusinessIdsByBusinessId,
           guestBusinessId: candidateAssignment.guestBusinessId,
           hostBusinessId: candidateAssignment.hostBusinessId,
           pairedBusinessIdsByBusinessId,
@@ -917,8 +988,14 @@ async function getRoundManagementContext(
     database,
     activeBusinesses.map((business) => business.id),
   );
+  const forbiddenBusinessIdsByBusinessId =
+    await getForbiddenBusinessIdsByBusinessIds(
+      selectableBusinesses.map((business) => business.id),
+      database,
+    );
   const historicalContext = buildHistoricalContext(
     activeBusinesses,
+    toForbiddenBusinessIdSetMap(forbiddenBusinessIdsByBusinessId),
     historicalMatches,
   );
 
@@ -928,6 +1005,7 @@ async function getRoundManagementContext(
       toRoundAssignmentRecord(assignment),
     ),
     batch,
+    forbiddenBusinessIdsByBusinessId,
     historicalContext,
     selectableBusinesses,
   };
@@ -980,6 +1058,7 @@ export const getRoundBatchView = cache(async (requestedBatchId?: number) => {
       assignmentRows: [],
       batch: null,
       batches,
+      forbiddenBusinessIdsByBusinessId: {},
       rows: activeBusinesses.map((business) => ({
         businessId: business.id,
         businessName: business.business,
@@ -1000,7 +1079,7 @@ export const getRoundBatchView = cache(async (requestedBatchId?: number) => {
       ? batches[0]
       : batches.find((batch) => batch.sequenceNumber === requestedBatchId) ??
         batches.find((batch) => batch.id === requestedBatchId)) ?? batches[0];
-  const [{ assignments }, appliedMatches] = await Promise.all([
+  const [{ assignments, forbiddenBusinessIdsByBusinessId }, appliedMatches] = await Promise.all([
     getRoundManagementContext(selectedBatch.id),
     selectedBatch.status === "applied"
       ? prisma.match.findMany({
@@ -1107,6 +1186,10 @@ export const getRoundBatchView = cache(async (requestedBatchId?: number) => {
     assignmentRows,
     batch: selectedBatch,
     batches,
+    forbiddenBusinessIdsByBusinessId:
+      serializeForbiddenBusinessIdsByBusinessId(
+        forbiddenBusinessIdsByBusinessId,
+      ),
     rows,
     selectableBusinesses: selectableBusinesses.map((business) =>
       toRoundDraftOption(business),
@@ -1151,13 +1234,21 @@ export async function createRoundDraftBatch() {
         transaction,
         activeBusinesses.map((business) => business.id),
       );
+      const forbiddenBusinessIdsByBusinessId =
+        await getForbiddenBusinessIdsByBusinessIds(
+          activeBusinesses.map((business) => business.id),
+          transaction,
+        );
       const historicalContext = buildHistoricalContext(
         activeBusinesses,
+        toForbiddenBusinessIdSetMap(forbiddenBusinessIdsByBusinessId),
         historicalMatches,
       );
       const generatedAssignments = buildAutomaticRoundAssignments({
         activeBusinesses,
         balanceByBusinessId: historicalContext.balanceByBusinessId,
+        forbiddenBusinessIdsByBusinessId:
+          historicalContext.forbiddenBusinessIdsByBusinessId,
         pairedBusinessIdsByBusinessId:
           historicalContext.pairedBusinessIdsByBusinessId,
       });
@@ -1228,13 +1319,21 @@ export async function generateRoundDraftForBatch(roundBatchId: number) {
       database,
       activeBusinesses.map((business) => business.id),
     );
+    const forbiddenBusinessIdsByBusinessId =
+      await getForbiddenBusinessIdsByBusinessIds(
+        activeBusinesses.map((business) => business.id),
+        database,
+      );
     const historicalContext = buildHistoricalContext(
       activeBusinesses,
+      toForbiddenBusinessIdSetMap(forbiddenBusinessIdsByBusinessId),
       historicalMatches,
     );
     const generatedAssignments = buildAutomaticRoundAssignments({
       activeBusinesses,
       balanceByBusinessId: historicalContext.balanceByBusinessId,
+      forbiddenBusinessIdsByBusinessId:
+        historicalContext.forbiddenBusinessIdsByBusinessId,
       pairedBusinessIdsByBusinessId:
         historicalContext.pairedBusinessIdsByBusinessId,
     });
@@ -1310,10 +1409,25 @@ export async function updateRoundAssignment(
       direction === "publishedFor" ? counterpartBusinessId : businessId;
 
     if (
+      isForbiddenRoundPair({
+        forbiddenBusinessIdsByBusinessId:
+          historicalContext.forbiddenBusinessIdsByBusinessId,
+        guestBusinessId,
+        hostBusinessId,
+      })
+    ) {
+      throw new Error(
+        "That draft pairing is blocked because this business pair is forbidden.",
+      );
+    }
+
+    if (
       !isDirectedAssignmentEligible({
         currentAssignmentId: currentAssignment?.id,
         draftState,
         enforceExchangeRules: false,
+        forbiddenBusinessIdsByBusinessId:
+          historicalContext.forbiddenBusinessIdsByBusinessId,
         guestBusinessId,
         hostBusinessId,
         pairedBusinessIdsByBusinessId:
@@ -1400,10 +1514,25 @@ export async function upsertRoundAssignmentRow(
     }
 
     if (
+      isForbiddenRoundPair({
+        forbiddenBusinessIdsByBusinessId:
+          historicalContext.forbiddenBusinessIdsByBusinessId,
+        guestBusinessId,
+        hostBusinessId,
+      })
+    ) {
+      throw new Error(
+        "That draft pairing is blocked because this business pair is forbidden.",
+      );
+    }
+
+    if (
       !isDirectedAssignmentEligible({
         currentAssignmentId: currentAssignment?.id,
         draftState: buildRoundDraftState(assignments),
         enforceExchangeRules: false,
+        forbiddenBusinessIdsByBusinessId:
+          historicalContext.forbiddenBusinessIdsByBusinessId,
         guestBusinessId,
         hostBusinessId,
         pairedBusinessIdsByBusinessId:

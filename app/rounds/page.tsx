@@ -162,6 +162,9 @@ export default async function RoundsPage({ searchParams }: RoundsPageProps) {
         <RoundDraftTable
           assignmentRows={roundBatchView.assignmentRows}
           canDeleteAssignments={isAdmin}
+          forbiddenBusinessIdsByBusinessId={
+            roundBatchView.forbiddenBusinessIdsByBusinessId
+          }
           key={roundBatchView.batch.id}
           roundBatchId={roundBatchView.batch.id}
           roundSequenceNumber={roundBatchView.batch.sequenceNumber}
