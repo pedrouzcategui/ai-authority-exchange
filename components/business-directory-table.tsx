@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useDeferredValue, useState } from "react";
 import { BusinessDirectoryExchangeSelect } from "@/components/business-directory-exchange-select";
 import { getBusinessProfileHref } from "@/lib/business-profile-route";
 import type { BusinessDirectoryRow } from "@/lib/matches";
@@ -22,6 +22,10 @@ function formatCellValue(value: string | null) {
   return value && value.trim().length > 0 ? value : "Not set";
 }
 
+function normalizeSearchValue(value: string | null) {
+  return value?.trim().toLocaleLowerCase() ?? "";
+}
+
 function getCategoryFilterLabel(selectedCategories: string[]) {
   if (selectedCategories.length === 0) {
     return "All categories";
@@ -37,9 +41,12 @@ function getCategoryFilterLabel(selectedCategories: string[]) {
 export function BusinessDirectoryTable({
   businesses,
 }: BusinessDirectoryTableProps) {
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [exchangeFilter, setExchangeFilter] = useState<ExchangeFilter>("all");
   const [websiteFilter, setWebsiteFilter] = useState<WebsiteFilter>("all");
+  const deferredSearchQuery = useDeferredValue(searchQuery);
+  const normalizedSearchQuery = normalizeSearchValue(deferredSearchQuery);
 
   const categories = Array.from(
     new Set(
@@ -51,6 +58,17 @@ export function BusinessDirectoryTable({
 
   const selectedCategorySet = new Set(selectedCategories);
   const filteredBusinesses = businesses.filter((business) => {
+    const matchesSearch =
+      normalizedSearchQuery.length === 0 ||
+      [
+        business.business,
+        business.businessCategoryName,
+        business.subcategory,
+        business.websiteUrl,
+      ].some((value) =>
+        normalizeSearchValue(value).includes(normalizedSearchQuery),
+      );
+
     const matchesCategory =
       selectedCategorySet.size === 0 ||
       (business.businessCategoryName !== null &&
@@ -66,7 +84,12 @@ export function BusinessDirectoryTable({
       (websiteFilter === "set" && business.websiteUrl !== null) ||
       (websiteFilter === "not-set" && business.websiteUrl === null);
 
-    return matchesCategory && matchesExchange && matchesWebsite;
+    return (
+      matchesSearch &&
+      matchesCategory &&
+      matchesExchange &&
+      matchesWebsite
+    );
   });
 
   function toggleCategory(category: string) {
@@ -80,6 +103,7 @@ export function BusinessDirectoryTable({
   }
 
   function clearFilters() {
+    setSearchQuery("");
     setSelectedCategories([]);
     setExchangeFilter("all");
     setWebsiteFilter("all");
@@ -98,12 +122,25 @@ export function BusinessDirectoryTable({
           </h2>
         </div>
         <p className="max-w-2xl text-sm leading-7 text-muted sm:text-base lg:text-right">
-          Filter the directory by category, exchange participation, or whether
-          a website URL has been saved.
+          Search by business, category, subcategory, or website, then narrow
+          the list by exchange participation and saved website status.
         </p>
       </div>
 
-      <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1.3fr)_220px_220px_auto]">
+      <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1.15fr)_220px_220px_auto]">
+        <label className="flex flex-col gap-2">
+          <span className="flex min-h-10 items-end text-sm font-medium text-foreground">
+            Search
+          </span>
+          <input
+            className="min-h-12 w-full rounded-2xl border border-border bg-white/90 px-4 py-3 text-foreground outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Search businesses"
+            type="search"
+            value={searchQuery}
+          />
+        </label>
+
         <div className="relative">
           <span className="mb-2 flex min-h-10 items-end text-sm font-medium text-foreground">
             Category
@@ -214,6 +251,7 @@ export function BusinessDirectoryTable({
           <button
             className="inline-flex min-h-12 items-center justify-center rounded-full border border-border bg-white/80 px-5 py-3 text-sm font-medium text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-60"
             disabled={
+              searchQuery.trim().length === 0 &&
               selectedCategories.length === 0 &&
               exchangeFilter === "all" &&
               websiteFilter === "all"
@@ -232,7 +270,8 @@ export function BusinessDirectoryTable({
             No businesses match the current filters.
           </p>
           <p className="mt-2 text-sm leading-7 text-muted">
-            Adjust the selected categories, exchange state, or website filter.
+            Adjust the search, selected categories, exchange state, or website
+            filter.
           </p>
         </div>
       ) : (

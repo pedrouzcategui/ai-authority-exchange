@@ -586,7 +586,7 @@ export async function PATCH(request: Request) {
       retiredRoundBatchId,
       status: exchangeParticipationStatus,
     });
-    const updateData: Prisma.BusinessUpdateInput = {
+    const updateData: Prisma.BusinessUncheckedUpdateInput = {
       aiAuthorityExchangeJoinedAt:
         exchangeLifecycleFields.aiAuthorityExchangeJoinedAt,
       aiAuthorityExchangeRetiredAt:
