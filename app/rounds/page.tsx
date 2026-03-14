@@ -44,7 +44,7 @@ export default async function RoundsPage({ searchParams }: RoundsPageProps) {
   const latestBatchIsDraft = roundBatchView.batches[0]?.status === "draft";
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-8 px-6 py-10 sm:px-10 lg:px-12 lg:py-14">
+    <main className="mx-auto flex min-h-screen w-full max-w-8xl flex-col gap-8 px-6 py-10 sm:px-10 lg:px-12 lg:py-14">
       <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="space-y-4">
           <div className="space-y-3">

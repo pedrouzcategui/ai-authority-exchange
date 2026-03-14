@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 
 type ConfirmationDialogProps = {
   cancelLabel?: string;
@@ -63,7 +64,7 @@ export function ConfirmationDialog({
     return null;
   }
 
-  return (
+  const dialog = (
     <div
       aria-labelledby="confirmation-dialog-title"
       aria-modal="true"
@@ -117,4 +118,6 @@ export function ConfirmationDialog({
       </div>
     </div>
   );
+
+  return createPortal(dialog, document.body);
 }

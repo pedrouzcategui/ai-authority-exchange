@@ -8,6 +8,7 @@ import { MatchesFilterControls } from "@/components/matches-filter-controls";
 import { getBusinessProfileHref } from "@/lib/business-profile-route";
 import {
   getBusinesses,
+  getBusinessContacts,
   getExplicitlyActiveExchangeBusinesses,
   getBusinessRelationshipRows,
   type BusinessOption,
@@ -126,7 +127,7 @@ function RelationshipPills({
               ? "inline-flex items-center rounded-full border border-accent/20 bg-accent/10 px-2.5 py-0.5 text-[13px] font-medium text-accent-strong"
               : tone === "danger"
                 ? "inline-flex items-center rounded-full border border-danger-strong/15 bg-danger-soft px-2.5 py-0.5 text-[13px] font-medium text-danger-strong"
-              : "inline-flex items-center rounded-full border border-border bg-brand-deep-soft/55 px-2.5 py-0.5 text-[13px] font-medium text-foreground"
+                : "inline-flex items-center rounded-full border border-border bg-brand-deep-soft/55 px-2.5 py-0.5 text-[13px] font-medium text-foreground"
           }
         >
           {business.business}
@@ -151,11 +152,13 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
     businessFilter === undefined ? requestedGuestFilter : undefined;
   const requestedPage = parsePageNumber(resolvedSearchParams.page);
   const perPage = parseResultsPerPage(resolvedSearchParams.perPage);
-  const [businesses, relationshipRows, allBusinesses] = await Promise.all([
-    getExplicitlyActiveExchangeBusinesses(),
-    getBusinessRelationshipRows(hostFilter, guestFilter, businessFilter),
-    getBusinesses(),
-  ]);
+  const [businesses, relationshipRows, allBusinesses, businessContacts] =
+    await Promise.all([
+      getExplicitlyActiveExchangeBusinesses(),
+      getBusinessRelationshipRows(hostFilter, guestFilter, businessFilter),
+      getBusinesses(),
+      getBusinessContacts(),
+    ]);
   const businessById = new Map(
     businesses.map((business) => [business.id, business.business] as const),
   );
@@ -218,7 +221,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
   })();
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-8 px-6 py-10 sm:px-10 lg:px-12 lg:py-14">
+    <main className="mx-auto flex min-h-screen w-full max-w-8xl flex-col gap-8 px-6 py-10 sm:px-10 lg:px-12 lg:py-14">
       <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm font-medium tracking-[0.16em] text-accent uppercase">
@@ -227,7 +230,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
           <h1 className="mt-3 text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
             Business publishing relationships
           </h1>
-          <p className="mt-3 max-w-2xl text-base leading-7 text-muted sm:text-lg">
+          <p className="mt-3 max-w-3xl text-base leading-7 text-muted sm:text-lg">
             Each row shows the business, who published them, and who they were
             published for.
           </p>
@@ -271,9 +274,9 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
         </div>
       </section>
 
-      <section className="overflow-hidden rounded-4xl border border-border bg-surface shadow-(--shadow) backdrop-blur-md">
+      <section className="rounded-4xl border border-border bg-surface p-6 shadow-(--shadow) backdrop-blur-md sm:p-8">
         {businesses.length === 0 ? (
-          <div className="px-6 py-16 text-center sm:px-10">
+          <div className="rounded-4xl border border-dashed border-border bg-white/60 px-6 py-14 text-center">
             <p className="text-lg font-medium text-foreground">
               No businesses available yet.
             </p>
@@ -283,7 +286,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
             </p>
           </div>
         ) : relationshipRows.length === 0 ? (
-          <div className="px-6 py-16 text-center sm:px-10">
+          <div className="rounded-4xl border border-dashed border-border bg-white/60 px-6 py-14 text-center">
             <p className="text-lg font-medium text-foreground">
               No businesses matched those filters.
             </p>
@@ -293,88 +296,91 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full border-separate border-spacing-0">
-              <thead>
-                <tr className="bg-brand-deep-soft/75 text-left text-sm font-medium tracking-[0.16em] text-muted uppercase">
-                  <th className="px-6 py-4 sm:px-8">Business</th>
-                  <th className="px-6 py-4 sm:px-8">Client Type</th>
-                  <th className="px-6 py-4 sm:px-8">Published For</th>
-                  <th className="px-6 py-4 sm:px-8">Published By</th>
-                  <th className="px-6 py-4 sm:px-8">Forbidden Competitors</th>
-                  <th className="w-42 px-6 py-4 text-right sm:px-8">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedRows.map((row) => (
-                  <tr key={row.id} className="bg-white/65 align-top">
-                    <td className="border-t border-border px-6 py-5 sm:px-8">
-                      <Link
-                        className="font-semibold text-foreground transition hover:text-accent"
-                        href={getBusinessProfileHref(row.id)}
-                      >
-                        {row.business}
-                      </Link>
-                    </td>
-                    <td className="border-t border-border px-6 py-5 sm:px-8">
-                      <BusinessRoleBadge role={row.clientType} />
-                    </td>
-                    <td className="border-t border-border px-6 py-5 sm:px-8">
-                      <RelationshipPills
-                        businesses={row.publishedFor}
-                        emptyLabel="Not published for any businesses yet."
-                        tone="accent"
-                      />
-                    </td>
-                    <td className="border-t border-border px-6 py-5 sm:px-8">
-                      <RelationshipPills
-                        businesses={row.publishedBy}
-                        emptyLabel="No publishers yet."
-                        tone="neutral"
-                      />
-                    </td>
-                    <td className="border-t border-border px-6 py-5 sm:px-8">
-                      <RelationshipPills
-                        businesses={row.forbiddenBusinesses}
-                        emptyLabel="No forbidden competitors."
-                        tone="danger"
-                      />
-                    </td>
-                    <td className="w-42 border-t border-border px-6 py-5 text-right align-middle sm:px-8">
-                      <div className="flex flex-nowrap justify-end gap-2 whitespace-nowrap">
-                        <span className="group relative inline-flex">
-                          <Link
-                            aria-label="Find matches"
-                            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-white/80 text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
-                            href={`/matches/${row.id}`}
-                            prefetch={false}
-                          >
-                            <FindMatchesIcon />
-                          </Link>
-                          <ActionTooltip label="Find matches" />
-                        </span>
-                        <EditBusinessModal
-                          business={row}
-                          triggerVariant="icon"
-                        />
-                        <ManageBusinessRelationshipsModal
-                          business={row}
-                          businesses={allBusinesses}
-                          publishedBy={row.publishedBy}
-                          publishedFor={row.publishedFor}
-                          triggerVariant="icon"
-                        />
-                      </div>
-                    </td>
+          <div className="overflow-hidden rounded-4xl border border-border bg-white/72">
+            <div className="overflow-x-auto">
+              <table className="min-w-full border-separate border-spacing-0">
+                <thead>
+                  <tr className="bg-brand-deep-soft/75 text-left text-sm font-medium tracking-[0.16em] text-muted uppercase">
+                    <th className="px-6 py-4 sm:px-8">Business</th>
+                    <th className="px-6 py-4 sm:px-8">Client Type</th>
+                    <th className="px-6 py-4 sm:px-8">Published For</th>
+                    <th className="px-6 py-4 sm:px-8">Published By</th>
+                    <th className="px-6 py-4 sm:px-8">Forbidden Competitors</th>
+                    <th className="w-42 px-6 py-4 text-right sm:px-8">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {paginatedRows.map((row) => (
+                    <tr key={row.id} className="bg-white/65 align-top">
+                      <td className="border-t border-border px-6 py-5 sm:px-8">
+                        <Link
+                          className="font-semibold text-foreground transition hover:text-accent"
+                          href={getBusinessProfileHref(row.id)}
+                        >
+                          {row.business}
+                        </Link>
+                      </td>
+                      <td className="border-t border-border px-6 py-5 sm:px-8">
+                        <BusinessRoleBadge role={row.clientType} />
+                      </td>
+                      <td className="border-t border-border px-6 py-5 sm:px-8">
+                        <RelationshipPills
+                          businesses={row.publishedFor}
+                          emptyLabel="Not published for any businesses yet."
+                          tone="accent"
+                        />
+                      </td>
+                      <td className="border-t border-border px-6 py-5 sm:px-8">
+                        <RelationshipPills
+                          businesses={row.publishedBy}
+                          emptyLabel="No publishers yet."
+                          tone="neutral"
+                        />
+                      </td>
+                      <td className="border-t border-border px-6 py-5 sm:px-8">
+                        <RelationshipPills
+                          businesses={row.forbiddenBusinesses}
+                          emptyLabel="No forbidden competitors."
+                          tone="danger"
+                        />
+                      </td>
+                      <td className="w-42 border-t border-border px-6 py-5 text-right align-middle sm:px-8">
+                        <div className="flex flex-nowrap justify-end gap-2 whitespace-nowrap">
+                          <span className="group relative inline-flex">
+                            <Link
+                              aria-label="Find matches"
+                              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-white/80 text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
+                              href={`/matches/${row.id}`}
+                              prefetch={false}
+                            >
+                              <FindMatchesIcon />
+                            </Link>
+                            <ActionTooltip label="Find matches" />
+                          </span>
+                          <EditBusinessModal
+                            business={row}
+                            contacts={businessContacts}
+                            triggerVariant="icon"
+                          />
+                          <ManageBusinessRelationshipsModal
+                            business={row}
+                            businesses={allBusinesses}
+                            publishedBy={row.publishedBy}
+                            publishedFor={row.publishedFor}
+                            triggerVariant="icon"
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
         {relationshipRows.length > 0 && totalPages > 1 ? (
-          <div className="flex flex-col gap-4 border-t border-border px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+          <div className="mt-5 flex flex-col gap-4 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm leading-7 text-muted">
               Page {currentPage} of {totalPages}
             </p>

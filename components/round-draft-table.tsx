@@ -979,8 +979,8 @@ export function RoundDraftTable({
 
   return (
     <>
-      <section className="overflow-hidden rounded-4xl border border-border bg-surface shadow-(--shadow) backdrop-blur-md">
-        <div className="flex flex-col gap-4 border-b border-border px-6 py-5 sm:px-8">
+      <section className="rounded-4xl border border-border bg-surface p-6 shadow-(--shadow) backdrop-blur-md sm:p-8">
+        <div className="flex flex-col gap-4 border-b border-border pb-5">
           <div className="space-y-2">
             <p className="text-sm font-medium tracking-[0.16em] text-muted uppercase">
               Round Overview
@@ -1057,7 +1057,7 @@ export function RoundDraftTable({
         </div>
 
         {(isDraft ? visibleDraftOverviewRows.length : visibleRows.length) === 0 ? (
-          <div className="px-6 py-12 text-center sm:px-8">
+          <div className="mt-6 rounded-4xl border border-dashed border-border bg-white/60 px-6 py-12 text-center">
             <p className="text-lg font-medium text-foreground">
               {rows.length === 0
                 ? "No businesses are represented in this round yet."
@@ -1072,144 +1072,146 @@ export function RoundDraftTable({
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full border-separate border-spacing-0">
-              <thead>
-                <tr className="bg-brand-deep-soft/75 text-left text-xs font-semibold tracking-[0.16em] text-muted uppercase">
-                  <th className="px-5 py-4 sm:px-6">Business Name</th>
-                  <th className="px-5 py-4 sm:px-6">Published For</th>
-                  <th className="px-5 py-4 sm:px-6">Published By</th>
-                  {!isDraft ? (
-                    <th className="px-5 py-4 sm:px-6">Email Drafts</th>
-                  ) : null}
-                  <th className="px-5 py-4 sm:px-6">Placement</th>
-                </tr>
-              </thead>
-              <tbody>
-                {isDraft
-                  ? visibleDraftOverviewRows.map((row) => (
-                      <tr key={row.businessId} className="align-top">
-                        <td className="border-t border-border px-5 py-4 sm:px-6">
-                          <div className="space-y-1.5">
-                            <Link
-                              className="block text-sm font-semibold text-foreground transition hover:text-accent"
-                              href={getBusinessProfileHref(row.businessId)}
+          <div className="mt-6 overflow-hidden rounded-4xl border border-border bg-white/72">
+            <div className="overflow-x-auto">
+              <table className="min-w-full border-separate border-spacing-0">
+                <thead>
+                  <tr className="bg-brand-deep-soft/75 text-left text-xs font-semibold tracking-[0.16em] text-muted uppercase">
+                    <th className="px-5 py-4 sm:px-6">Business Name</th>
+                    <th className="px-5 py-4 sm:px-6">Published For</th>
+                    <th className="px-5 py-4 sm:px-6">Published By</th>
+                    {!isDraft ? (
+                      <th className="px-5 py-4 sm:px-6">Email Drafts</th>
+                    ) : null}
+                    <th className="px-5 py-4 sm:px-6">Placement</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {isDraft
+                    ? visibleDraftOverviewRows.map((row) => (
+                        <tr key={row.businessId} className="align-top">
+                          <td className="border-t border-border px-5 py-4 sm:px-6">
+                            <div className="space-y-1.5">
+                              <Link
+                                className="block text-sm font-semibold text-foreground transition hover:text-accent"
+                                href={getBusinessProfileHref(row.businessId)}
+                              >
+                                {row.businessName}
+                              </Link>
+                              <span className="inline-flex items-center rounded-full border border-border bg-brand-deep-soft/55 px-2.5 py-0.5 text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">
+                                {row.domainRating === null
+                                  ? "No DR"
+                                  : `DR ${row.domainRating}`}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="border-t border-border px-5 py-4 sm:px-6">
+                            <div className="space-y-2">
+                              {renderOverviewRelationshipCell({
+                                businessId: row.businessId,
+                                direction: "publishedFor",
+                                emptyLabel:
+                                  "No Published For relationships in this round yet.",
+                                relationships: row.publishedForRows,
+                              })}
+                              {row.publishedForRows.length > 1 ? (
+                                <p className="text-xs leading-6 text-muted">
+                                  {row.publishedForRows.length} linked businesses
+                                </p>
+                              ) : null}
+                            </div>
+                          </td>
+                          <td className="border-t border-border px-5 py-4 sm:px-6">
+                            <div className="space-y-2">
+                              {renderOverviewRelationshipCell({
+                                businessId: row.businessId,
+                                direction: "publishedBy",
+                                emptyLabel:
+                                  "No Published By relationships in this round yet.",
+                                relationships: row.publishedByRows,
+                              })}
+                              {row.publishedByRows.length > 1 ? (
+                                <p className="text-xs leading-6 text-muted">
+                                  {row.publishedByRows.length} linked businesses
+                                </p>
+                              ) : null}
+                            </div>
+                          </td>
+                          <td className="border-t border-border px-5 py-4 sm:px-6">
+                            <span
+                              className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold tracking-[0.08em] uppercase ${getOverviewStatusClassName(row.rowStatus)}`}
                             >
-                              {row.businessName}
-                            </Link>
-                            <span className="inline-flex items-center rounded-full border border-border bg-brand-deep-soft/55 px-2.5 py-0.5 text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">
-                              {row.domainRating === null
-                                ? "No DR"
-                                : `DR ${row.domainRating}`}
+                              {getOverviewStatusLabel(row.rowStatus)}
                             </span>
-                          </div>
-                        </td>
-                        <td className="border-t border-border px-5 py-4 sm:px-6">
-                          <div className="space-y-2">
-                            {renderOverviewRelationshipCell({
-                              businessId: row.businessId,
-                              direction: "publishedFor",
-                              emptyLabel:
-                                "No Published For relationships in this round yet.",
-                              relationships: row.publishedForRows,
-                            })}
-                            {row.publishedForRows.length > 1 ? (
-                              <p className="text-xs leading-6 text-muted">
-                                {row.publishedForRows.length} linked businesses
-                              </p>
-                            ) : null}
-                          </div>
-                        </td>
-                        <td className="border-t border-border px-5 py-4 sm:px-6">
-                          <div className="space-y-2">
-                            {renderOverviewRelationshipCell({
-                              businessId: row.businessId,
-                              direction: "publishedBy",
-                              emptyLabel:
-                                "No Published By relationships in this round yet.",
-                              relationships: row.publishedByRows,
-                            })}
-                            {row.publishedByRows.length > 1 ? (
-                              <p className="text-xs leading-6 text-muted">
-                                {row.publishedByRows.length} linked businesses
-                              </p>
-                            ) : null}
-                          </div>
-                        </td>
-                        <td className="border-t border-border px-5 py-4 sm:px-6">
-                          <span
-                            className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold tracking-[0.08em] uppercase ${getOverviewStatusClassName(row.rowStatus)}`}
-                          >
-                            {getOverviewStatusLabel(row.rowStatus)}
-                          </span>
-                        </td>
-                      </tr>
-                    ))
+                          </td>
+                        </tr>
+                      ))
                     : visibleRows.map((row) => (
-                      <tr key={row.businessId} className="align-top">
-                        <td className="border-t border-border px-5 py-4 sm:px-6">
-                          <div className="space-y-1.5">
-                            <Link
-                              className="block text-sm font-semibold text-foreground transition hover:text-accent"
-                              href={getBusinessProfileHref(row.businessId)}
-                            >
-                              {row.businessName}
-                            </Link>
-                            <span className="inline-flex items-center rounded-full border border-border bg-brand-deep-soft/55 px-2.5 py-0.5 text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">
-                              {row.domainRating === null
-                                ? "No DR"
-                                : `DR ${row.domainRating}`}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="border-t border-border px-5 py-4 sm:px-6">
-                          <div className="space-y-2">
-                            {renderRelationshipList(
-                              row.publishedFor,
-                              "No Published For relationships in this round yet.",
-                              "accent",
-                            )}
-                            {row.publishedFor.length > 1 ? (
-                              <p className="text-xs leading-6 text-muted">
-                                {row.publishedFor.length} linked businesses
-                              </p>
-                            ) : null}
-                          </div>
-                        </td>
-                        <td className="border-t border-border px-5 py-4 sm:px-6">
-                          <div className="space-y-2">
-                            {renderRelationshipList(
-                              row.publishedBy,
-                              "No Published By relationships in this round yet.",
-                              "neutral",
-                            )}
-                            {row.publishedBy.length > 1 ? (
-                              <p className="text-xs leading-6 text-muted">
-                                {row.publishedBy.length} linked businesses
-                              </p>
-                            ) : null}
-                          </div>
-                        </td>
-                        <td className="border-t border-border px-5 py-4 sm:px-6">
-                          {renderAppliedDraftActions(
-                            row.businessId,
-                            row.businessName,
-                            row.rowStatus,
-                            row.publishedFor,
-                          )}
-                        </td>
-                        <td className="border-t border-border px-5 py-4 sm:px-6">
-                          <span
-                            className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold tracking-[0.08em] uppercase ${getOverviewStatusClassName(row.rowStatus)}`}
-                          >
-                            {getOverviewStatusLabel(row.rowStatus)}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-              </tbody>
-            </table>
-          </div>
+                        <tr key={row.businessId} className="align-top">
+                          <td className="border-t border-border px-5 py-4 sm:px-6">
+                            <div className="space-y-1.5">
+                                <Link
+                                  className="block text-sm font-semibold text-foreground transition hover:text-accent"
+                                  href={getBusinessProfileHref(row.businessId)}
+                                >
+                                  {row.businessName}
+                                </Link>
+                                <span className="inline-flex items-center rounded-full border border-border bg-brand-deep-soft/55 px-2.5 py-0.5 text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">
+                                  {row.domainRating === null
+                                    ? "No DR"
+                                    : `DR ${row.domainRating}`}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="border-t border-border px-5 py-4 sm:px-6">
+                              <div className="space-y-2">
+                                {renderRelationshipList(
+                                  row.publishedFor,
+                                  "No Published For relationships in this round yet.",
+                                  "accent",
+                                )}
+                                {row.publishedFor.length > 1 ? (
+                                  <p className="text-xs leading-6 text-muted">
+                                    {row.publishedFor.length} linked businesses
+                                  </p>
+                                ) : null}
+                              </div>
+                            </td>
+                            <td className="border-t border-border px-5 py-4 sm:px-6">
+                              <div className="space-y-2">
+                                {renderRelationshipList(
+                                  row.publishedBy,
+                                  "No Published By relationships in this round yet.",
+                                  "neutral",
+                                )}
+                                {row.publishedBy.length > 1 ? (
+                                  <p className="text-xs leading-6 text-muted">
+                                    {row.publishedBy.length} linked businesses
+                                  </p>
+                                ) : null}
+                              </div>
+                            </td>
+                            <td className="border-t border-border px-5 py-4 sm:px-6">
+                              {renderAppliedDraftActions(
+                                row.businessId,
+                                row.businessName,
+                                row.rowStatus,
+                                row.publishedFor,
+                              )}
+                            </td>
+                            <td className="border-t border-border px-5 py-4 sm:px-6">
+                              <span
+                                className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold tracking-[0.08em] uppercase ${getOverviewStatusClassName(row.rowStatus)}`}
+                              >
+                                {getOverviewStatusLabel(row.rowStatus)}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
         )}
       </section>
 
