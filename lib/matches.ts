@@ -9,6 +9,30 @@ import { getBusinessProfileSlug } from "@/lib/business-profile-route";
 import { getForbiddenBusinessIdsForBusiness } from "@/lib/forbidden-business-pairs";
 import { prisma } from "@/lib/prisma";
 
+const businessContactSelection = {
+  email: true,
+  firstName: true,
+  fullName: true,
+  id: true,
+  lastName: true,
+  role: true,
+} as const;
+
+const businessContactAssignmentSelection = {
+  business: true,
+  id: true,
+} as const;
+
+const businessContactDirectorySelection = {
+  ...businessContactSelection,
+  expertForBusinesses: {
+    select: businessContactAssignmentSelection,
+  },
+  marketerForBusinesses: {
+    select: businessContactAssignmentSelection,
+  },
+} as const;
+
 const businessSelection = {
   aiAuthorityExchangeJoinedAt: true,
   aiAuthorityExchangeRetiredAt: true,
@@ -21,8 +45,14 @@ const businessSelection = {
   business: true,
   clientType: true,
   domain_rating: true,
+  expert: {
+    select: businessContactSelection,
+  },
   id: true,
   isActiveOnAiAuthorityExchange: true,
+  marketer: {
+    select: businessContactSelection,
+  },
   websiteUrl: true,
 } as const;
 
@@ -43,9 +73,11 @@ function toBusinessOption(business: SelectedBusiness) {
     business: business.business,
     clientType: business.clientType,
     domain_rating: business.domain_rating,
+    expert: business.expert,
     id: business.id,
     isActiveOnAiAuthorityExchange:
       business.isActiveOnAiAuthorityExchange === true,
+    marketer: business.marketer,
     websiteUrl: business.websiteUrl,
   };
 }
@@ -110,7 +142,9 @@ export const getForbiddenBusinessesForBusiness = cache(
     ]);
     const forbiddenBusinessIdSet = new Set(forbiddenBusinessIds);
 
-    return businesses.filter((business) => forbiddenBusinessIdSet.has(business.id));
+    return businesses.filter((business) =>
+      forbiddenBusinessIdSet.has(business.id),
+    );
   },
 );
 
@@ -127,7 +161,104 @@ export const getExplicitlyActiveExchangeBusinesses = cache(async () => {
     .toSorted(compareBusinessNames);
 });
 
+export type BusinessContactOption = Prisma.BusinessContactGetPayload<{
+  select: typeof businessContactSelection;
+}>;
+
+export type BusinessContactAssignment = Prisma.BusinessGetPayload<{
+  select: typeof businessContactAssignmentSelection;
+}>;
+
+type SelectedBusinessContactDirectoryRow = Prisma.BusinessContactGetPayload<{
+  select: typeof businessContactDirectorySelection;
+}>;
+
+const businessContactCollator = new Intl.Collator(undefined, {
+  numeric: true,
+  sensitivity: "base",
+});
+
+function getBusinessContactLabel(contact: BusinessContactOption) {
+  if (contact.fullName && contact.fullName.trim().length > 0) {
+    return contact.fullName.trim();
+  }
+
+  const fullName = [contact.firstName, contact.lastName]
+    .filter((value): value is string =>
+      Boolean(value && value.trim().length > 0),
+    )
+    .join(" ")
+    .trim();
+
+  if (fullName.length > 0) {
+    return fullName;
+  }
+
+  if (contact.email && contact.email.trim().length > 0) {
+    return contact.email.trim();
+  }
+
+  return `Contact ${contact.id}`;
+}
+
+function compareBusinessContacts(
+  left: BusinessContactOption,
+  right: BusinessContactOption,
+) {
+  const roleComparison = businessContactCollator.compare(left.role, right.role);
+
+  if (roleComparison !== 0) {
+    return roleComparison;
+  }
+
+  const labelComparison = businessContactCollator.compare(
+    getBusinessContactLabel(left),
+    getBusinessContactLabel(right),
+  );
+
+  if (labelComparison !== 0) {
+    return labelComparison;
+  }
+
+  return left.id - right.id;
+}
+
+export const getBusinessContacts = cache(async () => {
+  const contacts = await prisma.businessContact.findMany({
+    select: businessContactSelection,
+  });
+
+  return contacts.toSorted(compareBusinessContacts);
+});
+
+function toBusinessContactDirectoryRow(
+  contact: SelectedBusinessContactDirectoryRow,
+) {
+  return {
+    ...contact,
+    expertForBusinesses: [...contact.expertForBusinesses].toSorted(
+      compareBusinessNames,
+    ),
+    marketerForBusinesses: [...contact.marketerForBusinesses].toSorted(
+      compareBusinessNames,
+    ),
+  };
+}
+
+export const getBusinessContactDirectoryRows = cache(async () => {
+  const contacts = await prisma.businessContact.findMany({
+    select: businessContactDirectorySelection,
+  });
+
+  return contacts
+    .map((contact) => toBusinessContactDirectoryRow(contact))
+    .toSorted(compareBusinessContacts);
+});
+
 export type BusinessOption = Awaited<ReturnType<typeof getBusinesses>>[number];
+export type BusinessContactDirectoryRow = Awaited<
+  ReturnType<typeof getBusinessContactDirectoryRows>
+>[number];
 
 export type BusinessProfileDetails = {
   businessCategoryName: string | null;
@@ -140,11 +271,15 @@ export type BusinessProfileDetails = {
 export type BusinessDirectoryRow = {
   business: string;
   businessCategoryName: string | null;
+  expert: BusinessDirectoryContact | null;
   id: number;
   isActiveOnAiAuthorityExchange: boolean;
+  marketer: BusinessDirectoryContact | null;
   subcategory: string | null;
   websiteUrl: string | null;
 };
+
+export type BusinessDirectoryContact = BusinessContactOption;
 
 export const getBusinessById = cache(async (businessId: number) => {
   const business = await prisma.business.findUnique({
@@ -222,8 +357,14 @@ export const getBusinessDirectoryRows = cache(async () => {
           name: true,
         },
       },
+      expert: {
+        select: businessContactSelection,
+      },
       id: true,
       isActiveOnAiAuthorityExchange: true,
+      marketer: {
+        select: businessContactSelection,
+      },
       subcategory: true,
       websiteUrl: true,
     },
@@ -235,9 +376,11 @@ export const getBusinessDirectoryRows = cache(async () => {
         ({
           business: business.business,
           businessCategoryName: business.business_categories?.name ?? null,
+          expert: business.expert,
           id: business.id,
           isActiveOnAiAuthorityExchange:
             business.isActiveOnAiAuthorityExchange === true,
+          marketer: business.marketer,
           subcategory: business.subcategory,
           websiteUrl: business.websiteUrl,
         }) satisfies BusinessDirectoryRow,

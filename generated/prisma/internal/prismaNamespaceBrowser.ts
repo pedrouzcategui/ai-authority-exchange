@@ -52,6 +52,7 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   Business: 'Business',
+  BusinessContact: 'BusinessContact',
   Match: 'Match',
   RoundBatch: 'RoundBatch',
   RoundAssignment: 'RoundAssignment',
@@ -63,7 +64,8 @@ export const ModelName = {
   User: 'User',
   Account: 'Account',
   Session: 'Session',
-  VerificationToken: 'VerificationToken'
+  VerificationToken: 'VerificationToken',
+  ai_authority_exchange_forbidden_business_pairs: 'ai_authority_exchange_forbidden_business_pairs'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -86,10 +88,6 @@ export const BusinessScalarFieldEnum = {
   id: 'id',
   business: 'business',
   websiteUrl: 'websiteUrl',
-  isActiveOnAiAuthorityExchange: 'isActiveOnAiAuthorityExchange',
-  aiAuthorityExchangeJoinedAt: 'aiAuthorityExchangeJoinedAt',
-  aiAuthorityExchangeRetiredAt: 'aiAuthorityExchangeRetiredAt',
-  aiAuthorityExchangeRetiredInRoundBatchId: 'aiAuthorityExchangeRetiredInRoundBatchId',
   google_drive_folder_url: 'google_drive_folder_url',
   writer_411_document_url: 'writer_411_document_url',
   discovery_packet_document_url: 'discovery_packet_document_url',
@@ -104,24 +102,44 @@ export const BusinessScalarFieldEnum = {
   domain_rating: 'domain_rating',
   related_category_ids: 'related_category_ids',
   related_categories_reasoning: 'related_categories_reasoning',
-  clientType: 'clientType'
+  clientType: 'clientType',
+  isActiveOnAiAuthorityExchange: 'isActiveOnAiAuthorityExchange',
+  aiAuthorityExchangeJoinedAt: 'aiAuthorityExchangeJoinedAt',
+  aiAuthorityExchangeRetiredAt: 'aiAuthorityExchangeRetiredAt',
+  aiAuthorityExchangeRetiredInRoundBatchId: 'aiAuthorityExchangeRetiredInRoundBatchId',
+  marketerContactId: 'marketerContactId',
+  marketerRole: 'marketerRole',
+  expertContactId: 'expertContactId',
+  expertRole: 'expertRole'
 } as const
 
 export type BusinessScalarFieldEnum = (typeof BusinessScalarFieldEnum)[keyof typeof BusinessScalarFieldEnum]
+
+
+export const BusinessContactScalarFieldEnum = {
+  id: 'id',
+  firstName: 'firstName',
+  lastName: 'lastName',
+  fullName: 'fullName',
+  email: 'email',
+  role: 'role'
+} as const
+
+export type BusinessContactScalarFieldEnum = (typeof BusinessContactScalarFieldEnum)[keyof typeof BusinessContactScalarFieldEnum]
 
 
 export const MatchScalarFieldEnum = {
   id: 'id',
   hostId: 'hostId',
   guestId: 'guestId',
-  roundBatchId: 'roundBatchId',
   status: 'status',
   interview_sent: 'interview_sent',
   interview_published: 'interview_published',
   partner_interview_received: 'partner_interview_received',
   partner_interview_published: 'partner_interview_published',
   notes: 'notes',
-  created_at: 'created_at'
+  created_at: 'created_at',
+  roundBatchId: 'roundBatchId'
 } as const
 
 export type MatchScalarFieldEnum = (typeof MatchScalarFieldEnum)[keyof typeof MatchScalarFieldEnum]
@@ -217,11 +235,11 @@ export const UserScalarFieldEnum = {
   legacyUserId: 'legacyUserId',
   name: 'name',
   email: 'email',
-  role: 'role',
   emailVerified: 'emailVerified',
   image: 'image',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  role: 'role'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -266,6 +284,16 @@ export const VerificationTokenScalarFieldEnum = {
 } as const
 
 export type VerificationTokenScalarFieldEnum = (typeof VerificationTokenScalarFieldEnum)[keyof typeof VerificationTokenScalarFieldEnum]
+
+
+export const Ai_authority_exchange_forbidden_business_pairsScalarFieldEnum = {
+  id: 'id',
+  lower_business_id: 'lower_business_id',
+  higher_business_id: 'higher_business_id',
+  created_at: 'created_at'
+} as const
+
+export type Ai_authority_exchange_forbidden_business_pairsScalarFieldEnum = (typeof Ai_authority_exchange_forbidden_business_pairsScalarFieldEnum)[keyof typeof Ai_authority_exchange_forbidden_business_pairsScalarFieldEnum]
 
 
 export const SortOrder = {

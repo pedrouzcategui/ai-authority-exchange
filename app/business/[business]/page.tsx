@@ -7,6 +7,7 @@ import { BusinessRoleBadge } from "@/components/business-role-badge";
 import { EditBusinessModal } from "@/components/edit-business-modal";
 import {
   getBusinessByIdentifier,
+  getBusinessContacts,
   getBusinesses,
   getBusinessMatchBoard,
   getForbiddenBusinessesForBusiness,
@@ -52,14 +53,21 @@ export default async function BusinessProfilePage({
     notFound();
   }
 
-  const [rows, roundBatches, profileDetails, selectableBusinesses, forbiddenBusinesses] =
-    await Promise.all([
-      getBusinessMatchBoard(business.id),
-      getRoundBatchSummaries(),
-      getBusinessProfileDetails(business.id),
-      getBusinesses(),
-      getForbiddenBusinessesForBusiness(business.id),
-    ]);
+  const [
+    rows,
+    roundBatches,
+    profileDetails,
+    selectableBusinesses,
+    forbiddenBusinesses,
+    businessContacts,
+  ] = await Promise.all([
+    getBusinessMatchBoard(business.id),
+    getRoundBatchSummaries(),
+    getBusinessProfileDetails(business.id),
+    getBusinesses(),
+    getForbiddenBusinessesForBusiness(business.id),
+    getBusinessContacts(),
+  ]);
   const forbiddenCounterpartIds = forbiddenBusinesses.map(
     (forbiddenBusiness) => forbiddenBusiness.id,
   );
@@ -170,7 +178,7 @@ export default async function BusinessProfilePage({
           >
             Find AI Matches
           </Link>
-          <EditBusinessModal business={business} />
+          <EditBusinessModal business={business} contacts={businessContacts} />
         </div>
       </section>
 
@@ -229,7 +237,11 @@ export default async function BusinessProfilePage({
               These fields drive the exchange matching logic and explain how the
               business connects to adjacent categories.
             </p>
-            <EditBusinessModal business={business} triggerVariant="icon" />
+            <EditBusinessModal
+              business={business}
+              contacts={businessContacts}
+              triggerVariant="icon"
+            />
           </div>
         </div>
 
@@ -265,7 +277,8 @@ export default async function BusinessProfilePage({
             <p className="text-sm font-medium tracking-[0.12em] text-muted uppercase">
               Related Categories
             </p>
-            {profileDetails && profileDetails.relatedCategoryNames.length > 0 ? (
+            {profileDetails &&
+            profileDetails.relatedCategoryNames.length > 0 ? (
               <div className="mt-3 flex flex-wrap gap-2">
                 {profileDetails.relatedCategoryNames.map((categoryName) => (
                   <span
@@ -289,7 +302,9 @@ export default async function BusinessProfilePage({
             Related Categories Reasoning
           </p>
           <p className="mt-3 max-w-4xl text-sm leading-7 text-muted sm:text-base">
-            {formatProfileValue(profileDetails?.relatedCategoriesReasoning ?? null)}
+            {formatProfileValue(
+              profileDetails?.relatedCategoriesReasoning ?? null,
+            )}
           </p>
         </div>
       </section>

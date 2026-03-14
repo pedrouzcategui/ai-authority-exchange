@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { Prisma, type BusinessRoleType } from "@/generated/prisma/client";
+import {
+  Prisma,
+  type BusinessContactRoleType,
+  type BusinessRoleType,
+} from "@/generated/prisma/client";
 import type { ExchangeParticipationStatus } from "@/lib/ai-authority-exchange";
 import { requireLegacyUserSession } from "@/lib/auth-session";
 import { buildExchangeLifecycleFields } from "@/lib/business-exchange-lifecycle";
@@ -15,15 +19,35 @@ type CreateBusinessPayload = {
   websiteUrl?: unknown;
 };
 
+type BusinessContactPayload = {
+  email?: unknown;
+  firstName?: unknown;
+  lastName?: unknown;
+  selectedContactId?: unknown;
+};
+
 type UpdateBusinessPayload = CreateBusinessPayload & {
   businessCategoryId?: unknown;
   businessId?: unknown;
+  expertContact?: unknown;
+  marketerContact?: unknown;
   relatedCategoriesReasoning?: unknown;
   relatedCategoryIds?: unknown;
   subcategory?: unknown;
 };
 
+type NormalizedBusinessContactInput = {
+  email: string | null;
+  firstName: string | null;
+  hasAnyValue: boolean;
+  lastName: string | null;
+  selectedContactId: number | null;
+};
+
+class ContactValidationError extends Error {}
+
 const hasProtocolPattern = /^[a-z][a-z\d+.-]*:\/\//i;
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function formatErrorDetails(error: unknown) {
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -71,6 +95,28 @@ function normalizeWebsiteUrl(value: unknown) {
   } catch {
     return null;
   }
+}
+
+function normalizeEmailAddress(value: unknown) {
+  if (value === null || value === undefined || value === "") {
+    return { isValid: true, value: null } as const;
+  }
+
+  if (typeof value !== "string") {
+    return { isValid: false, value: null } as const;
+  }
+
+  const trimmedValue = value.trim().toLocaleLowerCase();
+
+  if (!trimmedValue) {
+    return { isValid: true, value: null } as const;
+  }
+
+  if (!emailPattern.test(trimmedValue)) {
+    return { isValid: false, value: null } as const;
+  }
+
+  return { isValid: true, value: trimmedValue } as const;
 }
 
 function normalizeRole(value: unknown): BusinessRoleType | null {
@@ -181,6 +227,59 @@ function normalizeNullableText(value: unknown) {
   } as const;
 }
 
+function normalizeBusinessContactInput(value: unknown) {
+  if (value === null || value === undefined) {
+    return { isValid: false, value: null } as const;
+  }
+
+  if (typeof value !== "object" || Array.isArray(value)) {
+    return { isValid: false, value: null } as const;
+  }
+
+  const payload = value as BusinessContactPayload;
+  const firstName = normalizeNullableText(payload.firstName);
+  const lastName = normalizeNullableText(payload.lastName);
+  const email = normalizeEmailAddress(payload.email);
+  const selectedContactId = normalizeNullablePositiveInteger(
+    payload.selectedContactId,
+  );
+
+  if (
+    !firstName.isValid ||
+    !lastName.isValid ||
+    !email.isValid ||
+    !selectedContactId.isValid
+  ) {
+    return { isValid: false, value: null } as const;
+  }
+
+  const normalizedValue = {
+    email: email.value,
+    firstName: firstName.value,
+    hasAnyValue:
+      firstName.value !== null ||
+      lastName.value !== null ||
+      email.value !== null,
+    lastName: lastName.value,
+    selectedContactId: selectedContactId.value,
+  } satisfies NormalizedBusinessContactInput;
+
+  if (
+    normalizedValue.selectedContactId !== null ||
+    normalizedValue.hasAnyValue
+  ) {
+    if (
+      normalizedValue.firstName === null ||
+      normalizedValue.lastName === null ||
+      normalizedValue.email === null
+    ) {
+      return { isValid: false, value: null } as const;
+    }
+  }
+
+  return { isValid: true, value: normalizedValue } as const;
+}
+
 function normalizeRelatedCategoryIds(value: unknown) {
   if (value === null) {
     return { isValid: true, value: [] } as const;
@@ -207,6 +306,76 @@ function normalizeRelatedCategoryIds(value: unknown) {
   }
 
   return { isValid: true, value: normalizedIds } as const;
+}
+
+function buildBusinessContactFullName(
+  firstName: string | null,
+  lastName: string | null,
+) {
+  const fullName = [firstName, lastName]
+    .filter((value): value is string => value !== null && value.length > 0)
+    .join(" ")
+    .trim();
+
+  return fullName.length > 0 ? fullName : null;
+}
+
+function getAssignedContactEmail(contact: { email: string | null } | null) {
+  return contact?.email?.trim().toLocaleLowerCase() ?? null;
+}
+
+function resolveNextAssignedContactEmail(
+  input: NormalizedBusinessContactInput,
+  currentContact: { email: string | null } | null,
+) {
+  if (input.selectedContactId === null && !input.hasAnyValue) {
+    return null;
+  }
+
+  return input.email ?? getAssignedContactEmail(currentContact);
+}
+
+async function persistBusinessRoleContact(params: {
+  input: NormalizedBusinessContactInput;
+  role: BusinessContactRoleType;
+  tx: Prisma.TransactionClient;
+}) {
+  const { input, role, tx } = params;
+
+  if (input.selectedContactId !== null) {
+    await tx.businessContact.update({
+      data: {
+        email: input.email,
+        firstName: input.firstName,
+        fullName: buildBusinessContactFullName(input.firstName, input.lastName),
+        lastName: input.lastName,
+      },
+      where: {
+        id: input.selectedContactId,
+      },
+    });
+
+    return input.selectedContactId;
+  }
+
+  if (!input.hasAnyValue) {
+    return null;
+  }
+
+  const createdContact = await tx.businessContact.create({
+    data: {
+      email: input.email,
+      firstName: input.firstName,
+      fullName: buildBusinessContactFullName(input.firstName, input.lastName),
+      lastName: input.lastName,
+      role,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  return createdContact.id;
 }
 
 async function resolveRetiredRoundBatchId(sequenceNumber: number | null) {
@@ -363,10 +532,26 @@ export async function POST(request: Request) {
       { status: 201 },
     );
   } catch (error) {
+    if (error instanceof ContactValidationError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2002"
     ) {
+      const target = JSON.stringify(error.meta?.target ?? "");
+
+      if (target.includes("business_contact")) {
+        return NextResponse.json(
+          {
+            error:
+              "A contact with that email already exists for this business.",
+          },
+          { status: 409 },
+        );
+      }
+
       return NextResponse.json(
         { error: "A business with that name already exists." },
         { status: 409 },
@@ -415,6 +600,14 @@ export async function PATCH(request: Request) {
     payload,
     "relatedCategoryIds",
   );
+  const hasMarketerContact = Object.prototype.hasOwnProperty.call(
+    payload,
+    "marketerContact",
+  );
+  const hasExpertContact = Object.prototype.hasOwnProperty.call(
+    payload,
+    "expertContact",
+  );
   const hasSubcategory = Object.prototype.hasOwnProperty.call(
     payload,
     "subcategory",
@@ -440,6 +633,12 @@ export async function PATCH(request: Request) {
     : null;
   const relatedCategoryIds = hasRelatedCategoryIds
     ? normalizeRelatedCategoryIds(payload.relatedCategoryIds)
+    : null;
+  const marketerContact = hasMarketerContact
+    ? normalizeBusinessContactInput(payload.marketerContact)
+    : null;
+  const expertContact = hasExpertContact
+    ? normalizeBusinessContactInput(payload.expertContact)
     : null;
   const subcategory = hasSubcategory
     ? normalizeNullableText(payload.subcategory)
@@ -490,12 +689,14 @@ export async function PATCH(request: Request) {
     (businessCategoryId && !businessCategoryId.isValid) ||
     (subcategory && !subcategory.isValid) ||
     (relatedCategoryIds && !relatedCategoryIds.isValid) ||
-    (relatedCategoriesReasoning && !relatedCategoriesReasoning.isValid)
+    (relatedCategoriesReasoning && !relatedCategoriesReasoning.isValid) ||
+    (marketerContact && !marketerContact.isValid) ||
+    (expertContact && !expertContact.isValid)
   ) {
     return NextResponse.json(
       {
         error:
-          "Please provide valid business taxonomy values before saving this business.",
+          "Please provide valid business taxonomy and contact values before saving this business.",
       },
       { status: 400 },
     );
@@ -507,7 +708,21 @@ export async function PATCH(request: Request) {
         select: {
           aiAuthorityExchangeJoinedAt: true,
           business_category_id: true,
+          expert: {
+            select: {
+              email: true,
+              id: true,
+            },
+          },
+          expertContactId: true,
           id: true,
+          marketer: {
+            select: {
+              email: true,
+              id: true,
+            },
+          },
+          marketerContactId: true,
           related_category_ids: true,
         },
         where: {
@@ -528,6 +743,89 @@ export async function PATCH(request: Request) {
       return NextResponse.json(
         {
           error: `Round ${retiredRoundSequenceNumber} does not exist yet. Create or import that round before assigning it as the retirement round.`,
+        },
+        { status: 400 },
+      );
+    }
+
+    const selectedContactIds = [
+      hasMarketerContact ? marketerContact!.value.selectedContactId : null,
+      hasExpertContact ? expertContact!.value.selectedContactId : null,
+    ].filter((contactId): contactId is number => contactId !== null);
+
+    const selectedContacts =
+      selectedContactIds.length === 0
+        ? []
+        : await prisma.businessContact.findMany({
+            select: {
+              id: true,
+              role: true,
+            },
+            where: {
+              id: {
+                in: selectedContactIds,
+              },
+            },
+          });
+
+    if (
+      hasMarketerContact &&
+      marketerContact!.value.selectedContactId !== null &&
+      !selectedContacts.some(
+        (contact) =>
+          contact.id === marketerContact!.value.selectedContactId &&
+          contact.role === "marketer",
+      )
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "The selected marketer contact is no longer available for this business.",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (
+      hasExpertContact &&
+      expertContact!.value.selectedContactId !== null &&
+      !selectedContacts.some(
+        (contact) =>
+          contact.id === expertContact!.value.selectedContactId &&
+          contact.role === "expert",
+      )
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "The selected expert contact is no longer available for this business.",
+        },
+        { status: 400 },
+      );
+    }
+
+    const nextMarketerEmail = hasMarketerContact
+      ? resolveNextAssignedContactEmail(
+          marketerContact!.value,
+          currentBusiness.marketer,
+        )
+      : getAssignedContactEmail(currentBusiness.marketer);
+    const nextExpertEmail = hasExpertContact
+      ? resolveNextAssignedContactEmail(
+          expertContact!.value,
+          currentBusiness.expert,
+        )
+      : getAssignedContactEmail(currentBusiness.expert);
+
+    if (
+      nextMarketerEmail !== null &&
+      nextExpertEmail !== null &&
+      nextMarketerEmail === nextExpertEmail
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "The same email cannot be used for both the marketer and expert on the same business.",
         },
         { status: 400 },
       );
@@ -617,15 +915,40 @@ export async function PATCH(request: Request) {
         relatedCategoriesReasoning!.value;
     }
 
-    const business = await prisma.business.update({
-      data: updateData,
-      select: {
-        business: true,
-        id: true,
-      },
-      where: {
-        id: businessId,
-      },
+    const business = await prisma.$transaction(async (tx) => {
+      if (hasMarketerContact) {
+        const marketerContactId = await persistBusinessRoleContact({
+          input: marketerContact!.value,
+          role: "marketer",
+          tx,
+        });
+
+        updateData.marketerContactId = marketerContactId;
+        updateData.marketerRole =
+          marketerContactId === null ? null : "marketer";
+      }
+
+      if (hasExpertContact) {
+        const expertContactId = await persistBusinessRoleContact({
+          input: expertContact!.value,
+          role: "expert",
+          tx,
+        });
+
+        updateData.expertContactId = expertContactId;
+        updateData.expertRole = expertContactId === null ? null : "expert";
+      }
+
+      return tx.business.update({
+        data: updateData,
+        select: {
+          business: true,
+          id: true,
+        },
+        where: {
+          id: businessId,
+        },
+      });
     });
 
     return NextResponse.json(
@@ -636,10 +959,23 @@ export async function PATCH(request: Request) {
       { status: 200 },
     );
   } catch (error) {
+    if (error instanceof ContactValidationError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2002"
     ) {
+      const target = JSON.stringify(error.meta?.target ?? "");
+
+      if (target.includes("business_contact") || target.includes("email")) {
+        return NextResponse.json(
+          { error: "A contact with that email already exists for that role." },
+          { status: 409 },
+        );
+      }
+
       return NextResponse.json(
         { error: "A business with that name already exists." },
         { status: 409 },

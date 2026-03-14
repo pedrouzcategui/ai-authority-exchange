@@ -30,6 +30,10 @@ model Business {
   aiAuthorityExchangeJoinedAt                                                                                                  DateTime?                                        @map("ai_authority_exchange_joined_at") @db.Timestamp(6)
   aiAuthorityExchangeRetiredAt                                                                                                 DateTime?                                        @map("ai_authority_exchange_retired_at") @db.Timestamp(6)
   aiAuthorityExchangeRetiredInRoundBatchId                                                                                     Int?                                             @map("ai_authority_exchange_retired_in_round_batch_id")
+  marketerContactId                                                                                                            Int?                                             @map("marketer_contact_id")
+  marketerRole                                                                                                                 BusinessContactRoleType?                         @default(marketer) @map("marketer_contact_role")
+  expertContactId                                                                                                              Int?                                             @map("expert_contact_id")
+  expertRole                                                                                                                   BusinessContactRoleType?                         @default(expert) @map("expert_contact_role")
   ai_authority_exchange_forbidden_business_pairs_ai_authority_exchange_forbidden_business_pairs_higher_business_idTobusinesses ai_authority_exchange_forbidden_business_pairs[] @relation("ai_authority_exchange_forbidden_business_pairs_higher_business_idTobusinesses")
   ai_authority_exchange_forbidden_business_pairs_ai_authority_exchange_forbidden_business_pairs_lower_business_idTobusinesses  ai_authority_exchange_forbidden_business_pairs[] @relation("ai_authority_exchange_forbidden_business_pairs_lower_business_idTobusinesses")
   guestMatches                                                                                                                 Match[]                                          @relation("GuestBusiness")
@@ -38,13 +42,41 @@ model Business {
   outgoingRoundAssignments                                                                                                     RoundAssignment[]                                @relation("RoundAssignmentHostBusiness")
   business_categories                                                                                                          business_categories?                             @relation(fields: [business_category_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "business_category_id")
   aiAuthorityExchangeRetiredInRoundBatch                                                                                       RoundBatch?                                      @relation("RetiredBusinesses", fields: [aiAuthorityExchangeRetiredInRoundBatchId], references: [id], onUpdate: NoAction)
+  marketer                                                                                                                     BusinessContact?                                 @relation("BusinessMarketer", fields: [marketerContactId, marketerRole], references: [id, role], onDelete: SetNull, onUpdate: NoAction)
+  expert                                                                                                                       BusinessContact?                                 @relation("BusinessExpert", fields: [expertContactId, expertRole], references: [id, role], onDelete: SetNull, onUpdate: NoAction)
   client_details                                                                                                               client_details?
   publications                                                                                                                 publications[]
 
+  @@unique([id, marketerContactId, marketerRole], map: "unique_business_marketer_contact")
+  @@unique([id, expertContactId, expertRole], map: "unique_business_expert_contact")
   @@index([aiAuthorityExchangeRetiredInRoundBatchId], map: "idx_businesses_retired_round_batch_id")
+  @@index([marketerContactId, marketerRole], map: "idx_businesses_marketer_contact")
+  @@index([expertContactId, expertRole], map: "idx_businesses_expert_contact")
   @@index([related_category_ids], map: "idx_clients_related_categories", type: Gin)
   @@index([writing_topics], map: "idx_clients_writing_topics", type: Gin)
   @@map("businesses")
+}
+
+model BusinessContact {
+  id                    Int                     @id @default(autoincrement())
+  firstName             String?                 @map("first_name")
+  lastName              String?                 @map("last_name")
+  fullName              String?                 @map("full_name")
+  email                 String?
+  role                  BusinessContactRoleType @map("role")
+  marketerForBusinesses Business[]              @relation("BusinessMarketer")
+  expertForBusinesses   Business[]              @relation("BusinessExpert")
+
+  @@unique([id, role], map: "unique_business_contact_lookup")
+  @@unique([email, role], map: "unique_business_contact_email")
+  @@map("business_contacts")
+}
+
+enum BusinessContactRoleType {
+  marketer
+  expert
+
+  @@map("business_contact_role_type")
 }
 
 model Match {

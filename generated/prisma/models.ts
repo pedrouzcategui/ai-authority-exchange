@@ -9,6 +9,7 @@
  * 🟢 You can import this file directly.
  */
 export type * from './models/Business'
+export type * from './models/BusinessContact'
 export type * from './models/Match'
 export type * from './models/RoundBatch'
 export type * from './models/RoundAssignment'
@@ -21,4 +22,5 @@ export type * from './models/User'
 export type * from './models/Account'
 export type * from './models/Session'
 export type * from './models/VerificationToken'
+export type * from './models/ai_authority_exchange_forbidden_business_pairs'
 export type * from './commonInputTypes'

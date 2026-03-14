@@ -23,6 +23,11 @@ export * from './enums';
  */
 export type Business = Prisma.BusinessModel
 /**
+ * Model BusinessContact
+ * 
+ */
+export type BusinessContact = Prisma.BusinessContactModel
+/**
  * Model Match
  * 
  */
@@ -82,3 +87,8 @@ export type Session = Prisma.SessionModel
  * 
  */
 export type VerificationToken = Prisma.VerificationTokenModel
+/**
+ * Model ai_authority_exchange_forbidden_business_pairs
+ * This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+ */
+export type ai_authority_exchange_forbidden_business_pairs = Prisma.ai_authority_exchange_forbidden_business_pairsModel

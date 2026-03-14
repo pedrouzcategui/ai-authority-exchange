@@ -2,12 +2,17 @@
 
 import Link from "next/link";
 import { useDeferredValue, useState } from "react";
+import { BusinessDirectoryContactControl } from "@/components/business-directory-contact-control";
 import { BusinessDirectoryExchangeSelect } from "@/components/business-directory-exchange-select";
 import { getBusinessProfileHref } from "@/lib/business-profile-route";
-import type { BusinessDirectoryRow } from "@/lib/matches";
+import type {
+  BusinessContactOption,
+  BusinessDirectoryRow,
+} from "@/lib/matches";
 
 type BusinessDirectoryTableProps = {
   businesses: BusinessDirectoryRow[];
+  contacts: BusinessContactOption[];
 };
 
 type ExchangeFilter = "all" | "active" | "inactive";
@@ -22,7 +27,7 @@ function formatCellValue(value: string | null) {
   return value && value.trim().length > 0 ? value : "Not set";
 }
 
-function normalizeSearchValue(value: string | null) {
+function normalizeSearchValue(value: string | null | undefined) {
   return value?.trim().toLocaleLowerCase() ?? "";
 }
 
@@ -40,6 +45,7 @@ function getCategoryFilterLabel(selectedCategories: string[]) {
 
 export function BusinessDirectoryTable({
   businesses,
+  contacts,
 }: BusinessDirectoryTableProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -47,6 +53,12 @@ export function BusinessDirectoryTable({
   const [websiteFilter, setWebsiteFilter] = useState<WebsiteFilter>("all");
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const normalizedSearchQuery = normalizeSearchValue(deferredSearchQuery);
+  const marketerContacts = contacts.filter(
+    (contact) => contact.role === "marketer",
+  );
+  const expertContacts = contacts.filter(
+    (contact) => contact.role === "expert",
+  );
 
   const categories = Array.from(
     new Set(
@@ -63,6 +75,14 @@ export function BusinessDirectoryTable({
       [
         business.business,
         business.businessCategoryName,
+        business.expert?.email,
+        business.expert?.firstName,
+        business.expert?.fullName,
+        business.expert?.lastName,
+        business.marketer?.email,
+        business.marketer?.firstName,
+        business.marketer?.fullName,
+        business.marketer?.lastName,
         business.subcategory,
         business.websiteUrl,
       ].some((value) =>
@@ -77,7 +97,8 @@ export function BusinessDirectoryTable({
     const matchesExchange =
       exchangeFilter === "all" ||
       (exchangeFilter === "active" && business.isActiveOnAiAuthorityExchange) ||
-      (exchangeFilter === "inactive" && !business.isActiveOnAiAuthorityExchange);
+      (exchangeFilter === "inactive" &&
+        !business.isActiveOnAiAuthorityExchange);
 
     const matchesWebsite =
       websiteFilter === "all" ||
@@ -85,10 +106,7 @@ export function BusinessDirectoryTable({
       (websiteFilter === "not-set" && business.websiteUrl === null);
 
     return (
-      matchesSearch &&
-      matchesCategory &&
-      matchesExchange &&
-      matchesWebsite
+      matchesSearch && matchesCategory && matchesExchange && matchesWebsite
     );
   });
 
@@ -122,8 +140,9 @@ export function BusinessDirectoryTable({
           </h2>
         </div>
         <p className="max-w-2xl text-sm leading-7 text-muted sm:text-base lg:text-right">
-          Search by business, category, subcategory, or website, then narrow
-          the list by exchange participation and saved website status.
+          Search by business, marketer, expert, category, subcategory, or
+          website, then narrow the list by exchange participation and saved
+          website status.
         </p>
       </div>
 
@@ -282,6 +301,8 @@ export function BusinessDirectoryTable({
                 <tr className="bg-brand-deep-soft/75 text-left text-xs font-semibold tracking-[0.16em] text-muted uppercase">
                   <th className="px-5 py-4 sm:px-6">Business</th>
                   <th className="px-5 py-4 sm:px-6">Exchange</th>
+                  <th className="px-5 py-4 sm:px-6">Marketer</th>
+                  <th className="px-5 py-4 sm:px-6">Expert</th>
                   <th className="px-5 py-4 sm:px-6">Category</th>
                   <th className="px-5 py-4 sm:px-6">Subcategory</th>
                   <th className="px-5 py-4 sm:px-6">Website URL</th>
@@ -303,6 +324,24 @@ export function BusinessDirectoryTable({
                         businessId={business.id}
                         businessName={business.business}
                         initialIsActive={business.isActiveOnAiAuthorityExchange}
+                      />
+                    </td>
+                    <td className="border-t border-border px-5 py-4 sm:px-6">
+                      <BusinessDirectoryContactControl
+                        availableContacts={marketerContacts}
+                        businessId={business.id}
+                        businessName={business.business}
+                        initialContact={business.marketer}
+                        role="marketer"
+                      />
+                    </td>
+                    <td className="border-t border-border px-5 py-4 sm:px-6">
+                      <BusinessDirectoryContactControl
+                        availableContacts={expertContacts}
+                        businessId={business.id}
+                        businessName={business.business}
+                        initialContact={business.expert}
+                        role="expert"
                       />
                     </td>
                     <td className="border-t border-border px-5 py-4 text-sm text-foreground sm:px-6">

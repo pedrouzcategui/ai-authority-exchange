@@ -9,6 +9,14 @@
 * 🟢 You can import this file directly.
 */
 
+export const BusinessContactRoleType = {
+  marketer: 'marketer',
+  expert: 'expert'
+} as const
+
+export type BusinessContactRoleType = (typeof BusinessContactRoleType)[keyof typeof BusinessContactRoleType]
+
+
 export const BusinessRoleType = {
   client: 'client',
   partner: 'partner'
@@ -27,11 +35,11 @@ export type AuthUserRole = (typeof AuthUserRole)[keyof typeof AuthUserRole]
 
 export const MatchStatus = {
   Not_Started: 'Not_Started',
-  Draft_Created: 'Draft_Created',
   In_Progress: 'In_Progress',
   Done: 'Done',
   Leaving: 'Leaving',
-  Partner_Leaving: 'Partner_Leaving'
+  Partner_Leaving: 'Partner_Leaving',
+  Draft_Created: 'Draft_Created'
 } as const
 
 export type MatchStatus = (typeof MatchStatus)[keyof typeof MatchStatus]

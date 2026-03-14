@@ -1,0 +1,1 @@
+npx dotenv -e .env.development -- npx prisma migrate status

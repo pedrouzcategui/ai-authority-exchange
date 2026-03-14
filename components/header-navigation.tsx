@@ -20,6 +20,11 @@ const navigationItems = [
       pathname.startsWith("/businesses") || pathname.startsWith("/business/"),
   },
   {
+    href: "/contacts",
+    label: "Contacts",
+    matches: (pathname: string) => pathname.startsWith("/contacts"),
+  },
+  {
     href: "/rounds",
     label: "Rounds",
     matches: (pathname: string) => pathname.startsWith("/rounds"),

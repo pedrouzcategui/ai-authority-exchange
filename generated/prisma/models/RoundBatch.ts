@@ -228,8 +228,8 @@ export type RoundBatchWhereInput = {
   appliedAt?: Prisma.DateTimeNullableFilter<"RoundBatch"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"RoundBatch"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"RoundBatch"> | Date | string
-  assignments?: Prisma.RoundAssignmentListRelationFilter
   matches?: Prisma.MatchListRelationFilter
+  assignments?: Prisma.RoundAssignmentListRelationFilter
   retiredBusinesses?: Prisma.BusinessListRelationFilter
 }
 
@@ -240,8 +240,8 @@ export type RoundBatchOrderByWithRelationInput = {
   appliedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
-  assignments?: Prisma.RoundAssignmentOrderByRelationAggregateInput
   matches?: Prisma.MatchOrderByRelationAggregateInput
+  assignments?: Prisma.RoundAssignmentOrderByRelationAggregateInput
   retiredBusinesses?: Prisma.BusinessOrderByRelationAggregateInput
 }
 
@@ -255,8 +255,8 @@ export type RoundBatchWhereUniqueInput = Prisma.AtLeast<{
   appliedAt?: Prisma.DateTimeNullableFilter<"RoundBatch"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"RoundBatch"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"RoundBatch"> | Date | string
-  assignments?: Prisma.RoundAssignmentListRelationFilter
   matches?: Prisma.MatchListRelationFilter
+  assignments?: Prisma.RoundAssignmentListRelationFilter
   retiredBusinesses?: Prisma.BusinessListRelationFilter
 }, "id" | "sequenceNumber">
 
@@ -292,8 +292,8 @@ export type RoundBatchCreateInput = {
   appliedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  assignments?: Prisma.RoundAssignmentCreateNestedManyWithoutRoundBatchInput
   matches?: Prisma.MatchCreateNestedManyWithoutRoundBatchInput
+  assignments?: Prisma.RoundAssignmentCreateNestedManyWithoutRoundBatchInput
   retiredBusinesses?: Prisma.BusinessCreateNestedManyWithoutAiAuthorityExchangeRetiredInRoundBatchInput
 }
 
@@ -304,8 +304,8 @@ export type RoundBatchUncheckedCreateInput = {
   appliedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  assignments?: Prisma.RoundAssignmentUncheckedCreateNestedManyWithoutRoundBatchInput
   matches?: Prisma.MatchUncheckedCreateNestedManyWithoutRoundBatchInput
+  assignments?: Prisma.RoundAssignmentUncheckedCreateNestedManyWithoutRoundBatchInput
   retiredBusinesses?: Prisma.BusinessUncheckedCreateNestedManyWithoutAiAuthorityExchangeRetiredInRoundBatchInput
 }
 
@@ -315,8 +315,8 @@ export type RoundBatchUpdateInput = {
   appliedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  assignments?: Prisma.RoundAssignmentUpdateManyWithoutRoundBatchNestedInput
   matches?: Prisma.MatchUpdateManyWithoutRoundBatchNestedInput
+  assignments?: Prisma.RoundAssignmentUpdateManyWithoutRoundBatchNestedInput
   retiredBusinesses?: Prisma.BusinessUpdateManyWithoutAiAuthorityExchangeRetiredInRoundBatchNestedInput
 }
 
@@ -327,8 +327,8 @@ export type RoundBatchUncheckedUpdateInput = {
   appliedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  assignments?: Prisma.RoundAssignmentUncheckedUpdateManyWithoutRoundBatchNestedInput
   matches?: Prisma.MatchUncheckedUpdateManyWithoutRoundBatchNestedInput
+  assignments?: Prisma.RoundAssignmentUncheckedUpdateManyWithoutRoundBatchNestedInput
   retiredBusinesses?: Prisma.BusinessUncheckedUpdateManyWithoutAiAuthorityExchangeRetiredInRoundBatchNestedInput
 }
 
@@ -461,8 +461,8 @@ export type RoundBatchCreateWithoutRetiredBusinessesInput = {
   appliedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  assignments?: Prisma.RoundAssignmentCreateNestedManyWithoutRoundBatchInput
   matches?: Prisma.MatchCreateNestedManyWithoutRoundBatchInput
+  assignments?: Prisma.RoundAssignmentCreateNestedManyWithoutRoundBatchInput
 }
 
 export type RoundBatchUncheckedCreateWithoutRetiredBusinessesInput = {
@@ -472,8 +472,8 @@ export type RoundBatchUncheckedCreateWithoutRetiredBusinessesInput = {
   appliedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  assignments?: Prisma.RoundAssignmentUncheckedCreateNestedManyWithoutRoundBatchInput
   matches?: Prisma.MatchUncheckedCreateNestedManyWithoutRoundBatchInput
+  assignments?: Prisma.RoundAssignmentUncheckedCreateNestedManyWithoutRoundBatchInput
 }
 
 export type RoundBatchCreateOrConnectWithoutRetiredBusinessesInput = {
@@ -498,8 +498,8 @@ export type RoundBatchUpdateWithoutRetiredBusinessesInput = {
   appliedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  assignments?: Prisma.RoundAssignmentUpdateManyWithoutRoundBatchNestedInput
   matches?: Prisma.MatchUpdateManyWithoutRoundBatchNestedInput
+  assignments?: Prisma.RoundAssignmentUpdateManyWithoutRoundBatchNestedInput
 }
 
 export type RoundBatchUncheckedUpdateWithoutRetiredBusinessesInput = {
@@ -509,8 +509,8 @@ export type RoundBatchUncheckedUpdateWithoutRetiredBusinessesInput = {
   appliedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  assignments?: Prisma.RoundAssignmentUncheckedUpdateManyWithoutRoundBatchNestedInput
   matches?: Prisma.MatchUncheckedUpdateManyWithoutRoundBatchNestedInput
+  assignments?: Prisma.RoundAssignmentUncheckedUpdateManyWithoutRoundBatchNestedInput
 }
 
 export type RoundBatchCreateWithoutMatchesInput = {
@@ -635,14 +635,14 @@ export type RoundBatchUncheckedUpdateWithoutAssignmentsInput = {
  */
 
 export type RoundBatchCountOutputType = {
-  assignments: number
   matches: number
+  assignments: number
   retiredBusinesses: number
 }
 
 export type RoundBatchCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  assignments?: boolean | RoundBatchCountOutputTypeCountAssignmentsArgs
   matches?: boolean | RoundBatchCountOutputTypeCountMatchesArgs
+  assignments?: boolean | RoundBatchCountOutputTypeCountAssignmentsArgs
   retiredBusinesses?: boolean | RoundBatchCountOutputTypeCountRetiredBusinessesArgs
 }
 
@@ -659,15 +659,15 @@ export type RoundBatchCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.E
 /**
  * RoundBatchCountOutputType without action
  */
-export type RoundBatchCountOutputTypeCountAssignmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.RoundAssignmentWhereInput
+export type RoundBatchCountOutputTypeCountMatchesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.MatchWhereInput
 }
 
 /**
  * RoundBatchCountOutputType without action
  */
-export type RoundBatchCountOutputTypeCountMatchesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.MatchWhereInput
+export type RoundBatchCountOutputTypeCountAssignmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.RoundAssignmentWhereInput
 }
 
 /**
@@ -685,8 +685,8 @@ export type RoundBatchSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   appliedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  assignments?: boolean | Prisma.RoundBatch$assignmentsArgs<ExtArgs>
   matches?: boolean | Prisma.RoundBatch$matchesArgs<ExtArgs>
+  assignments?: boolean | Prisma.RoundBatch$assignmentsArgs<ExtArgs>
   retiredBusinesses?: boolean | Prisma.RoundBatch$retiredBusinessesArgs<ExtArgs>
   _count?: boolean | Prisma.RoundBatchCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["roundBatch"]>
@@ -720,8 +720,8 @@ export type RoundBatchSelectScalar = {
 
 export type RoundBatchOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "sequenceNumber" | "status" | "appliedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["roundBatch"]>
 export type RoundBatchInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  assignments?: boolean | Prisma.RoundBatch$assignmentsArgs<ExtArgs>
   matches?: boolean | Prisma.RoundBatch$matchesArgs<ExtArgs>
+  assignments?: boolean | Prisma.RoundBatch$assignmentsArgs<ExtArgs>
   retiredBusinesses?: boolean | Prisma.RoundBatch$retiredBusinessesArgs<ExtArgs>
   _count?: boolean | Prisma.RoundBatchCountOutputTypeDefaultArgs<ExtArgs>
 }
@@ -731,8 +731,8 @@ export type RoundBatchIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.E
 export type $RoundBatchPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "RoundBatch"
   objects: {
-    assignments: Prisma.$RoundAssignmentPayload<ExtArgs>[]
     matches: Prisma.$MatchPayload<ExtArgs>[]
+    assignments: Prisma.$RoundAssignmentPayload<ExtArgs>[]
     retiredBusinesses: Prisma.$BusinessPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
@@ -1136,8 +1136,8 @@ readonly fields: RoundBatchFieldRefs;
  */
 export interface Prisma__RoundBatchClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  assignments<T extends Prisma.RoundBatch$assignmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.RoundBatch$assignmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RoundAssignmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   matches<T extends Prisma.RoundBatch$matchesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.RoundBatch$matchesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MatchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  assignments<T extends Prisma.RoundBatch$assignmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.RoundBatch$assignmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RoundAssignmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   retiredBusinesses<T extends Prisma.RoundBatch$retiredBusinessesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.RoundBatch$retiredBusinessesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BusinessPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -1562,30 +1562,6 @@ export type RoundBatchDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.In
 }
 
 /**
- * RoundBatch.assignments
- */
-export type RoundBatch$assignmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the RoundAssignment
-   */
-  select?: Prisma.RoundAssignmentSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the RoundAssignment
-   */
-  omit?: Prisma.RoundAssignmentOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.RoundAssignmentInclude<ExtArgs> | null
-  where?: Prisma.RoundAssignmentWhereInput
-  orderBy?: Prisma.RoundAssignmentOrderByWithRelationInput | Prisma.RoundAssignmentOrderByWithRelationInput[]
-  cursor?: Prisma.RoundAssignmentWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.RoundAssignmentScalarFieldEnum | Prisma.RoundAssignmentScalarFieldEnum[]
-}
-
-/**
  * RoundBatch.matches
  */
 export type RoundBatch$matchesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1607,6 +1583,30 @@ export type RoundBatch$matchesArgs<ExtArgs extends runtime.Types.Extensions.Inte
   take?: number
   skip?: number
   distinct?: Prisma.MatchScalarFieldEnum | Prisma.MatchScalarFieldEnum[]
+}
+
+/**
+ * RoundBatch.assignments
+ */
+export type RoundBatch$assignmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the RoundAssignment
+   */
+  select?: Prisma.RoundAssignmentSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the RoundAssignment
+   */
+  omit?: Prisma.RoundAssignmentOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.RoundAssignmentInclude<ExtArgs> | null
+  where?: Prisma.RoundAssignmentWhereInput
+  orderBy?: Prisma.RoundAssignmentOrderByWithRelationInput | Prisma.RoundAssignmentOrderByWithRelationInput[]
+  cursor?: Prisma.RoundAssignmentWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.RoundAssignmentScalarFieldEnum | Prisma.RoundAssignmentScalarFieldEnum[]
 }
 
 /**

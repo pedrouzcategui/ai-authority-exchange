@@ -385,6 +385,7 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 export const ModelName = {
   Business: 'Business',
+  BusinessContact: 'BusinessContact',
   Match: 'Match',
   RoundBatch: 'RoundBatch',
   RoundAssignment: 'RoundAssignment',
@@ -396,7 +397,8 @@ export const ModelName = {
   User: 'User',
   Account: 'Account',
   Session: 'Session',
-  VerificationToken: 'VerificationToken'
+  VerificationToken: 'VerificationToken',
+  ai_authority_exchange_forbidden_business_pairs: 'ai_authority_exchange_forbidden_business_pairs'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -412,7 +414,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "business" | "match" | "roundBatch" | "roundAssignment" | "business_categories" | "client_details" | "economic_sectors" | "publications" | "users" | "user" | "account" | "session" | "verificationToken"
+    modelProps: "business" | "businessContact" | "match" | "roundBatch" | "roundAssignment" | "business_categories" | "client_details" | "economic_sectors" | "publications" | "users" | "user" | "account" | "session" | "verificationToken" | "ai_authority_exchange_forbidden_business_pairs"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -487,6 +489,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.BusinessCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.BusinessCountAggregateOutputType> | number
+        }
+      }
+    }
+    BusinessContact: {
+      payload: Prisma.$BusinessContactPayload<ExtArgs>
+      fields: Prisma.BusinessContactFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.BusinessContactFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BusinessContactPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.BusinessContactFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BusinessContactPayload>
+        }
+        findFirst: {
+          args: Prisma.BusinessContactFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BusinessContactPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.BusinessContactFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BusinessContactPayload>
+        }
+        findMany: {
+          args: Prisma.BusinessContactFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BusinessContactPayload>[]
+        }
+        create: {
+          args: Prisma.BusinessContactCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BusinessContactPayload>
+        }
+        createMany: {
+          args: Prisma.BusinessContactCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.BusinessContactCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BusinessContactPayload>[]
+        }
+        delete: {
+          args: Prisma.BusinessContactDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BusinessContactPayload>
+        }
+        update: {
+          args: Prisma.BusinessContactUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BusinessContactPayload>
+        }
+        deleteMany: {
+          args: Prisma.BusinessContactDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.BusinessContactUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.BusinessContactUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BusinessContactPayload>[]
+        }
+        upsert: {
+          args: Prisma.BusinessContactUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BusinessContactPayload>
+        }
+        aggregate: {
+          args: Prisma.BusinessContactAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateBusinessContact>
+        }
+        groupBy: {
+          args: Prisma.BusinessContactGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BusinessContactGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.BusinessContactCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BusinessContactCountAggregateOutputType> | number
         }
       }
     }
@@ -1378,6 +1454,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    ai_authority_exchange_forbidden_business_pairs: {
+      payload: Prisma.$ai_authority_exchange_forbidden_business_pairsPayload<ExtArgs>
+      fields: Prisma.ai_authority_exchange_forbidden_business_pairsFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ai_authority_exchange_forbidden_business_pairsFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ai_authority_exchange_forbidden_business_pairsPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ai_authority_exchange_forbidden_business_pairsFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ai_authority_exchange_forbidden_business_pairsPayload>
+        }
+        findFirst: {
+          args: Prisma.ai_authority_exchange_forbidden_business_pairsFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ai_authority_exchange_forbidden_business_pairsPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ai_authority_exchange_forbidden_business_pairsFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ai_authority_exchange_forbidden_business_pairsPayload>
+        }
+        findMany: {
+          args: Prisma.ai_authority_exchange_forbidden_business_pairsFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ai_authority_exchange_forbidden_business_pairsPayload>[]
+        }
+        create: {
+          args: Prisma.ai_authority_exchange_forbidden_business_pairsCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ai_authority_exchange_forbidden_business_pairsPayload>
+        }
+        createMany: {
+          args: Prisma.ai_authority_exchange_forbidden_business_pairsCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ai_authority_exchange_forbidden_business_pairsCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ai_authority_exchange_forbidden_business_pairsPayload>[]
+        }
+        delete: {
+          args: Prisma.ai_authority_exchange_forbidden_business_pairsDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ai_authority_exchange_forbidden_business_pairsPayload>
+        }
+        update: {
+          args: Prisma.ai_authority_exchange_forbidden_business_pairsUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ai_authority_exchange_forbidden_business_pairsPayload>
+        }
+        deleteMany: {
+          args: Prisma.ai_authority_exchange_forbidden_business_pairsDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ai_authority_exchange_forbidden_business_pairsUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ai_authority_exchange_forbidden_business_pairsUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ai_authority_exchange_forbidden_business_pairsPayload>[]
+        }
+        upsert: {
+          args: Prisma.ai_authority_exchange_forbidden_business_pairsUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ai_authority_exchange_forbidden_business_pairsPayload>
+        }
+        aggregate: {
+          args: Prisma.Ai_authority_exchange_forbidden_business_pairsAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAi_authority_exchange_forbidden_business_pairs>
+        }
+        groupBy: {
+          args: Prisma.ai_authority_exchange_forbidden_business_pairsGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Ai_authority_exchange_forbidden_business_pairsGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ai_authority_exchange_forbidden_business_pairsCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Ai_authority_exchange_forbidden_business_pairsCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1421,10 +1571,6 @@ export const BusinessScalarFieldEnum = {
   id: 'id',
   business: 'business',
   websiteUrl: 'websiteUrl',
-  isActiveOnAiAuthorityExchange: 'isActiveOnAiAuthorityExchange',
-  aiAuthorityExchangeJoinedAt: 'aiAuthorityExchangeJoinedAt',
-  aiAuthorityExchangeRetiredAt: 'aiAuthorityExchangeRetiredAt',
-  aiAuthorityExchangeRetiredInRoundBatchId: 'aiAuthorityExchangeRetiredInRoundBatchId',
   google_drive_folder_url: 'google_drive_folder_url',
   writer_411_document_url: 'writer_411_document_url',
   discovery_packet_document_url: 'discovery_packet_document_url',
@@ -1439,24 +1585,44 @@ export const BusinessScalarFieldEnum = {
   domain_rating: 'domain_rating',
   related_category_ids: 'related_category_ids',
   related_categories_reasoning: 'related_categories_reasoning',
-  clientType: 'clientType'
+  clientType: 'clientType',
+  isActiveOnAiAuthorityExchange: 'isActiveOnAiAuthorityExchange',
+  aiAuthorityExchangeJoinedAt: 'aiAuthorityExchangeJoinedAt',
+  aiAuthorityExchangeRetiredAt: 'aiAuthorityExchangeRetiredAt',
+  aiAuthorityExchangeRetiredInRoundBatchId: 'aiAuthorityExchangeRetiredInRoundBatchId',
+  marketerContactId: 'marketerContactId',
+  marketerRole: 'marketerRole',
+  expertContactId: 'expertContactId',
+  expertRole: 'expertRole'
 } as const
 
 export type BusinessScalarFieldEnum = (typeof BusinessScalarFieldEnum)[keyof typeof BusinessScalarFieldEnum]
+
+
+export const BusinessContactScalarFieldEnum = {
+  id: 'id',
+  firstName: 'firstName',
+  lastName: 'lastName',
+  fullName: 'fullName',
+  email: 'email',
+  role: 'role'
+} as const
+
+export type BusinessContactScalarFieldEnum = (typeof BusinessContactScalarFieldEnum)[keyof typeof BusinessContactScalarFieldEnum]
 
 
 export const MatchScalarFieldEnum = {
   id: 'id',
   hostId: 'hostId',
   guestId: 'guestId',
-  roundBatchId: 'roundBatchId',
   status: 'status',
   interview_sent: 'interview_sent',
   interview_published: 'interview_published',
   partner_interview_received: 'partner_interview_received',
   partner_interview_published: 'partner_interview_published',
   notes: 'notes',
-  created_at: 'created_at'
+  created_at: 'created_at',
+  roundBatchId: 'roundBatchId'
 } as const
 
 export type MatchScalarFieldEnum = (typeof MatchScalarFieldEnum)[keyof typeof MatchScalarFieldEnum]
@@ -1552,11 +1718,11 @@ export const UserScalarFieldEnum = {
   legacyUserId: 'legacyUserId',
   name: 'name',
   email: 'email',
-  role: 'role',
   emailVerified: 'emailVerified',
   image: 'image',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  role: 'role'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -1601,6 +1767,16 @@ export const VerificationTokenScalarFieldEnum = {
 } as const
 
 export type VerificationTokenScalarFieldEnum = (typeof VerificationTokenScalarFieldEnum)[keyof typeof VerificationTokenScalarFieldEnum]
+
+
+export const Ai_authority_exchange_forbidden_business_pairsScalarFieldEnum = {
+  id: 'id',
+  lower_business_id: 'lower_business_id',
+  higher_business_id: 'higher_business_id',
+  created_at: 'created_at'
+} as const
+
+export type Ai_authority_exchange_forbidden_business_pairsScalarFieldEnum = (typeof Ai_authority_exchange_forbidden_business_pairsScalarFieldEnum)[keyof typeof Ai_authority_exchange_forbidden_business_pairsScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1662,9 +1838,16 @@ export type ListStringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaMod
 
 
 /**
- * Reference to a field of type 'Boolean'
+ * Reference to a field of type 'client_status'
  */
-export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+export type Enumclient_statusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'client_status'>
+    
+
+
+/**
+ * Reference to a field of type 'client_status[]'
+ */
+export type ListEnumclient_statusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'client_status[]'>
     
 
 
@@ -1683,20 +1866,6 @@ export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaM
 
 
 /**
- * Reference to a field of type 'client_status'
- */
-export type Enumclient_statusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'client_status'>
-    
-
-
-/**
- * Reference to a field of type 'client_status[]'
- */
-export type ListEnumclient_statusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'client_status[]'>
-    
-
-
-/**
  * Reference to a field of type 'BusinessRoleType'
  */
 export type EnumBusinessRoleTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BusinessRoleType'>
@@ -1707,6 +1876,27 @@ export type EnumBusinessRoleTypeFieldRefInput<$PrismaModel> = FieldRefInputType<
  * Reference to a field of type 'BusinessRoleType[]'
  */
 export type ListEnumBusinessRoleTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BusinessRoleType[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Boolean'
+ */
+export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+/**
+ * Reference to a field of type 'BusinessContactRoleType'
+ */
+export type EnumBusinessContactRoleTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BusinessContactRoleType'>
+    
+
+
+/**
+ * Reference to a field of type 'BusinessContactRoleType[]'
+ */
+export type ListEnumBusinessContactRoleTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BusinessContactRoleType[]'>
     
 
 
@@ -1889,6 +2079,7 @@ export type PrismaClientOptions = ({
 }
 export type GlobalOmitConfig = {
   business?: Prisma.BusinessOmit
+  businessContact?: Prisma.BusinessContactOmit
   match?: Prisma.MatchOmit
   roundBatch?: Prisma.RoundBatchOmit
   roundAssignment?: Prisma.RoundAssignmentOmit
@@ -1901,6 +2092,7 @@ export type GlobalOmitConfig = {
   account?: Prisma.AccountOmit
   session?: Prisma.SessionOmit
   verificationToken?: Prisma.VerificationTokenOmit
+  ai_authority_exchange_forbidden_business_pairs?: Prisma.ai_authority_exchange_forbidden_business_pairsOmit
 }
 
 /* Types for Logging */
