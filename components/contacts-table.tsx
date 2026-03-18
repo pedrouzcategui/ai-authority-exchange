@@ -15,9 +15,23 @@ type ContactsTableProps = {
 };
 
 type RoleFilter = "all" | "marketer" | "expert";
+type SortColumn = "contact" | "email";
+type SortDirection = "asc" | "desc";
+
+const sortCollator = new Intl.Collator(undefined, {
+  numeric: true,
+  sensitivity: "base",
+});
 
 function normalizeSearchValue(value: string | null | undefined) {
   return value?.trim().toLocaleLowerCase() ?? "";
+}
+
+function normalizeSortValue(value: string | null | undefined) {
+  const normalizedValue = value?.trim();
+  return normalizedValue && normalizedValue.length > 0
+    ? normalizedValue
+    : "Not set";
 }
 
 function getContactDisplayName(contact: BusinessContactDirectoryRow) {
@@ -55,34 +69,81 @@ function getRoleClassName(role: RoleFilter) {
     : "border-[#c7d5f1] bg-[#eef4ff] text-[#325188]";
 }
 
+function getSortButtonClassName(isActive: boolean) {
+  return isActive
+    ? "inline-flex items-center gap-1 rounded-sm bg-transparent p-0 text-foreground uppercase tracking-[0.16em] decoration-2 underline underline-offset-4 decoration-accent transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
+    : "inline-flex items-center gap-1 rounded-sm bg-transparent p-0 text-muted uppercase tracking-[0.16em] transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20";
+}
+
 export function ContactsTable({ businesses, contacts }: ContactsTableProps) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
+  const [sortColumn, setSortColumn] = useState<SortColumn>("contact");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [contactPendingDelete, setContactPendingDelete] =
     useState<BusinessContactDirectoryRow | null>(null);
   const [isDeleting, startDeleteTransition] = useTransition();
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const normalizedSearchQuery = normalizeSearchValue(deferredSearchQuery);
 
-  const filteredContacts = contacts.filter((contact) => {
-    const assignedBusinesses = getAssignedBusinesses(contact);
-    const matchesSearch =
-      normalizedSearchQuery.length === 0 ||
-      [
-        contact.email,
-        contact.firstName,
-        contact.fullName,
-        contact.lastName,
-        ...assignedBusinesses.map((business) => business.business),
-      ].some((value) =>
-        normalizeSearchValue(value).includes(normalizedSearchQuery),
+  const filteredContacts = contacts
+    .filter((contact) => {
+      const assignedBusinesses = getAssignedBusinesses(contact);
+      const matchesSearch =
+        normalizedSearchQuery.length === 0 ||
+        [
+          contact.email,
+          contact.firstName,
+          contact.fullName,
+          contact.lastName,
+          ...assignedBusinesses.map((business) => business.business),
+        ].some((value) =>
+          normalizeSearchValue(value).includes(normalizedSearchQuery),
+        );
+
+      const matchesRole = roleFilter === "all" || contact.role === roleFilter;
+
+      return matchesSearch && matchesRole;
+    })
+    .toSorted((left, right) => {
+      const leftValue =
+        sortColumn === "contact"
+          ? getContactDisplayName(left)
+          : normalizeSortValue(left.email);
+      const rightValue =
+        sortColumn === "contact"
+          ? getContactDisplayName(right)
+          : normalizeSortValue(right.email);
+
+      const comparison = sortCollator.compare(leftValue, rightValue);
+
+      if (comparison !== 0) {
+        return sortDirection === "asc" ? comparison : -comparison;
+      }
+
+      return left.id - right.id;
+    });
+
+  function toggleSort(nextColumn: SortColumn) {
+    if (sortColumn === nextColumn) {
+      setSortDirection((currentDirection) =>
+        currentDirection === "asc" ? "desc" : "asc",
       );
+      return;
+    }
 
-    const matchesRole = roleFilter === "all" || contact.role === roleFilter;
+    setSortColumn(nextColumn);
+    setSortDirection("asc");
+  }
 
-    return matchesSearch && matchesRole;
-  });
+  function getSortIndicator(column: SortColumn) {
+    if (sortColumn !== column) {
+      return "";
+    }
+
+    return sortDirection === "asc" ? "↑" : "↓";
+  }
 
   function clearFilters() {
     setSearchQuery("");
@@ -205,11 +266,35 @@ export function ContactsTable({ businesses, contacts }: ContactsTableProps) {
             <table className="min-w-full border-separate border-spacing-0">
               <thead>
                 <tr className="bg-brand-deep-soft/75 text-left text-xs font-semibold tracking-[0.16em] text-muted uppercase">
-                  <th className="px-5 py-4 sm:px-6">Contact</th>
-                  <th className="px-5 py-4 sm:px-6">Role</th>
-                  <th className="px-5 py-4 sm:px-6">Email</th>
-                  <th className="px-5 py-4 sm:px-6">Assigned Businesses</th>
-                  <th className="px-5 py-4 text-right sm:px-6">Actions</th>
+                  <th className="px-5 py-4 sm:px-6">
+                    <button
+                      aria-label={`Sort by contact${sortColumn === "contact" ? ` ${sortDirection === "asc" ? "descending" : "ascending"}` : " ascending"}`}
+                      className={getSortButtonClassName(sortColumn === "contact")}
+                      onClick={() => toggleSort("contact")}
+                      type="button"
+                    >
+                      <span>CONTACT</span>
+                      <span aria-hidden="true" className="text-accent">
+                        {getSortIndicator("contact")}
+                      </span>
+                    </button>
+                  </th>
+                  <th className="px-5 py-4 sm:px-6">ROLE</th>
+                  <th className="px-5 py-4 sm:px-6">
+                    <button
+                      aria-label={`Sort by email${sortColumn === "email" ? ` ${sortDirection === "asc" ? "descending" : "ascending"}` : " ascending"}`}
+                      className={getSortButtonClassName(sortColumn === "email")}
+                      onClick={() => toggleSort("email")}
+                      type="button"
+                    >
+                      <span>EMAIL</span>
+                      <span aria-hidden="true" className="text-accent">
+                        {getSortIndicator("email")}
+                      </span>
+                    </button>
+                  </th>
+                  <th className="px-5 py-4 sm:px-6">ASSIGNED BUSINESSES</th>
+                  <th className="px-5 py-4 text-right sm:px-6">ACTIONS</th>
                 </tr>
               </thead>
               <tbody>
