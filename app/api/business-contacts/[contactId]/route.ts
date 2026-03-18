@@ -43,22 +43,47 @@ function normalizeRequiredText(value: unknown) {
   return trimmedValue.length > 0 ? trimmedValue : null;
 }
 
-function normalizeRequiredEmail(value: unknown) {
+function normalizeOptionalText(value: unknown) {
+  if (value === null || value === undefined || value === "") {
+    return { isValid: true, value: null } as const;
+  }
+
   if (typeof value !== "string") {
-    return null;
+    return { isValid: false, value: null } as const;
+  }
+
+  const trimmedValue = value.trim();
+
+  return {
+    isValid: true,
+    value: trimmedValue.length > 0 ? trimmedValue : null,
+  } as const;
+}
+
+function normalizeOptionalEmail(value: unknown) {
+  if (value === null || value === undefined || value === "") {
+    return { isValid: true, value: null } as const;
+  }
+
+  if (typeof value !== "string") {
+    return { isValid: false, value: null } as const;
   }
 
   const trimmedValue = value.trim().toLocaleLowerCase();
 
-  if (!trimmedValue || !emailPattern.test(trimmedValue)) {
-    return null;
+  if (!trimmedValue) {
+    return { isValid: true, value: null } as const;
   }
 
-  return trimmedValue;
+  if (!emailPattern.test(trimmedValue)) {
+    return { isValid: false, value: null } as const;
+  }
+
+  return { isValid: true, value: trimmedValue } as const;
 }
 
-function buildFullName(firstName: string, lastName: string) {
-  return `${firstName} ${lastName}`.trim();
+function buildFullName(firstName: string, lastName: string | null) {
+  return [firstName, lastName].filter(Boolean).join(" ").trim();
 }
 
 export async function PATCH(request: Request, context: RouteContext) {
@@ -90,15 +115,15 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   const firstName = normalizeRequiredText(payload.firstName);
-  const lastName = normalizeRequiredText(payload.lastName);
-  const email = normalizeRequiredEmail(payload.email);
+  const lastName = normalizeOptionalText(payload.lastName);
+  const email = normalizeOptionalEmail(payload.email);
   const role = normalizeRole(payload.role);
 
-  if (!firstName || !lastName || !email || !role) {
+  if (!firstName || !role || !lastName.isValid || !email.isValid) {
     return NextResponse.json(
       {
         error:
-          "Please provide the contact role, first name, last name, and a valid email address.",
+          "Please provide the contact role and first name. If you include an email address, it must be valid.",
       },
       { status: 400 },
     );
@@ -149,10 +174,10 @@ export async function PATCH(request: Request, context: RouteContext) {
   try {
     await prisma.businessContact.update({
       data: {
-        email,
+        email: email.value,
         firstName,
-        fullName: buildFullName(firstName, lastName),
-        lastName,
+        fullName: buildFullName(firstName, lastName.value),
+        lastName: lastName.value,
         role,
       },
       where: {

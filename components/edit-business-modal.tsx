@@ -132,10 +132,12 @@ function getNormalizedSelectedContactEmail(state: BusinessContactFormState) {
 }
 
 function normalizeContactStateForPayload(state: BusinessContactFormState) {
+  const email = state.email.trim().toLocaleLowerCase();
+
   return {
-    email: state.email.trim(),
-    firstName: state.firstName.trim(),
-    lastName: state.lastName.trim(),
+    email: email.length > 0 ? email : null,
+    firstName: normalizeContactText(state.firstName),
+    lastName: normalizeContactText(state.lastName),
     selectedContactId:
       state.mode === "existing" ? state.selectedContactId : null,
   };

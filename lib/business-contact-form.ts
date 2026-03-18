@@ -56,18 +56,19 @@ export function validateBusinessContactState(
   const firstName = state.firstName.trim();
   const lastName = state.lastName.trim();
   const email = state.email.trim().toLocaleLowerCase();
+  const normalizedEmail = email.length > 0 ? email : null;
   const hasAnyValue =
-    firstName.length > 0 || lastName.length > 0 || email.length > 0;
+    firstName.length > 0 || lastName.length > 0 || normalizedEmail !== null;
 
-  if (!hasAnyValue || !firstName || !lastName || !email) {
+  if (!hasAnyValue || !firstName) {
     return {
       email: null,
-      errorMessage: `Please provide the ${roleLabel.toLocaleLowerCase()}'s first name, last name, and email, or set the dropdown to None.`,
+      errorMessage: `Please provide the ${roleLabel.toLocaleLowerCase()}'s first name, or set the dropdown to None.`,
       isValid: false,
     } as const;
   }
 
-  if (!emailPattern.test(email)) {
+  if (normalizedEmail !== null && !emailPattern.test(normalizedEmail)) {
     return {
       email: null,
       errorMessage: `Please provide a valid email for the ${roleLabel.toLocaleLowerCase()}.`,
@@ -76,7 +77,7 @@ export function validateBusinessContactState(
   }
 
   return {
-    email,
+    email: normalizedEmail,
     errorMessage: null,
     isValid: true,
   } as const;

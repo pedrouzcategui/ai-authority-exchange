@@ -268,11 +268,7 @@ function normalizeBusinessContactInput(value: unknown) {
     normalizedValue.selectedContactId !== null ||
     normalizedValue.hasAnyValue
   ) {
-    if (
-      normalizedValue.firstName === null ||
-      normalizedValue.lastName === null ||
-      normalizedValue.email === null
-    ) {
+    if (normalizedValue.firstName === null) {
       return { isValid: false, value: null } as const;
     }
   }
