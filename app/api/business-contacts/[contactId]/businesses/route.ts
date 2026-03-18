@@ -129,18 +129,12 @@ export async function PUT(request: Request, context: RouteContext) {
         businessIds.value.length === 0
           ? []
           : await transaction.business.findMany({
-              select:
-                contact.role === "marketer"
-                  ? {
-                      business: true,
-                      id: true,
-                      marketerContactId: true,
-                    }
-                  : {
-                      business: true,
-                      expertContactId: true,
-                      id: true,
-                    },
+              select: {
+                business: true,
+                expertContactId: true,
+                id: true,
+                marketerContactId: true,
+              },
               where: {
                 id: {
                   in: businessIds.value,
