@@ -5,10 +5,12 @@ import { useDeferredValue, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { EditBusinessContactModal } from "@/components/edit-business-contact-modal";
-import type { BusinessContactDirectoryRow } from "@/lib/matches";
+import { ManageContactBusinessesModal } from "@/components/manage-contact-businesses-modal";
+import type { BusinessContactDirectoryRow, BusinessOption } from "@/lib/matches";
 import { useRouter } from "next/navigation";
 
 type ContactsTableProps = {
+  businesses: BusinessOption[];
   contacts: BusinessContactDirectoryRow[];
 };
 
@@ -53,7 +55,7 @@ function getRoleClassName(role: RoleFilter) {
     : "border-[#c7d5f1] bg-[#eef4ff] text-[#325188]";
 }
 
-export function ContactsTable({ contacts }: ContactsTableProps) {
+export function ContactsTable({ businesses, contacts }: ContactsTableProps) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
@@ -250,6 +252,11 @@ export function ContactsTable({ contacts }: ContactsTableProps) {
                       </td>
                       <td className="border-t border-border px-5 py-4 text-right sm:px-6">
                         <div className="flex items-center justify-end gap-3">
+                          <ManageContactBusinessesModal
+                            businesses={businesses}
+                            contact={contact}
+                            triggerVariant="icon"
+                          />
                           <EditBusinessContactModal contact={contact} />
                           <button
                             className="inline-flex items-center rounded-full border border-[#e3beb9] bg-[#fff4f2] px-4 py-2 text-sm font-medium text-[#8f2e2a] transition hover:-translate-y-0.5 hover:border-[#c85c56] hover:text-[#7a211d]"

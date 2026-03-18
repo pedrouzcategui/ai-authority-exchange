@@ -1,12 +1,15 @@
 import Link from "next/link";
 import { AddBusinessContactModal } from "@/components/add-business-contact-modal";
 import { ContactsTable } from "@/components/contacts-table";
-import { getBusinessContactDirectoryRows } from "@/lib/matches";
+import { getBusinessContactDirectoryRows, getBusinesses } from "@/lib/matches";
 
 export const dynamic = "force-dynamic";
 
 export default async function ContactsPage() {
-  const contacts = await getBusinessContactDirectoryRows();
+  const [contacts, businesses] = await Promise.all([
+    getBusinessContactDirectoryRows(),
+    getBusinesses(),
+  ]);
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-8xl flex-col gap-8 px-6 py-10 sm:px-10 lg:px-12 lg:py-14">
@@ -35,7 +38,7 @@ export default async function ContactsPage() {
         </div>
       </section>
 
-      <ContactsTable contacts={contacts} />
+      <ContactsTable businesses={businesses} contacts={contacts} />
     </main>
   );
 }
