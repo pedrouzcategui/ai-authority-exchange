@@ -92,9 +92,9 @@ export function EditBusinessContactModal({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          email: contactState.email.trim(),
+          email: validation.email,
           firstName: contactState.firstName.trim(),
-          lastName: contactState.lastName.trim(),
+          lastName: contactState.lastName.trim() || null,
           role,
         }),
       });

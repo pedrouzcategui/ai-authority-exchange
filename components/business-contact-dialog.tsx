@@ -131,7 +131,7 @@ export function BusinessContactDialog({
 
             <label className="flex flex-col gap-2">
               <span className="text-sm font-medium text-foreground">
-                Last name
+                Last name (optional)
               </span>
               <input
                 className="min-h-12 w-full rounded-2xl border border-border bg-white/85 px-4 py-3 text-foreground outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
@@ -147,7 +147,9 @@ export function BusinessContactDialog({
           </div>
 
           <label className="flex flex-col gap-2">
-            <span className="text-sm font-medium text-foreground">Email</span>
+            <span className="text-sm font-medium text-foreground">
+              Email (optional)
+            </span>
             <input
               className="min-h-12 w-full rounded-2xl border border-border bg-white/85 px-4 py-3 text-foreground outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
               disabled={isBusy}
