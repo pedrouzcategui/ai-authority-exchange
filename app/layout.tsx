@@ -22,7 +22,6 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "A.I Authority Exchange",
   description: "Create business matches and review the full match list.",
-  icons: { icon: "/cropped-favicon.webp" },
 };
 
 export default async function RootLayout({

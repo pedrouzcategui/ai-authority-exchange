@@ -15,10 +15,17 @@ type BusinessDirectoryTableProps = {
   contacts: BusinessContactOption[];
 };
 
+type ContactFilter = "all" | "none" | `${number}`;
 type ExchangeFilter = "all" | "active" | "inactive";
+type SortDirection = "asc" | "desc";
 type WebsiteFilter = "all" | "set" | "not-set";
 
 const categoryCollator = new Intl.Collator(undefined, {
+  numeric: true,
+  sensitivity: "base",
+});
+
+const businessNameCollator = new Intl.Collator(undefined, {
   numeric: true,
   sensitivity: "base",
 });
@@ -29,6 +36,27 @@ function formatCellValue(value: string | null) {
 
 function normalizeSearchValue(value: string | null | undefined) {
   return value?.trim().toLocaleLowerCase() ?? "";
+}
+
+function getContactFilterLabel(contact: BusinessContactOption) {
+  if (contact.fullName && contact.fullName.trim().length > 0) {
+    return contact.fullName.trim();
+  }
+
+  const fullName = [contact.firstName, contact.lastName]
+    .filter((value): value is string => Boolean(value && value.trim().length > 0))
+    .join(" ")
+    .trim();
+
+  if (fullName.length > 0) {
+    return fullName;
+  }
+
+  if (contact.email && contact.email.trim().length > 0) {
+    return contact.email.trim();
+  }
+
+  return `Contact ${contact.id}`;
 }
 
 function getCategoryFilterLabel(selectedCategories: string[]) {
@@ -43,12 +71,21 @@ function getCategoryFilterLabel(selectedCategories: string[]) {
   return `${selectedCategories.length} categories`;
 }
 
+function getSortButtonClassName(isActive: boolean) {
+  return isActive
+    ? "inline-flex items-center gap-1 rounded-sm bg-transparent p-0 text-foreground uppercase tracking-[0.16em] decoration-2 underline underline-offset-4 decoration-accent transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
+    : "inline-flex items-center gap-1 rounded-sm bg-transparent p-0 text-muted uppercase tracking-[0.16em] transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20";
+}
+
 export function BusinessDirectoryTable({
   businesses,
   contacts,
 }: BusinessDirectoryTableProps) {
+  const [expertFilter, setExpertFilter] = useState<ContactFilter>("all");
+  const [marketerFilter, setMarketerFilter] = useState<ContactFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [exchangeFilter, setExchangeFilter] = useState<ExchangeFilter>("all");
   const [websiteFilter, setWebsiteFilter] = useState<WebsiteFilter>("all");
   const deferredSearchQuery = useDeferredValue(searchQuery);
@@ -69,46 +106,84 @@ export function BusinessDirectoryTable({
   ).toSorted(categoryCollator.compare);
 
   const selectedCategorySet = new Set(selectedCategories);
-  const filteredBusinesses = businesses.filter((business) => {
-    const matchesSearch =
-      normalizedSearchQuery.length === 0 ||
-      [
-        business.business,
-        business.businessCategoryName,
-        business.expert?.email,
-        business.expert?.firstName,
-        business.expert?.fullName,
-        business.expert?.lastName,
-        business.marketer?.email,
-        business.marketer?.firstName,
-        business.marketer?.fullName,
-        business.marketer?.lastName,
-        business.subcategory,
-        business.websiteUrl,
-      ].some((value) =>
-        normalizeSearchValue(value).includes(normalizedSearchQuery),
+  const filteredBusinesses = businesses
+    .filter((business) => {
+      const matchesSearch =
+        normalizedSearchQuery.length === 0 ||
+        [
+          business.business,
+          business.businessCategoryName,
+          business.expert?.email,
+          business.expert?.firstName,
+          business.expert?.fullName,
+          business.expert?.lastName,
+          business.marketer?.email,
+          business.marketer?.firstName,
+          business.marketer?.fullName,
+          business.marketer?.lastName,
+          business.subcategory,
+          business.websiteUrl,
+        ].some((value) =>
+          normalizeSearchValue(value).includes(normalizedSearchQuery),
+        );
+
+      const matchesCategory =
+        selectedCategorySet.size === 0 ||
+        (business.businessCategoryName !== null &&
+          selectedCategorySet.has(business.businessCategoryName));
+
+      const matchesExchange =
+        exchangeFilter === "all" ||
+        (exchangeFilter === "active" && business.isActiveOnAiAuthorityExchange) ||
+        (exchangeFilter === "inactive" &&
+          !business.isActiveOnAiAuthorityExchange);
+
+      const matchesWebsite =
+        websiteFilter === "all" ||
+        (websiteFilter === "set" && business.websiteUrl !== null) ||
+        (websiteFilter === "not-set" && business.websiteUrl === null);
+
+      const matchesMarketer =
+        marketerFilter === "all" ||
+        (marketerFilter === "none" && business.marketer === null) ||
+        business.marketer?.id.toString() === marketerFilter;
+
+      const matchesExpert =
+        expertFilter === "all" ||
+        (expertFilter === "none" && business.expert === null) ||
+        business.expert?.id.toString() === expertFilter;
+
+      return (
+        matchesSearch &&
+        matchesCategory &&
+        matchesExchange &&
+        matchesWebsite &&
+        matchesMarketer &&
+        matchesExpert
+      );
+    })
+    .toSorted((left, right) => {
+      const comparison = businessNameCollator.compare(
+        left.business,
+        right.business,
       );
 
-    const matchesCategory =
-      selectedCategorySet.size === 0 ||
-      (business.businessCategoryName !== null &&
-        selectedCategorySet.has(business.businessCategoryName));
+      if (comparison !== 0) {
+        return sortDirection === "asc" ? comparison : -comparison;
+      }
 
-    const matchesExchange =
-      exchangeFilter === "all" ||
-      (exchangeFilter === "active" && business.isActiveOnAiAuthorityExchange) ||
-      (exchangeFilter === "inactive" &&
-        !business.isActiveOnAiAuthorityExchange);
+      return left.id - right.id;
+    });
 
-    const matchesWebsite =
-      websiteFilter === "all" ||
-      (websiteFilter === "set" && business.websiteUrl !== null) ||
-      (websiteFilter === "not-set" && business.websiteUrl === null);
-
-    return (
-      matchesSearch && matchesCategory && matchesExchange && matchesWebsite
+  function toggleBusinessSort() {
+    setSortDirection((currentDirection) =>
+      currentDirection === "asc" ? "desc" : "asc",
     );
-  });
+  }
+
+  function getBusinessSortIndicator() {
+    return sortDirection === "asc" ? "↑" : "↓";
+  }
 
   function toggleCategory(category: string) {
     setSelectedCategories((currentCategories) =>
@@ -121,6 +196,8 @@ export function BusinessDirectoryTable({
   }
 
   function clearFilters() {
+    setExpertFilter("all");
+    setMarketerFilter("all");
     setSearchQuery("");
     setSelectedCategories([]);
     setExchangeFilter("all");
@@ -146,7 +223,7 @@ export function BusinessDirectoryTable({
         </p>
       </div>
 
-      <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1.15fr)_220px_220px_auto]">
+      <div className="mt-5 grid gap-4 md:grid-cols-2 2xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1.15fr)_220px_220px_220px_220px_auto]">
         <label className="flex flex-col gap-2">
           <span className="flex min-h-10 items-end text-sm font-medium text-foreground">
             Search
@@ -266,6 +343,48 @@ export function BusinessDirectoryTable({
           </select>
         </label>
 
+        <label className="flex flex-col gap-2">
+          <span className="flex min-h-10 items-end text-sm font-medium text-foreground">
+            Marketer
+          </span>
+          <select
+            className="min-h-12 w-full rounded-2xl border border-border bg-white/85 px-4 py-3 text-foreground outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
+            onChange={(event) =>
+              setMarketerFilter(event.target.value as ContactFilter)
+            }
+            value={marketerFilter}
+          >
+            <option value="all">All marketers</option>
+            <option value="none">No marketer</option>
+            {marketerContacts.map((contact) => (
+              <option key={`marketer-filter-${contact.id}`} value={contact.id}>
+                {getContactFilterLabel(contact)}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="flex flex-col gap-2">
+          <span className="flex min-h-10 items-end text-sm font-medium text-foreground">
+            Expert
+          </span>
+          <select
+            className="min-h-12 w-full rounded-2xl border border-border bg-white/85 px-4 py-3 text-foreground outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
+            onChange={(event) =>
+              setExpertFilter(event.target.value as ContactFilter)
+            }
+            value={expertFilter}
+          >
+            <option value="all">All experts</option>
+            <option value="none">No expert</option>
+            {expertContacts.map((contact) => (
+              <option key={`expert-filter-${contact.id}`} value={contact.id}>
+                {getContactFilterLabel(contact)}
+              </option>
+            ))}
+          </select>
+        </label>
+
         <div className="flex items-end justify-start lg:justify-end">
           <button
             className="inline-flex min-h-12 items-center justify-center rounded-full border border-border bg-white/80 px-5 py-3 text-sm font-medium text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-60"
@@ -273,7 +392,9 @@ export function BusinessDirectoryTable({
               searchQuery.trim().length === 0 &&
               selectedCategories.length === 0 &&
               exchangeFilter === "all" &&
-              websiteFilter === "all"
+              websiteFilter === "all" &&
+              marketerFilter === "all" &&
+              expertFilter === "all"
             }
             onClick={clearFilters}
             type="button"
@@ -299,7 +420,19 @@ export function BusinessDirectoryTable({
             <table className="min-w-full border-separate border-spacing-0">
               <thead>
                 <tr className="bg-brand-deep-soft/75 text-left text-xs font-semibold tracking-[0.16em] text-muted uppercase">
-                  <th className="px-5 py-4 sm:px-6">Business</th>
+                  <th className="px-5 py-4 sm:px-6">
+                    <button
+                      aria-label={`Sort by business ${sortDirection === "asc" ? "descending" : "ascending"}`}
+                      className={getSortButtonClassName(true)}
+                      onClick={toggleBusinessSort}
+                      type="button"
+                    >
+                      <span>BUSINESS</span>
+                      <span aria-hidden="true" className="text-accent">
+                        {getBusinessSortIndicator()}
+                      </span>
+                    </button>
+                  </th>
                   <th className="px-5 py-4 sm:px-6">Exchange</th>
                   <th className="px-5 py-4 sm:px-6">Marketer</th>
                   <th className="px-5 py-4 sm:px-6">Expert</th>
