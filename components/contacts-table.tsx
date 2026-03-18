@@ -14,6 +14,8 @@ type ContactsTableProps = {
   contacts: BusinessContactDirectoryRow[];
 };
 
+type FieldPresenceFilter = "all" | "is-set" | "not-set";
+type PageSize = 20 | 50 | 100;
 type RoleFilter = "all" | "marketer" | "expert";
 type SortColumn = "contact" | "email";
 type SortDirection = "asc" | "desc";
@@ -32,6 +34,18 @@ function normalizeSortValue(value: string | null | undefined) {
   return normalizedValue && normalizedValue.length > 0
     ? normalizedValue
     : "Not set";
+}
+
+function matchesFieldPresence(
+  value: string | null | undefined,
+  filter: FieldPresenceFilter,
+) {
+  if (filter === "all") {
+    return true;
+  }
+
+  const isSet = Boolean(value && value.trim().length > 0);
+  return filter === "is-set" ? isSet : !isSet;
 }
 
 function getContactDisplayName(contact: BusinessContactDirectoryRow) {
@@ -77,6 +91,13 @@ function getSortButtonClassName(isActive: boolean) {
 
 export function ContactsTable({ businesses, contacts }: ContactsTableProps) {
   const router = useRouter();
+  const [emailFilter, setEmailFilter] = useState<FieldPresenceFilter>("all");
+  const [firstNameFilter, setFirstNameFilter] =
+    useState<FieldPresenceFilter>("all");
+  const [lastNameFilter, setLastNameFilter] =
+    useState<FieldPresenceFilter>("all");
+  const [pageSize, setPageSize] = useState<PageSize>(20);
+  const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
   const [sortColumn, setSortColumn] = useState<SortColumn>("contact");
@@ -103,8 +124,23 @@ export function ContactsTable({ businesses, contacts }: ContactsTableProps) {
         );
 
       const matchesRole = roleFilter === "all" || contact.role === roleFilter;
+      const matchesFirstName = matchesFieldPresence(
+        contact.firstName,
+        firstNameFilter,
+      );
+      const matchesLastName = matchesFieldPresence(
+        contact.lastName,
+        lastNameFilter,
+      );
+      const matchesEmail = matchesFieldPresence(contact.email, emailFilter);
 
-      return matchesSearch && matchesRole;
+      return (
+        matchesSearch &&
+        matchesRole &&
+        matchesFirstName &&
+        matchesLastName &&
+        matchesEmail
+      );
     })
     .toSorted((left, right) => {
       const leftValue =
@@ -124,6 +160,16 @@ export function ContactsTable({ businesses, contacts }: ContactsTableProps) {
 
       return left.id - right.id;
     });
+
+  const totalPages = Math.max(1, Math.ceil(filteredContacts.length / pageSize));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const pageStartIndex = (safeCurrentPage - 1) * pageSize;
+  const paginatedContacts = filteredContacts.slice(
+    pageStartIndex,
+    pageStartIndex + pageSize,
+  );
+  const visibleStart = filteredContacts.length === 0 ? 0 : pageStartIndex + 1;
+  const visibleEnd = Math.min(pageStartIndex + pageSize, filteredContacts.length);
 
   function toggleSort(nextColumn: SortColumn) {
     if (sortColumn === nextColumn) {
@@ -146,6 +192,10 @@ export function ContactsTable({ businesses, contacts }: ContactsTableProps) {
   }
 
   function clearFilters() {
+    setEmailFilter("all");
+    setFirstNameFilter("all");
+    setLastNameFilter("all");
+    setCurrentPage(1);
     setSearchQuery("");
     setRoleFilter("all");
   }
@@ -208,14 +258,17 @@ export function ContactsTable({ businesses, contacts }: ContactsTableProps) {
         </p>
       </div>
 
-      <div className="mt-5 grid gap-4 md:grid-cols-[minmax(0,1fr)_220px_auto]">
+      <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1.4fr)_220px_180px_180px_180px_auto]">
         <label className="flex flex-col gap-2">
           <span className="flex min-h-10 items-end text-sm font-medium text-foreground">
             Search
           </span>
           <input
             className="min-h-12 w-full rounded-2xl border border-border bg-white/90 px-4 py-3 text-foreground outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
-            onChange={(event) => setSearchQuery(event.target.value)}
+            onChange={(event) => {
+              setCurrentPage(1);
+              setSearchQuery(event.target.value);
+            }}
             placeholder="Search contacts"
             type="search"
             value={searchQuery}
@@ -228,9 +281,10 @@ export function ContactsTable({ businesses, contacts }: ContactsTableProps) {
           </span>
           <select
             className="min-h-12 w-full rounded-2xl border border-border bg-white/85 px-4 py-3 text-foreground outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
-            onChange={(event) =>
-              setRoleFilter(event.target.value as RoleFilter)
-            }
+            onChange={(event) => {
+              setCurrentPage(1);
+              setRoleFilter(event.target.value as RoleFilter);
+            }}
             value={roleFilter}
           >
             <option value="all">All</option>
@@ -239,10 +293,70 @@ export function ContactsTable({ businesses, contacts }: ContactsTableProps) {
           </select>
         </label>
 
+        <label className="flex flex-col gap-2">
+          <span className="flex min-h-10 items-end text-sm font-medium text-foreground">
+            First Name
+          </span>
+          <select
+            className="min-h-12 w-full rounded-2xl border border-border bg-white/85 px-4 py-3 text-foreground outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
+            onChange={(event) => {
+              setCurrentPage(1);
+              setFirstNameFilter(event.target.value as FieldPresenceFilter);
+            }}
+            value={firstNameFilter}
+          >
+            <option value="all">All</option>
+            <option value="is-set">Is Set</option>
+            <option value="not-set">Not Set</option>
+          </select>
+        </label>
+
+        <label className="flex flex-col gap-2">
+          <span className="flex min-h-10 items-end text-sm font-medium text-foreground">
+            Last Name
+          </span>
+          <select
+            className="min-h-12 w-full rounded-2xl border border-border bg-white/85 px-4 py-3 text-foreground outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
+            onChange={(event) => {
+              setCurrentPage(1);
+              setLastNameFilter(event.target.value as FieldPresenceFilter);
+            }}
+            value={lastNameFilter}
+          >
+            <option value="all">All</option>
+            <option value="is-set">Is Set</option>
+            <option value="not-set">Not Set</option>
+          </select>
+        </label>
+
+        <label className="flex flex-col gap-2">
+          <span className="flex min-h-10 items-end text-sm font-medium text-foreground">
+            Email
+          </span>
+          <select
+            className="min-h-12 w-full rounded-2xl border border-border bg-white/85 px-4 py-3 text-foreground outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
+            onChange={(event) => {
+              setCurrentPage(1);
+              setEmailFilter(event.target.value as FieldPresenceFilter);
+            }}
+            value={emailFilter}
+          >
+            <option value="all">All</option>
+            <option value="is-set">Is Set</option>
+            <option value="not-set">Not Set</option>
+          </select>
+        </label>
+
         <div className="flex items-end justify-start lg:justify-end">
           <button
             className="inline-flex min-h-12 items-center justify-center rounded-full border border-border bg-white/80 px-5 py-3 text-sm font-medium text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-60"
-            disabled={searchQuery.trim().length === 0 && roleFilter === "all"}
+            disabled={
+              searchQuery.trim().length === 0 &&
+              roleFilter === "all" &&
+              firstNameFilter === "all" &&
+              lastNameFilter === "all" &&
+              emailFilter === "all"
+            }
             onClick={clearFilters}
             type="button"
           >
@@ -298,7 +412,7 @@ export function ContactsTable({ businesses, contacts }: ContactsTableProps) {
                 </tr>
               </thead>
               <tbody>
-                {filteredContacts.map((contact) => {
+                {paginatedContacts.map((contact) => {
                   const assignedBusinesses = getAssignedBusinesses(contact);
 
                   return (
@@ -357,6 +471,54 @@ export function ContactsTable({ businesses, contacts }: ContactsTableProps) {
                 })}
               </tbody>
             </table>
+          </div>
+
+          <div className="flex flex-col gap-4 border-t border-border bg-white/70 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+              <p className="text-sm text-muted">
+                Showing {visibleStart}-{visibleEnd} of {filteredContacts.length}
+              </p>
+
+              <label className="flex items-center gap-3 text-sm text-foreground">
+                <span className="font-medium">Rows per page</span>
+                <select
+                  className="min-h-11 rounded-2xl border border-border bg-white/85 px-4 py-2 text-foreground outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
+                  onChange={(event) => {
+                    setCurrentPage(1);
+                    setPageSize(Number(event.target.value) as PageSize);
+                  }}
+                  value={pageSize}
+                >
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+              </label>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                className="inline-flex min-h-11 items-center justify-center rounded-full border border-border bg-white/80 px-4 py-2 text-sm font-medium text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-45"
+                disabled={safeCurrentPage === 1}
+                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                type="button"
+              >
+                Previous
+              </button>
+              <span className="text-sm font-medium text-foreground">
+                Page {safeCurrentPage} of {totalPages}
+              </span>
+              <button
+                className="inline-flex min-h-11 items-center justify-center rounded-full border border-border bg-white/80 px-4 py-2 text-sm font-medium text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-45"
+                disabled={safeCurrentPage === totalPages}
+                onClick={() =>
+                  setCurrentPage((page) => Math.min(totalPages, page + 1))
+                }
+                type="button"
+              >
+                Next
+              </button>
+            </div>
           </div>
         </div>
       )}
