@@ -57,6 +57,21 @@ const roundAssignmentSelect = {
   updatedAt: true,
 } as const;
 
+const roundBatchMatchSelect = {
+  guest: {
+    select: roundBusinessSelect,
+  },
+  guestId: true,
+  host: {
+    select: roundBusinessSelect,
+  },
+  hostId: true,
+  id: true,
+  interview_published: true,
+  interview_sent: true,
+  status: true,
+} as const;
+
 const roundBatchSummarySelect = {
   _count: {
     select: {
@@ -106,6 +121,10 @@ function toRoundBusiness(business: RawRoundBusiness): RoundBusiness {
 
 type RawRoundAssignmentRecord = Prisma.RoundAssignmentGetPayload<{
   select: typeof roundAssignmentSelect;
+}>;
+
+type RawRoundBatchMatchRecord = Prisma.MatchGetPayload<{
+  select: typeof roundBatchMatchSelect;
 }>;
 
 function toRoundAssignmentRecord(
@@ -226,6 +245,15 @@ export type RoundDraftAssignmentRow = {
   source: RoundAssignmentSource;
 };
 
+export type RoundBatchMatchStatusRow = {
+  guestBusiness: RoundDraftOption;
+  hostBusiness: RoundDraftOption;
+  interviewPublished: boolean;
+  interviewSent: boolean;
+  matchId: number;
+  status: MatchStatus | null;
+};
+
 export type RoundDraftRow = {
   businessId: number;
   businessName: string;
@@ -241,6 +269,7 @@ export type RoundBatchView = {
   batch: RoundBatchSummary | null;
   batches: RoundBatchSummary[];
   forbiddenBusinessIdsByBusinessId: Record<number, number[]>;
+  matchStatusRows: RoundBatchMatchStatusRow[];
   rows: RoundDraftRow[];
   selectableBusinesses: RoundDraftOption[];
   unresolvedBusinessCount: number;
@@ -834,6 +863,19 @@ function toRoundDraftAssignmentRow(
   };
 }
 
+function toRoundBatchMatchStatusRow(
+  match: RawRoundBatchMatchRecord,
+): RoundBatchMatchStatusRow {
+  return {
+    guestBusiness: toRoundDraftOption(toRoundBusiness(match.guest)),
+    hostBusiness: toRoundDraftOption(toRoundBusiness(match.host)),
+    interviewPublished: match.interview_published ?? false,
+    interviewSent: match.interview_sent ?? false,
+    matchId: match.id,
+    status: match.status ?? null,
+  };
+}
+
 function getBusinessesRepresentedInAssignments(
   assignments: RoundAssignmentRecord[],
 ) {
@@ -1059,6 +1101,7 @@ export const getRoundBatchView = cache(async (requestedBatchId?: number) => {
       batch: null,
       batches,
       forbiddenBusinessIdsByBusinessId: {},
+      matchStatusRows: [],
       rows: activeBusinesses.map((business) => ({
         businessId: business.id,
         businessName: business.business,
@@ -1079,27 +1122,38 @@ export const getRoundBatchView = cache(async (requestedBatchId?: number) => {
       ? batches[0]
       : batches.find((batch) => batch.sequenceNumber === requestedBatchId) ??
         batches.find((batch) => batch.id === requestedBatchId)) ?? batches[0];
-  const [{ assignments, forbiddenBusinessIdsByBusinessId }, appliedMatches] = await Promise.all([
+  const [{ assignments, forbiddenBusinessIdsByBusinessId }, roundBatchMatches] = await Promise.all([
     getRoundManagementContext(selectedBatch.id),
-    selectedBatch.status === "applied"
-      ? prisma.match.findMany({
-          select: {
-            guestId: true,
-            hostId: true,
-            status: true,
-          },
-          where: {
-            roundBatchId: selectedBatch.id,
-          },
-        })
-      : Promise.resolve([]),
+    prisma.match.findMany({
+      select: roundBatchMatchSelect,
+      where: {
+        roundBatchId: selectedBatch.id,
+      },
+    }),
   ]);
   const matchStatusByPairKey = new Map(
-    appliedMatches.map((match) => [
+    roundBatchMatches.map((match) => [
       pairKey(match.hostId, match.guestId),
       match.status ?? null,
     ] as const),
   );
+  const matchStatusRows = roundBatchMatches
+    .map((match) => toRoundBatchMatchStatusRow(match))
+    .toSorted((left, right) => {
+      const guestComparison = businessNameCollator.compare(
+        left.guestBusiness.businessName,
+        right.guestBusiness.businessName,
+      );
+
+      if (guestComparison !== 0) {
+        return guestComparison;
+      }
+
+      return businessNameCollator.compare(
+        left.hostBusiness.businessName,
+        right.hostBusiness.businessName,
+      );
+    });
   const displayedBusinesses = getDisplayedBusinessesForBatch(
     activeBusinesses,
     assignments,
@@ -1190,6 +1244,7 @@ export const getRoundBatchView = cache(async (requestedBatchId?: number) => {
       serializeForbiddenBusinessIdsByBusinessId(
         forbiddenBusinessIdsByBusinessId,
       ),
+    matchStatusRows,
     rows,
     selectableBusinesses: selectableBusinesses.map((business) =>
       toRoundDraftOption(business),
