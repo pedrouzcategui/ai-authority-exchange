@@ -83,13 +83,20 @@ function toBusinessOption(business: SelectedBusiness) {
 }
 
 type RawMatchWithBusinesses = Prisma.MatchGetPayload<{
-  include: {
+  select: {
+    created_at: true;
     guest: {
       select: typeof businessSelection;
     };
+    guestId: true;
+    hostId: true;
     host: {
       select: typeof businessSelection;
     };
+    id: true;
+    interview_published: true;
+    interview_sent: true;
+    roundBatchId: true;
     roundBatch: {
       select: {
         id: true;
@@ -97,6 +104,7 @@ type RawMatchWithBusinesses = Prisma.MatchGetPayload<{
         status: true;
       };
     };
+    status: true;
   };
 }>;
 
@@ -421,13 +429,20 @@ export const getMatches = cache(async (hostId?: number, guestId?: number) => {
         };
 
   const matches = await prisma.match.findMany({
-    include: {
+    select: {
+      created_at: true,
       guest: {
         select: businessSelection,
       },
+      guestId: true,
       host: {
         select: businessSelection,
       },
+      hostId: true,
+      id: true,
+      interview_published: true,
+      interview_sent: true,
+      roundBatchId: true,
       roundBatch: {
         select: {
           id: true,
@@ -435,6 +450,7 @@ export const getMatches = cache(async (hostId?: number, guestId?: number) => {
           status: true,
         },
       },
+      status: true,
     },
     where,
     orderBy: {
@@ -522,13 +538,20 @@ async function getForbiddenBusinessesByBusinessId(
 
 export const getBusinessMatchBoard = cache(async (businessId: number) => {
   const matches = await prisma.match.findMany({
-    include: {
+    select: {
+      created_at: true,
       guest: {
         select: businessSelection,
       },
+      guestId: true,
       host: {
         select: businessSelection,
       },
+      hostId: true,
+      id: true,
+      interview_published: true,
+      interview_sent: true,
+      roundBatchId: true,
       roundBatch: {
         select: {
           id: true,
@@ -536,6 +559,7 @@ export const getBusinessMatchBoard = cache(async (businessId: number) => {
           status: true,
         },
       },
+      status: true,
     },
     orderBy: [{ created_at: "desc" }, { id: "desc" }],
     where: {
@@ -578,13 +602,20 @@ export const getBusinessRelationshipRows = cache(
       const [businesses, matches, forbiddenBusinesses] = await Promise.all([
         getExplicitlyActiveExchangeBusinesses(),
         prisma.match.findMany({
-          include: {
+          select: {
+            created_at: true,
             guest: {
               select: businessSelection,
             },
+            guestId: true,
             host: {
               select: businessSelection,
             },
+            hostId: true,
+            id: true,
+            interview_published: true,
+            interview_sent: true,
+            roundBatchId: true,
             roundBatch: {
               select: {
                 id: true,
@@ -592,6 +623,7 @@ export const getBusinessRelationshipRows = cache(
                 status: true,
               },
             },
+            status: true,
           },
           where: {
             OR: [

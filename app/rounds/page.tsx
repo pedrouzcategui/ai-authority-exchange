@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { RoundBatchPicker } from "@/components/round-batch-picker";
 import { RoundBatchActions } from "@/components/round-batch-actions";
-import { RoundDraftTable } from "@/components/round-draft-table";
+import { RoundsViewToggle } from "@/components/rounds-view-toggle";
 import { getAuthSession } from "@/lib/auth-session";
 import { getRoundBatchView } from "@/lib/rounds";
 import { getUserRoleForSessionUser, isAdminRole } from "@/lib/user-role";
@@ -159,14 +159,15 @@ export default async function RoundsPage({ searchParams }: RoundsPageProps) {
       ) : null}
 
       {roundBatchView.batch ? (
-        <RoundDraftTable
+        <RoundsViewToggle
           assignmentRows={roundBatchView.assignmentRows}
+          batchId={roundBatchView.batch.id}
           canDeleteAssignments={isAdmin}
           forbiddenBusinessIdsByBusinessId={
             roundBatchView.forbiddenBusinessIdsByBusinessId
           }
           key={roundBatchView.batch.id}
-          roundBatchId={roundBatchView.batch.id}
+          matchStatusRows={roundBatchView.matchStatusRows}
           roundSequenceNumber={roundBatchView.batch.sequenceNumber}
           rows={roundBatchView.rows}
           roundStatus={roundBatchView.batch.status}
