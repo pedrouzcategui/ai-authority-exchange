@@ -316,21 +316,6 @@ function buildBusinessContactFullName(
   return fullName.length > 0 ? fullName : null;
 }
 
-function getAssignedContactEmail(contact: { email: string | null } | null) {
-  return contact?.email?.trim().toLocaleLowerCase() ?? null;
-}
-
-function resolveNextAssignedContactEmail(
-  input: NormalizedBusinessContactInput,
-  currentContact: { email: string | null } | null,
-) {
-  if (input.selectedContactId === null && !input.hasAnyValue) {
-    return null;
-  }
-
-  return input.email ?? getAssignedContactEmail(currentContact);
-}
-
 async function persistBusinessRoleContact(params: {
   input: NormalizedBusinessContactInput;
   role: BusinessContactRoleType;
@@ -795,33 +780,6 @@ export async function PATCH(request: Request) {
         {
           error:
             "The selected expert contact is no longer available for this business.",
-        },
-        { status: 400 },
-      );
-    }
-
-    const nextMarketerEmail = hasMarketerContact
-      ? resolveNextAssignedContactEmail(
-          marketerContact!.value,
-          currentBusiness.marketer,
-        )
-      : getAssignedContactEmail(currentBusiness.marketer);
-    const nextExpertEmail = hasExpertContact
-      ? resolveNextAssignedContactEmail(
-          expertContact!.value,
-          currentBusiness.expert,
-        )
-      : getAssignedContactEmail(currentBusiness.expert);
-
-    if (
-      nextMarketerEmail !== null &&
-      nextExpertEmail !== null &&
-      nextMarketerEmail === nextExpertEmail
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            "The same email cannot be used for both the marketer and expert on the same business.",
         },
         { status: 400 },
       );
