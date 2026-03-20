@@ -86,8 +86,6 @@ model Match {
   status                      MatchStatus? @default(Not_Started) @map("status")
   interview_sent              Boolean?     @default(false)
   interview_published         Boolean?     @default(false)
-  partner_interview_received  Boolean?     @default(false)
-  partner_interview_published Boolean?     @default(false)
   notes                       String?
   created_at                  DateTime?    @default(now()) @db.Timestamp(6)
   roundBatchId                Int?         @map("round_batch_id")

@@ -1618,8 +1618,6 @@ export const MatchScalarFieldEnum = {
   status: 'status',
   interview_sent: 'interview_sent',
   interview_published: 'interview_published',
-  partner_interview_received: 'partner_interview_received',
-  partner_interview_published: 'partner_interview_published',
   notes: 'notes',
   created_at: 'created_at',
   roundBatchId: 'roundBatchId'
