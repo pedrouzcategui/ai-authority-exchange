@@ -9,6 +9,7 @@
     "lint": "eslint",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
+    "experts:import": "tsx scripts/import-expert-assignments.ts",
     "rounds:import": "tsx scripts/import-round-history.ts",
     "postinstall": "prisma generate"
   },
