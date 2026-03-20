@@ -78,17 +78,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   const business = await prisma.business.findUnique({
     select: {
       business: true,
-      expert: {
-        select: {
-          email: true,
-        },
-      },
       id: true,
-      marketer: {
-        select: {
-          email: true,
-        },
-      },
     },
     where: {
       id: businessId,
@@ -110,14 +100,12 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   let selectedContact: {
-    email: string | null;
     role: BusinessContactRoleType;
   } | null = null;
 
   if (selectedContactId !== null) {
     selectedContact = await prisma.businessContact.findUnique({
       select: {
-        email: true,
         role: true,
       },
       where: {
@@ -128,27 +116,6 @@ export async function PATCH(request: Request, context: RouteContext) {
     if (!selectedContact || selectedContact.role !== role) {
       return NextResponse.json(
         { error: `The selected ${role} is invalid for this business.` },
-        { status: 400 },
-      );
-    }
-
-    const otherAssignedEmail =
-      role === "marketer"
-        ? (business.expert?.email?.trim().toLocaleLowerCase() ?? null)
-        : (business.marketer?.email?.trim().toLocaleLowerCase() ?? null);
-    const selectedContactEmail =
-      selectedContact.email?.trim().toLocaleLowerCase() ?? null;
-
-    if (
-      otherAssignedEmail !== null &&
-      selectedContactEmail !== null &&
-      otherAssignedEmail === selectedContactEmail
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            "The same email cannot be used for both the marketer and expert on the same business.",
-        },
         { status: 400 },
       );
     }
