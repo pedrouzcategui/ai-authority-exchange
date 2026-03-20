@@ -18,7 +18,6 @@ type ContactSectionProps = {
 
 type BusinessContactFieldsProps = {
   disabled: boolean;
-  duplicateSelectionWarning?: string | null;
   expertContacts: BusinessContactOption[];
   expertState: BusinessContactFormState;
   marketerContacts: BusinessContactOption[];
@@ -211,7 +210,6 @@ function ContactSection({
 
 export function BusinessContactFields({
   disabled,
-  duplicateSelectionWarning,
   expertContacts,
   expertState,
   marketerContacts,
@@ -234,12 +232,6 @@ export function BusinessContactFields({
           authority exchange communications.
         </p>
       </div>
-
-      {duplicateSelectionWarning ? (
-        <div className="rounded-2xl border border-amber-300/80 bg-amber-50/90 px-4 py-3 text-sm leading-6 text-amber-950">
-          {duplicateSelectionWarning}
-        </div>
-      ) : null}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <ContactSection

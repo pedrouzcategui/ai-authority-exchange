@@ -122,15 +122,6 @@ function mergeSelectedContactState(
   );
 }
 
-function getNormalizedSelectedContactEmail(state: BusinessContactFormState) {
-  if (state.mode === "none") {
-    return null;
-  }
-
-  const trimmedEmail = state.email.trim().toLocaleLowerCase();
-  return trimmedEmail.length > 0 ? trimmedEmail : null;
-}
-
 function normalizeContactStateForPayload(state: BusinessContactFormState) {
   const email = state.email.trim().toLocaleLowerCase();
 
@@ -202,15 +193,6 @@ export function EditBusinessModal({
     getBusinessContactsByRole(contacts, "expert"),
     expertContact,
   );
-  const marketerSelectedContactEmail =
-    getNormalizedSelectedContactEmail(marketerContact);
-  const expertSelectedContactEmail =
-    getNormalizedSelectedContactEmail(expertContact);
-  const duplicateSelectionWarning =
-    marketerSelectedContactEmail !== null &&
-    marketerSelectedContactEmail === expertSelectedContactEmail
-      ? "The marketer and expert currently resolve to the same email address. Choose different contacts for each role before saving."
-      : null;
 
   useEffect(() => {
     if (!isOpen) {
@@ -404,17 +386,6 @@ export function EditBusinessModal({
         marketerValidation.errorMessage ??
           expertValidation.errorMessage ??
           "Please provide valid contact details before saving.",
-      );
-      return;
-    }
-
-    if (
-      marketerValidation.email !== null &&
-      expertValidation.email !== null &&
-      marketerValidation.email === expertValidation.email
-    ) {
-      toast.error(
-        "The same email cannot be used for both the marketer and expert on the same business.",
       );
       return;
     }
@@ -675,7 +646,6 @@ export function EditBusinessModal({
 
                   <BusinessContactFields
                     disabled={isPending}
-                    duplicateSelectionWarning={duplicateSelectionWarning}
                     expertContacts={expertContacts}
                     expertState={expertContact}
                     marketerContacts={marketerContacts}
