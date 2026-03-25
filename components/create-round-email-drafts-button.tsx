@@ -48,7 +48,7 @@ export function CreateRoundEmailDraftsButton({
       return "";
     }
 
-    return ` ${skippedAssignmentCount} match${skippedAssignmentCount === 1 ? " was" : "es were"} skipped because the business is incomplete or the status is not Not Started.`;
+    return ` ${skippedAssignmentCount} match${skippedAssignmentCount === 1 ? " was" : "es were"} skipped because the business is incomplete in this round.`;
   }
 
   function openConfirmation() {
@@ -150,7 +150,7 @@ export function CreateRoundEmailDraftsButton({
         onClick={openConfirmation}
         title={
           eligibleAssignments.length === 0
-            ? "Email drafts can only be created for businesses with complete matches that are still marked Not Started."
+            ? "Email drafts can only be created for businesses with complete matches in this round."
             : undefined
         }
         type="button"
@@ -161,7 +161,7 @@ export function CreateRoundEmailDraftsButton({
       <ConfirmationDialog
         cancelLabel="Keep Reviewing"
         confirmLabel="Create Drafts"
-        description={`This will create Gmail drafts for ${eligibleAssignments.length} applied match${eligibleAssignments.length === 1 ? "" : "es"} in round ${roundSequenceNumber ?? "selected"}. ${skippedAssignmentCount === 0 ? "You can review and send them from Gmail afterward." : `${skippedAssignmentCount} ${skippedAssignmentCount === 1 ? "match will" : "matches will"} be skipped because the business is incomplete or the status is no longer Not Started.`}`}
+        description={`This will create Gmail drafts for ${eligibleAssignments.length} applied match${eligibleAssignments.length === 1 ? "" : "es"} in round ${roundSequenceNumber ?? "selected"}. ${skippedAssignmentCount === 0 ? "You can review and send them from Gmail afterward." : `${skippedAssignmentCount} ${skippedAssignmentCount === 1 ? "match will" : "matches will"} be skipped because the business is incomplete in this round.`}`}
         isBusy={isPending}
         isOpen={isConfirmationOpen}
         onClose={closeConfirmation}

@@ -13,6 +13,34 @@ import { prisma, withDatabaseRetry } from "@/lib/prisma";
 
 type RoundDatabaseClient = PrismaClient | Prisma.TransactionClient;
 
+export type RoundApplyConflict = {
+  assignmentId: number;
+  existingGuestBusiness: string;
+  existingHostBusiness: string;
+  existingMatchId: number;
+  existingRoundSequenceNumber: number | null;
+  guestBusiness: string;
+  hostBusiness: string;
+};
+
+class RoundApplyConflictError extends Error {
+  conflicts: RoundApplyConflict[];
+
+  constructor(conflicts: RoundApplyConflict[]) {
+    super(
+      "One or more round assignments now conflict with an existing match. Refresh the draft before applying it.",
+    );
+    this.name = "RoundApplyConflictError";
+    this.conflicts = conflicts;
+  }
+}
+
+export function isRoundApplyConflictError(
+  error: unknown,
+): error is RoundApplyConflictError {
+  return error instanceof RoundApplyConflictError;
+}
+
 const businessNameCollator = new Intl.Collator(undefined, {
   numeric: true,
   sensitivity: "base",
@@ -2108,7 +2136,17 @@ export async function applyRoundBatch(roundBatchId: number) {
       }),
       database.roundAssignment.findMany({
         select: {
+          guestBusiness: {
+            select: {
+              business: true,
+            },
+          },
           guestBusinessId: true,
+          hostBusiness: {
+            select: {
+              business: true,
+            },
+          },
           hostBusinessId: true,
           id: true,
         },
@@ -2144,8 +2182,24 @@ export async function applyRoundBatch(roundBatchId: number) {
     ]);
     const conflictingMatches = await database.match.findMany({
       select: {
+        guest: {
+          select: {
+            business: true,
+          },
+        },
         guestId: true,
+        host: {
+          select: {
+            business: true,
+          },
+        },
         hostId: true,
+        id: true,
+        roundBatch: {
+          select: {
+            sequenceNumber: true,
+          },
+        },
       },
       where: {
         OR: pairWhereClauses,
@@ -2153,9 +2207,27 @@ export async function applyRoundBatch(roundBatchId: number) {
     });
 
     if (conflictingMatches.length > 0) {
-      throw new Error(
-        "One or more round assignments now conflict with an existing match. Refresh the draft before applying it.",
+      const conflicts = assignments.flatMap((assignment) =>
+        conflictingMatches
+          .filter(
+            (match) =>
+              (match.hostId === assignment.hostBusinessId &&
+                match.guestId === assignment.guestBusinessId) ||
+              (match.hostId === assignment.guestBusinessId &&
+                match.guestId === assignment.hostBusinessId),
+          )
+          .map((match) => ({
+            assignmentId: assignment.id,
+            existingGuestBusiness: match.guest.business,
+            existingHostBusiness: match.host.business,
+            existingMatchId: match.id,
+            existingRoundSequenceNumber: match.roundBatch?.sequenceNumber ?? null,
+            guestBusiness: assignment.guestBusiness.business,
+            hostBusiness: assignment.hostBusiness.business,
+          })),
       );
+
+      throw new RoundApplyConflictError(conflicts);
     }
 
     const creationResult = await database.match.createMany({

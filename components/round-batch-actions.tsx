@@ -6,12 +6,26 @@ import { toast } from "sonner";
 import type { RoundBatchStatus } from "@/generated/prisma/client";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
 
+type RoundApplyConflict = {
+  assignmentId: number;
+  existingGuestBusiness: string;
+  existingHostBusiness: string;
+  existingMatchId: number;
+  existingRoundSequenceNumber: number | null;
+  guestBusiness: string;
+  hostBusiness: string;
+};
+
 type ConfirmationState = {
   confirmLabel: string;
   description: string;
   onConfirm: () => void;
   title: string;
   tone: "danger" | "warning";
+} | null;
+
+type ApplyConflictState = {
+  conflicts: RoundApplyConflict[];
 } | null;
 
 type RoundBatchActionsProps = {
@@ -37,6 +51,8 @@ export function RoundBatchActions({
   const [isPending, startTransition] = useTransition();
   const [confirmationState, setConfirmationState] =
     useState<ConfirmationState>(null);
+  const [applyConflictState, setApplyConflictState] =
+    useState<ApplyConflictState>(null);
 
   function createRoundDraft() {
     startTransition(async () => {
@@ -72,6 +88,8 @@ export function RoundBatchActions({
     }
 
     startTransition(async () => {
+      setApplyConflictState(null);
+
       const response = await fetch(`/api/rounds/${roundBatchId}`, {
         method: "PATCH",
         headers: {
@@ -81,11 +99,23 @@ export function RoundBatchActions({
       });
 
       const payload = (await response.json().catch(() => null)) as {
+        conflicts?: RoundApplyConflict[];
         error?: string;
+        errorCode?: string;
         message?: string;
       } | null;
 
       if (!response.ok) {
+        if (
+          payload?.errorCode === "ROUND_APPLY_MATCH_CONFLICT" &&
+          payload.conflicts &&
+          payload.conflicts.length > 0
+        ) {
+          setApplyConflictState({
+            conflicts: payload.conflicts,
+          });
+        }
+
         toast.error(payload?.error ?? "The round draft could not be applied.");
         return;
       }
@@ -243,6 +273,49 @@ export function RoundBatchActions({
         onConfirm={() => confirmationState?.onConfirm()}
         title={confirmationState?.title ?? "Confirm action"}
         tone={confirmationState?.tone ?? "danger"}
+      />
+
+      <ConfirmationDialog
+        cancelLabel="Close"
+        confirmLabel="Refresh"
+        description="These draft assignments already exist in the match history, so the round cannot be applied until they are changed or removed."
+        details={
+          applyConflictState ? (
+            <div className="space-y-3">
+              <div className="max-h-80 space-y-2 overflow-y-auto rounded-3xl border border-border bg-white/78 p-3">
+                {applyConflictState.conflicts.map((conflict) => (
+                  <div
+                    className="rounded-2xl border border-border/80 bg-surface px-4 py-3"
+                    key={`${conflict.assignmentId}-${conflict.existingMatchId}`}
+                  >
+                    <p className="text-sm font-semibold text-foreground sm:text-base">
+                      {conflict.hostBusiness} -&gt; {conflict.guestBusiness}
+                    </p>
+                    <p className="mt-1 text-sm leading-6 text-muted">
+                      Already matched as {conflict.existingHostBusiness} -&gt; {conflict.existingGuestBusiness}
+                      {conflict.existingRoundSequenceNumber === null
+                        ? "."
+                        : ` in round ${conflict.existingRoundSequenceNumber}.`}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs leading-6 text-muted">
+                {applyConflictState.conflicts.length} conflicting match
+                {applyConflictState.conflicts.length === 1 ? "" : "es"} found.
+              </p>
+            </div>
+          ) : null
+        }
+        isBusy={isPending}
+        isOpen={applyConflictState !== null}
+        onClose={() => setApplyConflictState(null)}
+        onConfirm={() => {
+          setApplyConflictState(null);
+          router.refresh();
+        }}
+        title={`Round ${roundSequenceNumber ?? "draft"} has repeated matches`}
+        tone="warning"
       />
     </>
   );

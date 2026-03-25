@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 
@@ -7,6 +8,7 @@ type ConfirmationDialogProps = {
   cancelLabel?: string;
   confirmLabel?: string;
   description: string;
+  details?: ReactNode;
   isBusy?: boolean;
   isOpen: boolean;
   onClose: () => void;
@@ -31,6 +33,7 @@ export function ConfirmationDialog({
   cancelLabel = "Cancel",
   confirmLabel = "Confirm",
   description,
+  details,
   isBusy = false,
   isOpen,
   onClose,
@@ -93,6 +96,7 @@ export function ConfirmationDialog({
             <p className="text-sm leading-7 text-muted sm:text-base">
               {description}
             </p>
+            {details ? <div className="pt-1">{details}</div> : null}
           </div>
         </div>
 
