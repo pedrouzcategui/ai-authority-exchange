@@ -5,6 +5,7 @@ import {
   clearRoundBatch,
   deleteRoundBatch,
   generateRoundDraftForBatch,
+  isRoundApplyConflictError,
 } from "@/lib/rounds";
 import { getUserRoleForSessionUser, isAdminRole } from "@/lib/user-role";
 
@@ -117,6 +118,17 @@ export async function PATCH(request: Request, context: RouteContext) {
       message: `Round ${result.roundSequenceNumber} was applied with ${result.appliedCount} finalized match${result.appliedCount === 1 ? "" : "es"}.`,
     });
   } catch (error) {
+    if (isRoundApplyConflictError(error)) {
+      return NextResponse.json(
+        {
+          conflicts: error.conflicts,
+          error: `The round could not be applied. ${error.message}`,
+          errorCode: "ROUND_APPLY_MATCH_CONFLICT",
+        },
+        { status: 400 },
+      );
+    }
+
     const message = error instanceof Error ? error.message : String(error);
     const actionLabel =
       payload.action === "delete"
