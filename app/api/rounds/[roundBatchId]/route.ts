@@ -105,7 +105,9 @@ export async function PATCH(request: Request, context: RouteContext) {
         message:
           result.assignmentCount === 0
             ? `Round ${result.sequenceNumber} was generated, but no suggested assignments were available.`
-            : `Round ${result.sequenceNumber} was generated with ${result.assignmentCount} directed assignment${result.assignmentCount === 1 ? "" : "s"}.`,
+            : result.isComplete
+              ? `Round ${result.sequenceNumber} was generated with ${result.assignmentCount} directed assignment${result.assignmentCount === 1 ? "" : "s"}. Every active business received a full placement.`
+              : `Round ${result.sequenceNumber} was generated with ${result.assignmentCount} directed assignment${result.assignmentCount === 1 ? "" : "s"}, but ${result.unresolvedBusinessCount} business${result.unresolvedBusinessCount === 1 ? " still needs" : "es still need"} a complete placement because the remaining pairings are blocked by current rules.`,
       });
     }
 

@@ -3,8 +3,25 @@
 import { useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { BusinessContactDialog } from "@/components/business-contact-dialog";
+import { BusinessContactFields } from "@/components/business-contact-fields";
 import type { ExchangeParticipationStatus } from "@/lib/ai-authority-exchange";
+import {
+  createContactFormState,
+  createEmptyContactFormState,
+  type BusinessContactFormState,
+  validateBusinessContactState,
+} from "@/lib/business-contact-form";
+import type { BusinessContactOption } from "@/lib/matches";
 import { ExchangeParticipationFields } from "@/components/exchange-participation-fields";
+
+type AddClientModalProps = {
+  contacts: BusinessContactOption[];
+};
+
+type BusinessContact = BusinessContactOption;
+type BusinessContactField = "email" | "firstName" | "lastName";
+type BusinessContactRole = BusinessContact["role"];
 
 const roleOptions = [
   { label: "Client", value: "client" },
@@ -25,7 +42,68 @@ function normalizeWebsiteInput(value: string) {
     : `https://${trimmedValue}`;
 }
 
-export function AddClientModal() {
+function normalizeContactText(value: string) {
+  const trimmedValue = value.trim();
+  return trimmedValue.length > 0 ? trimmedValue : null;
+}
+
+function buildContactFullName(
+  firstName: string | null,
+  lastName: string | null,
+) {
+  const fullName = [firstName, lastName]
+    .filter((value): value is string => value !== null && value.length > 0)
+    .join(" ")
+    .trim();
+
+  return fullName.length > 0 ? fullName : null;
+}
+
+function getBusinessContactsByRole(
+  contacts: BusinessContactOption[],
+  role: BusinessContactRole,
+) {
+  return contacts.filter((contact) => contact.role === role);
+}
+
+function mergeSelectedContactState(
+  contacts: BusinessContact[],
+  state: BusinessContactFormState,
+) {
+  if (state.mode !== "existing" || state.selectedContactId === null) {
+    return contacts;
+  }
+
+  const email = normalizeContactText(state.email);
+  const firstName = normalizeContactText(state.firstName);
+  const lastName = normalizeContactText(state.lastName);
+
+  return contacts.map((contact) =>
+    contact.id === state.selectedContactId
+      ? {
+          ...contact,
+          email,
+          firstName,
+          fullName: buildContactFullName(firstName, lastName),
+          lastName,
+        }
+      : contact,
+  );
+}
+
+function normalizeContactStateForPayload(state: BusinessContactFormState) {
+  const email = state.email.trim().toLocaleLowerCase();
+
+  return {
+    email: email.length > 0 ? email : null,
+    firstName: normalizeContactText(state.firstName),
+    lastName: normalizeContactText(state.lastName),
+    selectedContactId:
+      state.mode === "existing" ? state.selectedContactId : null,
+  };
+}
+
+export function AddClientModal({ contacts }: AddClientModalProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -41,6 +119,25 @@ export function AddClientModal() {
     setAiAuthorityExchangeRetiredRoundSequenceNumber,
   ] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
+  const [marketerContact, setMarketerContact] = useState(() =>
+    createEmptyContactFormState(),
+  );
+  const [expertContact, setExpertContact] = useState(() =>
+    createEmptyContactFormState(),
+  );
+  const [contactDialogRole, setContactDialogRole] =
+    useState<BusinessContactRole | null>(null);
+  const [contactDialogState, setContactDialogState] = useState(() =>
+    createEmptyContactFormState(),
+  );
+  const marketerContacts = mergeSelectedContactState(
+    getBusinessContactsByRole(contacts, "marketer"),
+    marketerContact,
+  );
+  const expertContacts = mergeSelectedContactState(
+    getBusinessContactsByRole(contacts, "expert"),
+    expertContact,
+  );
 
   function resetForm() {
     setExchangeParticipationStatus("not-participating");
@@ -49,6 +146,10 @@ export function AddClientModal() {
     setAiAuthorityExchangeRetiredAt("");
     setAiAuthorityExchangeRetiredRoundSequenceNumber("");
     setWebsiteUrl("");
+    setMarketerContact(createEmptyContactFormState());
+    setExpertContact(createEmptyContactFormState());
+    setContactDialogRole(null);
+    setContactDialogState(createEmptyContactFormState());
   }
 
   function closeModal() {
@@ -93,6 +194,24 @@ export function AddClientModal() {
       }
     }
 
+    const marketerValidation = validateBusinessContactState(
+      "Marketer",
+      marketerContact,
+    );
+    const expertValidation = validateBusinessContactState(
+      "Expert",
+      expertContact,
+    );
+
+    if (!marketerValidation.isValid || !expertValidation.isValid) {
+      toast.error(
+        marketerValidation.errorMessage ??
+          expertValidation.errorMessage ??
+          "Please provide valid contact details before saving.",
+      );
+      return;
+    }
+
     const normalizedWebsiteUrl = normalizeWebsiteInput(websiteUrl);
     setWebsiteUrl(normalizedWebsiteUrl);
 
@@ -112,7 +231,9 @@ export function AddClientModal() {
             aiAuthorityExchangeRetiredRoundSequenceNumber.trim() !== ""
               ? Number(aiAuthorityExchangeRetiredRoundSequenceNumber)
               : null,
+          expertContact: normalizeContactStateForPayload(expertContact),
           exchangeParticipationStatus,
+          marketerContact: normalizeContactStateForPayload(marketerContact),
           name,
           role,
           websiteUrl: normalizedWebsiteUrl,
@@ -136,6 +257,114 @@ export function AddClientModal() {
     });
   }
 
+  function getContactStateByRole(role: BusinessContactRole) {
+    return role === "marketer" ? marketerContact : expertContact;
+  }
+
+  function setContactStateByRole(
+    role: BusinessContactRole,
+    nextState:
+      | BusinessContactFormState
+      | ((currentValue: BusinessContactFormState) => BusinessContactFormState),
+  ) {
+    const setState =
+      role === "marketer" ? setMarketerContact : setExpertContact;
+    setState(nextState);
+  }
+
+  function handleContactSelectionChange(
+    role: BusinessContactRole,
+    nextValue: string,
+  ) {
+    if (nextValue === "draft") {
+      return;
+    }
+
+    const availableContacts =
+      role === "marketer" ? marketerContacts : expertContacts;
+
+    if (nextValue === "none") {
+      setContactStateByRole(role, createEmptyContactFormState());
+      return;
+    }
+
+    const parsedContactId = Number.parseInt(nextValue, 10);
+
+    if (!Number.isInteger(parsedContactId)) {
+      setContactStateByRole(role, createEmptyContactFormState());
+      return;
+    }
+
+    const selectedContact = availableContacts.find(
+      (contact) => contact.id === parsedContactId,
+    );
+
+    setContactStateByRole(role, createContactFormState(selectedContact));
+  }
+
+  function openContactDialog(role: BusinessContactRole) {
+    const currentState = getContactStateByRole(role);
+
+    setContactDialogState(
+      currentState.mode === "none"
+        ? {
+            ...createEmptyContactFormState(),
+            mode: "new",
+          }
+        : currentState,
+    );
+    setContactDialogRole(role);
+  }
+
+  function closeContactDialog() {
+    if (isPending) {
+      return;
+    }
+
+    setContactDialogRole(null);
+    setContactDialogState(createEmptyContactFormState());
+  }
+
+  function handleContactDialogFieldChange(
+    field: BusinessContactField,
+    value: string,
+  ) {
+    setContactDialogState((currentValue) => ({
+      ...currentValue,
+      [field]: value,
+    }));
+  }
+
+  function handleSaveContactDialog() {
+    if (contactDialogRole === null) {
+      return;
+    }
+
+    const roleLabel = contactDialogRole === "marketer" ? "Marketer" : "Expert";
+    const validation = validateBusinessContactState(
+      roleLabel,
+      contactDialogState,
+    );
+
+    if (!validation.isValid) {
+      toast.error(
+        validation.errorMessage ??
+          `Please provide a valid ${roleLabel.toLocaleLowerCase()}.`,
+      );
+      return;
+    }
+
+    setContactStateByRole(contactDialogRole, {
+      ...contactDialogState,
+      email: contactDialogState.email.trim(),
+      firstName: contactDialogState.firstName.trim(),
+      lastName: contactDialogState.lastName.trim(),
+      mode: contactDialogState.selectedContactId === null ? "new" : "existing",
+    });
+    setContactDialogRole(null);
+    setContactDialogState(createEmptyContactFormState());
+  }
+
   return (
     <>
       <button
@@ -148,7 +377,7 @@ export function AddClientModal() {
 
       {isOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(51,71,91,0.36)] px-4 py-8 backdrop-blur-sm">
-          <div className="w-full max-w-2xl rounded-4xl border border-border bg-surface p-6 shadow-(--shadow) sm:p-8">
+          <div className="h-[80vh] w-full max-w-2xl overflow-y-auto rounded-4xl border border-border bg-surface p-6 shadow-(--shadow) sm:p-8">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="space-y-3">
                 <p className="text-sm font-medium tracking-[0.16em] text-accent uppercase">
@@ -230,6 +459,28 @@ export function AddClientModal() {
                 />
               </label>
 
+              <BusinessContactFields
+                disabled={isPending}
+                expertContacts={expertContacts}
+                expertState={expertContact}
+                marketerContacts={marketerContacts}
+                marketerState={marketerContact}
+                onExpertCreateRequested={() => openContactDialog("expert")}
+                onExpertEditRequested={() => openContactDialog("expert")}
+                onExpertSelectionChange={(nextValue) =>
+                  handleContactSelectionChange("expert", nextValue)
+                }
+                onMarketerCreateRequested={() =>
+                  openContactDialog("marketer")
+                }
+                onMarketerEditRequested={() =>
+                  openContactDialog("marketer")
+                }
+                onMarketerSelectionChange={(nextValue) =>
+                  handleContactSelectionChange("marketer", nextValue)
+                }
+              />
+
               <ExchangeParticipationFields
                 disabled={isPending}
                 onRetiredAtChange={setAiAuthorityExchangeRetiredAt}
@@ -270,6 +521,16 @@ export function AddClientModal() {
           </div>
         </div>
       ) : null}
+
+      <BusinessContactDialog
+        isBusy={isPending}
+        isOpen={contactDialogRole !== null}
+        onClose={closeContactDialog}
+        onFieldChange={handleContactDialogFieldChange}
+        onSave={handleSaveContactDialog}
+        roleLabel={contactDialogRole === "marketer" ? "Marketer" : "Expert"}
+        state={contactDialogState}
+      />
     </>
   );
 }

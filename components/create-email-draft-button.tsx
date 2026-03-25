@@ -42,6 +42,7 @@ export function CreateEmailDraftButton({
       const payload = (await response.json().catch(() => null)) as {
         error?: string;
         message?: string;
+        warning?: string | null;
       } | null;
 
       if (!response.ok) {
@@ -52,6 +53,9 @@ export function CreateEmailDraftButton({
       toast.success(
         payload?.message ?? "Email draft created in your Gmail account.",
       );
+      if (payload?.warning) {
+        toast(payload.warning);
+      }
       onCreated?.();
       router.refresh();
     });

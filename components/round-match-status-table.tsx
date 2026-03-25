@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { MatchStatus, RoundBatchStatus } from "@/generated/prisma/client";
 import { getBusinessProfileHref } from "@/lib/business-profile-route";
+import { getRoundMatchMethod, type RoundMatchMethod } from "@/lib/round-match-method";
 import type { RoundBatchMatchStatusRow } from "@/lib/rounds";
 
 type RoundMatchStatusTableProps = {
@@ -60,6 +61,36 @@ function getStatusSelectClassName(status: MatchStatus | null) {
     case "Not_Started":
     default:
       return "border-border bg-white/85 text-foreground focus:border-accent focus:ring-accent/15";
+  }
+}
+
+function getMatchingMethodClassName(method: RoundMatchMethod | null) {
+  switch (method) {
+    case "same-subcategory":
+      return "border-[#8fc2b1] bg-[#e9f7f1] text-[#256150]";
+    case "same-category":
+      return "border-[#9bb7dd] bg-[#edf4fd] text-[#31557f]";
+    case "related-category":
+      return "border-[#d7b4e6] bg-[#f8effc] text-[#6d3f83]";
+    case "related-sector":
+      return "border-[#efc28b] bg-[#fff5e8] text-[#9b6527]";
+    default:
+      return "border-[#efb1a8] bg-[#fff0ec] text-[#b55247]";
+  }
+}
+
+function getMatchingMethodLabel(method: RoundMatchMethod | null) {
+  switch (method) {
+    case "same-subcategory":
+      return "Same Subcategory";
+    case "same-category":
+      return "Same Category";
+    case "related-category":
+      return "Related Category";
+    case "related-sector":
+      return "Related Sector";
+    default:
+      return "Outside Taxonomy";
   }
 }
 
@@ -319,7 +350,8 @@ export function RoundMatchStatusTable({
           </div>
           <p className="max-w-3xl text-sm leading-7 text-muted sm:text-base">
             Update interview workflow directly from the selected round instead
-            of editing each business individually.
+            of editing each business individually. Pairings outside the
+            standard taxonomy rules are flagged in the table.
           </p>
         </div>
 
@@ -400,6 +432,10 @@ export function RoundMatchStatusTable({
               <tbody className="divide-y divide-border/80">
                 {visibleRows.map((row) => {
                   const isPending = pendingMatchIds.includes(row.matchId);
+                  const matchingMethod = getRoundMatchMethod(
+                    row.hostBusiness,
+                    row.guestBusiness,
+                  );
 
                   return (
                     <tr
@@ -407,7 +443,7 @@ export function RoundMatchStatusTable({
                       key={row.matchId}
                     >
                       <td className="px-4 py-4 align-middle">
-                        <div className="space-y-1">
+                        <div className="space-y-1.5">
                           <Link
                             className="text-sm font-semibold text-foreground transition hover:text-accent"
                             href={getBusinessProfileHref(row.guestBusiness.businessId)}
@@ -417,6 +453,11 @@ export function RoundMatchStatusTable({
                           <p className="text-xs uppercase tracking-[0.12em] text-muted">
                             {formatDomainRating(row.guestBusiness.domainRating)}
                           </p>
+                          <span
+                            className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-[0.08em] uppercase ${getMatchingMethodClassName(matchingMethod)}`}
+                          >
+                            {getMatchingMethodLabel(matchingMethod)}
+                          </span>
                         </div>
                       </td>
                       <td className="px-4 py-4 align-middle">

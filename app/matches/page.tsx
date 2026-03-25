@@ -243,7 +243,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
           >
             View Rounds
           </Link>
-          <AddClientModal />
+          <AddClientModal contacts={businessContacts} />
         </div>
       </section>
 

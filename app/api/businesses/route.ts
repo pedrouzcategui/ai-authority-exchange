@@ -12,8 +12,10 @@ import { prisma } from "@/lib/prisma";
 type CreateBusinessPayload = {
   aiAuthorityExchangeRetiredAt?: unknown;
   aiAuthorityExchangeRetiredRoundSequenceNumber?: unknown;
+  expertContact?: unknown;
   exchangeParticipationStatus?: unknown;
   isActiveOnAiAuthorityExchange?: unknown;
+  marketerContact?: unknown;
   name?: unknown;
   role?: unknown;
   websiteUrl?: unknown;
@@ -425,6 +427,20 @@ export async function POST(request: Request) {
   const retiredRoundSequenceNumber = parsePositiveInteger(
     payload.aiAuthorityExchangeRetiredRoundSequenceNumber,
   );
+  const hasMarketerContact = Object.prototype.hasOwnProperty.call(
+    payload,
+    "marketerContact",
+  );
+  const hasExpertContact = Object.prototype.hasOwnProperty.call(
+    payload,
+    "expertContact",
+  );
+  const marketerContact = hasMarketerContact
+    ? normalizeBusinessContactInput(payload.marketerContact)
+    : null;
+  const expertContact = hasExpertContact
+    ? normalizeBusinessContactInput(payload.expertContact)
+    : null;
   const websiteUrl = normalizeWebsiteUrl(payload.websiteUrl);
 
   if (
@@ -432,12 +448,14 @@ export async function POST(request: Request) {
     !websiteUrl ||
     !role ||
     !exchangeParticipationStatus ||
-    !retiredAt.isValid
+    !retiredAt.isValid ||
+    (marketerContact && !marketerContact.isValid) ||
+    (expertContact && !expertContact.isValid)
   ) {
     return NextResponse.json(
       {
         error:
-          "Please provide a business name, a valid website URL, a role, and a valid AI Authority Exchange status.",
+          "Please provide a business name, a valid website URL, a role, valid contact details, and a valid AI Authority Exchange status.",
       },
       { status: 400 },
     );
@@ -471,6 +489,62 @@ export async function POST(request: Request) {
       retiredRoundSequenceNumber,
     );
 
+    const selectedContactIds = [
+      hasMarketerContact ? marketerContact!.value.selectedContactId : null,
+      hasExpertContact ? expertContact!.value.selectedContactId : null,
+    ].filter((contactId): contactId is number => contactId !== null);
+
+    const selectedContacts =
+      selectedContactIds.length === 0
+        ? []
+        : await prisma.businessContact.findMany({
+            select: {
+              id: true,
+              role: true,
+            },
+            where: {
+              id: {
+                in: selectedContactIds,
+              },
+            },
+          });
+
+    if (
+      hasMarketerContact &&
+      marketerContact!.value.selectedContactId !== null &&
+      !selectedContacts.some(
+        (contact) =>
+          contact.id === marketerContact!.value.selectedContactId &&
+          contact.role === "marketer",
+      )
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "The selected marketer contact is no longer available for this business.",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (
+      hasExpertContact &&
+      expertContact!.value.selectedContactId !== null &&
+      !selectedContacts.some(
+        (contact) =>
+          contact.id === expertContact!.value.selectedContactId &&
+          contact.role === "expert",
+      )
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "The selected expert contact is no longer available for this business.",
+        },
+        { status: 400 },
+      );
+    }
+
     if (retiredRoundSequenceNumber !== null && retiredRoundBatchId === null) {
       return NextResponse.json(
         {
@@ -485,8 +559,8 @@ export async function POST(request: Request) {
       retiredRoundBatchId,
       status: exchangeParticipationStatus,
     });
-    const business = await prisma.business.create({
-      data: {
+    const business = await prisma.$transaction(async (tx) => {
+      const createData: Prisma.BusinessUncheckedCreateInput = {
         aiAuthorityExchangeJoinedAt:
           exchangeLifecycleFields.aiAuthorityExchangeJoinedAt,
         aiAuthorityExchangeRetiredAt:
@@ -498,11 +572,38 @@ export async function POST(request: Request) {
         isActiveOnAiAuthorityExchange:
           exchangeLifecycleFields.isActiveOnAiAuthorityExchange,
         websiteUrl,
-      },
-      select: {
-        business: true,
-        id: true,
-      },
+      };
+
+      if (hasMarketerContact) {
+        const marketerContactId = await persistBusinessRoleContact({
+          input: marketerContact!.value,
+          role: "marketer",
+          tx,
+        });
+
+        createData.marketerContactId = marketerContactId;
+        createData.marketerRole =
+          marketerContactId === null ? null : "marketer";
+      }
+
+      if (hasExpertContact) {
+        const expertContactId = await persistBusinessRoleContact({
+          input: expertContact!.value,
+          role: "expert",
+          tx,
+        });
+
+        createData.expertContactId = expertContactId;
+        createData.expertRole = expertContactId === null ? null : "expert";
+      }
+
+      return tx.business.create({
+        data: createData,
+        select: {
+          business: true,
+          id: true,
+        },
+      });
     });
 
     return NextResponse.json(

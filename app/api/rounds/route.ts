@@ -18,7 +18,9 @@ export async function POST() {
         message:
           batch.assignmentCount === 0
             ? `Round ${batch.sequenceNumber} was created as a draft, but no suggested assignments were available.`
-            : `Round ${batch.sequenceNumber} was created with ${batch.assignmentCount} directed assignment${batch.assignmentCount === 1 ? "" : "s"}.`,
+            : batch.isComplete
+              ? `Round ${batch.sequenceNumber} was created with ${batch.assignmentCount} directed assignment${batch.assignmentCount === 1 ? "" : "s"}. Every active business received a full placement.`
+              : `Round ${batch.sequenceNumber} was created with ${batch.assignmentCount} directed assignment${batch.assignmentCount === 1 ? "" : "s"}, but ${batch.unresolvedBusinessCount} business${batch.unresolvedBusinessCount === 1 ? " still needs" : "es still need"} a complete placement because the remaining pairings are blocked by current rules.`,
       },
       { status: 201 },
     );
