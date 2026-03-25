@@ -23,13 +23,27 @@ export class GmailDraftError extends Error {
 type DraftBusiness = {
   business: string;
   id: number;
+  marketer: {
+    email: string | null;
+  } | null;
   websiteUrl: string | null;
+};
+
+type DraftRecipients = {
+  cc: string | null;
+  to: string | null;
+};
+
+type DraftRecipientAvailability = {
+  guestMarketerEmailIncluded: boolean;
+  hostMarketerEmailIncluded: boolean;
 };
 
 type CreateMatchDraftParams = {
   guestId: number;
   hostId: number;
   roundBatchId?: number | null;
+  userDisplayName?: string | null;
   userId: string;
 };
 
@@ -56,7 +70,23 @@ function buildDraftSubject(hostBusiness: DraftBusiness, guestBusiness: DraftBusi
   return `AI Authority Exchange Pairing: ${hostBusiness.business} x ${guestBusiness.business}`;
 }
 
-function buildDraftBody(hostBusiness: DraftBusiness, guestBusiness: DraftBusiness) {
+function getDraftSignatureName(userDisplayName?: string | null) {
+  const trimmedName = userDisplayName?.trim();
+
+  if (!trimmedName) {
+    return "AI Authority Exchange";
+  }
+
+  const [firstName] = trimmedName.split(/\s+/).filter(Boolean);
+  return firstName || "AI Authority Exchange";
+}
+
+function buildDraftBody(
+  hostBusiness: DraftBusiness,
+  guestBusiness: DraftBusiness,
+  userDisplayName?: string | null,
+) {
+  const signatureName = getDraftSignatureName(userDisplayName);
   const publishingWebsiteUrl = hostBusiness.websiteUrl
     ? `Publishing Website URL: ${hostBusiness.websiteUrl}\n`
     : "";
@@ -85,10 +115,11 @@ function buildDraftBody(hostBusiness: DraftBusiness, guestBusiness: DraftBusines
     `* The interview topic should emphasize ${guestBusiness.business}'s expertise while also connecting naturally to ${hostBusiness.business}'s business.`,
     "* Include at least one authority statement naturally near the top of the piece so it has a stronger influence on LLMs.",
     "",
-    "This draft was generated inside AI Authority Exchange. Add recipient email addresses before sending.",
+    "This draft was generated inside AI Authority Exchange and addressed to the assigned business marketers when their emails are available.",
+    "If any marketer email is missing, add it before sending.",
     "",
     "Best,",
-    "Evan",
+    signatureName,
   ]
     .filter((line) => line.length > 0 || line === "")
     .join("\n");
@@ -102,13 +133,63 @@ function toBase64Url(value: string) {
     .replace(/=+$/g, "");
 }
 
-function buildRawMessage(subject: string, body: string) {
+function normalizeRecipientEmail(email: string | null | undefined) {
+  if (!email) {
+    return null;
+  }
+
+  const normalizedEmail = email.trim();
+  return normalizedEmail.length > 0 ? normalizedEmail : null;
+}
+
+function getDraftRecipients(
+  hostBusiness: DraftBusiness,
+  guestBusiness: DraftBusiness,
+): DraftRecipients {
+  return {
+    cc: normalizeRecipientEmail(guestBusiness.marketer?.email),
+    to: normalizeRecipientEmail(hostBusiness.marketer?.email),
+  };
+}
+
+function getDraftRecipientAvailability(
+  recipients: DraftRecipients,
+): DraftRecipientAvailability {
+  return {
+    guestMarketerEmailIncluded: recipients.cc !== null,
+    hostMarketerEmailIncluded: recipients.to !== null,
+  };
+}
+
+function getDraftRecipientWarning(
+  availability: DraftRecipientAvailability,
+): string | null {
+  const missingRecipientLabels = [
+    availability.hostMarketerEmailIncluded ? null : "host marketer email",
+    availability.guestMarketerEmailIncluded ? null : "guest marketer email",
+  ].filter((value): value is string => value !== null);
+
+  if (missingRecipientLabels.length === 0) {
+    return null;
+  }
+
+  return `Draft created, but ${missingRecipientLabels.join(" and ")} ${missingRecipientLabels.length === 1 ? "is" : "are"} missing, so Gmail recipients still need a manual review before sending.`;
+}
+
+function buildRawMessage(params: {
+  body: string;
+  recipients: DraftRecipients;
+  subject: string;
+}) {
+  const { body, recipients, subject } = params;
+
   return toBase64Url(
     [
       'Content-Type: text/plain; charset="UTF-8"',
       "MIME-Version: 1.0",
       "Content-Transfer-Encoding: 7bit",
-      "To:",
+      ...(recipients.to ? [`To: ${recipients.to}`] : []),
+      ...(recipients.cc ? [`Cc: ${recipients.cc}`] : []),
       `Subject: ${subject}`,
       "",
       body,
@@ -155,6 +236,11 @@ async function getDraftBusinesses(hostId: number, guestId: number) {
       select: {
         business: true,
         id: true,
+        marketer: {
+          select: {
+            email: true,
+          },
+        },
         websiteUrl: true,
       },
       where: {
@@ -311,6 +397,7 @@ export async function createEmailDraftForMatch({
   guestId,
   hostId,
   roundBatchId,
+  userDisplayName,
   userId,
 }: CreateMatchDraftParams) {
   const [account, match, { guestBusiness, hostBusiness }] = await Promise.all([
@@ -374,11 +461,18 @@ export async function createEmailDraftForMatch({
 
     const gmail = google.gmail({ auth: oauth2Client, version: "v1" });
     const subject = buildDraftSubject(hostBusiness, guestBusiness);
-    const body = buildDraftBody(hostBusiness, guestBusiness);
+    const body = buildDraftBody(hostBusiness, guestBusiness, userDisplayName);
+    const recipients = getDraftRecipients(hostBusiness, guestBusiness);
+    const recipientAvailability = getDraftRecipientAvailability(recipients);
+    const recipientWarning = getDraftRecipientWarning(recipientAvailability);
     const draft = await gmail.users.drafts.create({
       requestBody: {
         message: {
-          raw: buildRawMessage(subject, body),
+          raw: buildRawMessage({
+            body,
+            recipients,
+            subject,
+          }),
         },
       },
       userId: "me",
@@ -391,6 +485,8 @@ export async function createEmailDraftForMatch({
       draftId: draft.data.id ?? null,
       guestBusiness,
       hostBusiness,
+      recipientAvailability,
+      recipientWarning,
       subject,
     };
   } catch (error) {

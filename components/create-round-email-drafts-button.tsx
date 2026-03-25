@@ -73,6 +73,7 @@ export function CreateRoundEmailDraftsButton({
     startTransition(async () => {
       let createdCount = 0;
       const failedPairs: string[] = [];
+      const warningMessages: string[] = [];
 
       for (const assignment of eligibleAssignments) {
         const response = await fetch("/api/email-drafts", {
@@ -90,6 +91,7 @@ export function CreateRoundEmailDraftsButton({
         const payload = (await response.json().catch(() => null)) as {
           error?: string;
           message?: string;
+          warning?: string | null;
         } | null;
 
         if (response.ok) {
@@ -98,6 +100,11 @@ export function CreateRoundEmailDraftsButton({
             payload?.message ??
               `Email draft created for ${assignment.hostBusinessName} and ${assignment.guestBusinessName}. Match status updated to Draft Created.`,
           );
+          if (payload?.warning) {
+            warningMessages.push(
+              `${assignment.hostBusinessName} -> ${assignment.guestBusinessName}: ${payload.warning}`,
+            );
+          }
           continue;
         }
 
@@ -117,6 +124,14 @@ export function CreateRoundEmailDraftsButton({
             : `No drafts were created for round ${roundSequenceNumber ?? "selected"}.${getSkippedSummary()} Failed pairs: ${failedPairs.join("; ")}.`,
         );
         return;
+      }
+
+      if (warningMessages.length > 0) {
+        toast(
+          warningMessages.length === 1
+            ? warningMessages[0]
+            : `${warningMessages.length} drafts still need recipient review before sending. ${warningMessages.join("; ")}`,
+        );
       }
 
       if (skippedAssignmentCount > 0) {

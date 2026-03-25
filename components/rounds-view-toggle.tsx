@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { RoundBatchStatus } from "@/generated/prisma/client";
 import { RoundDraftTable } from "@/components/round-draft-table";
 import { RoundMatchStatusTable } from "@/components/round-match-status-table";
@@ -50,10 +50,6 @@ export function RoundsViewToggle({
   unresolvedBusinessCount,
 }: RoundsViewToggleProps) {
   const [activeView, setActiveView] = useState<ViewMode>("email-drafting");
-
-  useEffect(() => {
-    setActiveView("email-drafting");
-  }, [batchId]);
 
   return (
     <div className="space-y-5">

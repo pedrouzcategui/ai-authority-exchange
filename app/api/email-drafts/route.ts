@@ -61,13 +61,15 @@ export async function POST(request: Request) {
       guestId,
       hostId,
       roundBatchId,
+      userDisplayName: session.user.name,
       userId: session.user.id,
     });
 
     return NextResponse.json(
       {
         draftId: draft.draftId,
-        message: `Email draft created for ${draft.hostBusiness.business} and ${draft.guestBusiness.business}. Match status updated to Draft Created.`,
+        message: `Email draft created for ${draft.hostBusiness.business} and ${draft.guestBusiness.business}. The host marketer was added to To and the guest marketer to Cc when those emails were available. Match status updated to Draft Created.`,
+        warning: draft.recipientWarning,
       },
       { status: 201 },
     );

@@ -37,7 +37,7 @@ export default async function BusinessesPage() {
             View Matches
           </Link>
           <AddBusinessContactModal />
-          <AddClientModal />
+          <AddClientModal contacts={contacts} />
         </div>
       </section>
 

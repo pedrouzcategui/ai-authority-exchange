@@ -59,6 +59,7 @@ type DraftOverviewRow = {
   businessId: number;
   businessName: string;
   domainRating: number | null;
+  hasOutsideTaxonomy: boolean;
   publishedForDraftTargets: RoundDraftRow["publishedFor"];
   publishedByRows: EditableAssignmentRow[];
   publishedForRows: EditableAssignmentRow[];
@@ -69,6 +70,7 @@ type PlacementFilter =
   | "all"
   | "needs-matches"
   | "complete"
+  | "outside-taxonomy"
   | "partial"
   | "unassigned";
 
@@ -76,8 +78,19 @@ type PlacementSort = "business-name" | "needs-matches-first";
 
 type OverviewPlacementRow = {
   businessName: string;
+  hasOutsideTaxonomy: boolean;
   rowStatus: RoundDraftRow["rowStatus"];
 };
+
+function hasOutsideTaxonomyMatch(params: {
+  businessById: Map<number, RoundDraftOption>;
+  counterpartBusinessId: number;
+  currentBusinessId: number;
+}) {
+  return (
+    getLinkedBusinessMatchMethod(params) === null
+  );
+}
 
 const draftOverviewNameCollator = new Intl.Collator(undefined, {
   numeric: true,
@@ -85,18 +98,20 @@ const draftOverviewNameCollator = new Intl.Collator(undefined, {
 });
 
 function matchesPlacementFilter(
-  rowStatus: RoundDraftRow["rowStatus"],
+  row: OverviewPlacementRow,
   placementFilter: PlacementFilter,
 ) {
   switch (placementFilter) {
     case "needs-matches":
-      return rowStatus !== "complete";
+      return row.rowStatus !== "complete";
     case "complete":
-      return rowStatus === "complete";
+      return row.rowStatus === "complete";
+    case "outside-taxonomy":
+      return row.hasOutsideTaxonomy;
     case "partial":
-      return rowStatus === "partial";
+      return row.rowStatus === "partial";
     case "unassigned":
-      return rowStatus === "empty";
+      return row.rowStatus === "empty";
     case "all":
     default:
       return true;
@@ -123,7 +138,7 @@ function getVisibleOverviewRows<Row extends OverviewPlacementRow>(params: {
   const { placementFilter, placementSort, rows } = params;
 
   return rows
-    .filter((row) => matchesPlacementFilter(row.rowStatus, placementFilter))
+    .filter((row) => matchesPlacementFilter(row, placementFilter))
     .toSorted((left, right) => {
       if (placementSort === "needs-matches-first") {
         const placementDifference =
@@ -159,7 +174,7 @@ function getMatchingMethodClassName(method: RoundMatchMethod | null) {
     case "related-sector":
       return "border-[#efc28b] bg-[#fff5e8] text-[#9b6527]";
     default:
-      return "border-border bg-white/75 text-muted";
+      return "border-[#efb1a8] bg-[#fff0ec] text-[#b55247]";
   }
 }
 
@@ -174,8 +189,24 @@ function getMatchingMethodLabel(method: RoundMatchMethod | null) {
     case "related-sector":
       return "Related Sector";
     default:
-      return "Manual Override";
+      return "Outside Taxonomy";
   }
+}
+
+function getLinkedBusinessMatchMethod(params: {
+  businessById: Map<number, RoundDraftOption>;
+  counterpartBusinessId: number;
+  currentBusinessId: number;
+}) {
+  const { businessById, counterpartBusinessId, currentBusinessId } = params;
+  const currentBusiness = businessById.get(currentBusinessId);
+  const counterpartBusiness = businessById.get(counterpartBusinessId);
+
+  if (!currentBusiness || !counterpartBusiness) {
+    return null;
+  }
+
+  return getRoundMatchMethod(currentBusiness, counterpartBusiness);
 }
 
 function parseSelectedId(value: string) {
@@ -223,6 +254,7 @@ function buildDraftOverviewRows(params: {
         business?.businessName ??
         `Business ${businessId}`,
       domainRating: baseRow?.domainRating ?? business?.domainRating ?? null,
+      hasOutsideTaxonomy: false,
       publishedForDraftTargets: baseRow?.publishedFor ?? [],
       publishedByRows: [],
       publishedForRows: [],
@@ -253,6 +285,31 @@ function buildDraftOverviewRows(params: {
   return Array.from(rowByBusinessId.values())
     .map((row) => ({
       ...row,
+      hasOutsideTaxonomy:
+        row.publishedForRows.some((draftRow) => {
+          const guestBusinessId = parseSelectedId(draftRow.guestBusinessId);
+
+          return (
+            guestBusinessId !== null &&
+            hasOutsideTaxonomyMatch({
+              businessById,
+              counterpartBusinessId: guestBusinessId,
+              currentBusinessId: row.businessId,
+            })
+          );
+        }) ||
+        row.publishedByRows.some((draftRow) => {
+          const hostBusinessId = parseSelectedId(draftRow.hostBusinessId);
+
+          return (
+            hostBusinessId !== null &&
+            hasOutsideTaxonomyMatch({
+              businessById,
+              counterpartBusinessId: hostBusinessId,
+              currentBusinessId: row.businessId,
+            })
+          );
+        }),
       rowStatus:
         row.publishedByRows.length === 0 && row.publishedForRows.length === 0
           ? "empty"
@@ -321,7 +378,24 @@ export function RoundDraftTable({
   const visibleRows = getVisibleOverviewRows({
     placementFilter,
     placementSort,
-    rows,
+    rows: rows.map((row) => ({
+      ...row,
+      hasOutsideTaxonomy:
+        row.publishedFor.some((entry) =>
+          hasOutsideTaxonomyMatch({
+            businessById,
+            counterpartBusinessId: entry.businessId,
+            currentBusinessId: row.businessId,
+          }),
+        ) ||
+        row.publishedBy.some((entry) =>
+          hasOutsideTaxonomyMatch({
+            businessById,
+            counterpartBusinessId: entry.businessId,
+            currentBusinessId: row.businessId,
+          }),
+        ),
+    })),
   });
   const roundDraftAssignments = assignmentRows.map((assignment) => ({
     guestBusinessId: assignment.guestBusiness.businessId,
@@ -735,6 +809,18 @@ export function RoundDraftTable({
     }
   }
 
+  function getOverviewRowClassName(status: RoundDraftRow["rowStatus"]) {
+    switch (status) {
+      case "partial":
+        return "bg-[#fffaf0]";
+      case "empty":
+        return "bg-[#fff5f4]";
+      case "complete":
+      default:
+        return "bg-white/40";
+    }
+  }
+
   function getOverviewStatusLabel(status: RoundDraftRow["rowStatus"]) {
     switch (status) {
       case "complete":
@@ -747,8 +833,21 @@ export function RoundDraftTable({
     }
   }
 
+  function getOverviewStatusHelperLabel(status: RoundDraftRow["rowStatus"]) {
+    switch (status) {
+      case "partial":
+        return "Still missing one direction";
+      case "empty":
+        return "No matches yet";
+      case "complete":
+      default:
+        return null;
+    }
+  }
+
   function renderRelationshipList(
     businesses: RoundDraftRow["publishedBy"],
+    currentBusinessId: number,
     emptyLabel: string,
     tone: "accent" | "neutral",
   ) {
@@ -758,19 +857,36 @@ export function RoundDraftTable({
 
     return (
       <div className="flex flex-wrap gap-2">
-        {businesses.map((entry) => (
-          <Link
-            className={
-              tone === "accent"
-                ? "inline-flex items-center rounded-full border border-accent/20 bg-accent/10 px-2.5 py-1 text-[13px] font-medium text-accent-strong transition hover:border-accent/35 hover:bg-accent/14"
-                : "inline-flex items-center rounded-full border border-border bg-brand-deep-soft/55 px-2.5 py-1 text-[13px] font-medium text-foreground transition hover:border-accent/35 hover:text-accent"
-            }
-            href={getBusinessProfileHref(entry.businessId)}
-            key={`${tone}-${entry.assignmentId}-${entry.businessId}`}
-          >
-            {entry.businessName}
-          </Link>
-        ))}
+        {businesses.map((entry) => {
+          const matchingMethod = getLinkedBusinessMatchMethod({
+            businessById,
+            counterpartBusinessId: entry.businessId,
+            currentBusinessId,
+          });
+
+          return (
+            <div
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-white/80 px-2.5 py-1"
+              key={`${tone}-${entry.assignmentId}-${entry.businessId}`}
+            >
+              <Link
+                className={
+                  tone === "accent"
+                    ? "text-[13px] font-medium text-accent-strong transition hover:text-accent"
+                    : "text-[13px] font-medium text-foreground transition hover:text-accent"
+                }
+                href={getBusinessProfileHref(entry.businessId)}
+              >
+                {entry.businessName}
+              </Link>
+              <span
+                className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-[0.08em] uppercase ${getMatchingMethodClassName(matchingMethod)}`}
+              >
+                {getMatchingMethodLabel(matchingMethod)}
+              </span>
+            </div>
+          );
+        })}
       </div>
     );
   }
@@ -949,6 +1065,7 @@ export function RoundDraftTable({
         direction === "publishedBy"
           ? rows.find((row) => row.businessId === businessId)?.publishedBy ?? []
           : rows.find((row) => row.businessId === businessId)?.publishedFor ?? [],
+        businessId,
         emptyLabel,
         direction === "publishedBy" ? "neutral" : "accent",
       );
@@ -988,7 +1105,8 @@ export function RoundDraftTable({
             <p className="max-w-3xl text-sm leading-7 text-muted sm:text-base">
               This groups the selected round by business, similar to the Notion
               sheet. Each company can have multiple Published By and Published
-              For relationships inside the same round.
+              For relationships inside the same round. Pairings outside the
+              standard taxonomy rules are flagged throughout this overview.
             </p>
           </div>
 
@@ -1019,6 +1137,7 @@ export function RoundDraftTable({
                 <option value="needs-matches">Needs matches</option>
                 <option value="partial">Partial placement</option>
                 <option value="unassigned">Unassigned</option>
+                <option value="outside-taxonomy">Outside taxonomy</option>
                 <option value="complete">Complete only</option>
               </select>
             </label>
@@ -1089,7 +1208,10 @@ export function RoundDraftTable({
                 <tbody>
                   {isDraft
                     ? visibleDraftOverviewRows.map((row) => (
-                        <tr key={row.businessId} className="align-top">
+                        <tr
+                          key={row.businessId}
+                          className={`align-top ${getOverviewRowClassName(row.rowStatus)}`}
+                        >
                           <td className="border-t border-border px-5 py-4 sm:px-6">
                             <div className="space-y-1.5">
                               <Link
@@ -1103,6 +1225,11 @@ export function RoundDraftTable({
                                   ? "No DR"
                                   : `DR ${row.domainRating}`}
                               </span>
+                              {getOverviewStatusHelperLabel(row.rowStatus) ? (
+                                <p className="text-xs font-medium leading-6 text-muted">
+                                  {getOverviewStatusHelperLabel(row.rowStatus)}
+                                </p>
+                              ) : null}
                             </div>
                           </td>
                           <td className="border-t border-border px-5 py-4 sm:px-6">
@@ -1147,7 +1274,10 @@ export function RoundDraftTable({
                         </tr>
                       ))
                     : visibleRows.map((row) => (
-                        <tr key={row.businessId} className="align-top">
+                        <tr
+                          key={row.businessId}
+                          className={`align-top ${getOverviewRowClassName(row.rowStatus)}`}
+                        >
                           <td className="border-t border-border px-5 py-4 sm:px-6">
                             <div className="space-y-1.5">
                                 <Link
@@ -1161,12 +1291,18 @@ export function RoundDraftTable({
                                     ? "No DR"
                                     : `DR ${row.domainRating}`}
                                 </span>
+                                {getOverviewStatusHelperLabel(row.rowStatus) ? (
+                                  <p className="text-xs font-medium leading-6 text-muted">
+                                    {getOverviewStatusHelperLabel(row.rowStatus)}
+                                  </p>
+                                ) : null}
                               </div>
                             </td>
                             <td className="border-t border-border px-5 py-4 sm:px-6">
                               <div className="space-y-2">
                                 {renderRelationshipList(
                                   row.publishedFor,
+                                  row.businessId,
                                   "No Published For relationships in this round yet.",
                                   "accent",
                                 )}
@@ -1181,6 +1317,7 @@ export function RoundDraftTable({
                               <div className="space-y-2">
                                 {renderRelationshipList(
                                   row.publishedBy,
+                                  row.businessId,
                                   "No Published By relationships in this round yet.",
                                   "neutral",
                                 )}

@@ -189,6 +189,7 @@ type RoundDraftState = {
 type DraftAssignmentCandidate = {
   guestBusinessId: number;
   hostBusinessId: number;
+  relation: RoundAssignmentRelation;
   score: number;
 };
 
@@ -197,13 +198,43 @@ type RoundBusinessRelation =
   | "related-category"
   | "same-sector";
 
+type RoundAssignmentRelation = RoundBusinessRelation | "fallback";
+
+type GeneratedRoundAssignments = {
+  assignments: Array<{
+    guestBusinessId: number;
+    hostBusinessId: number;
+    source: RoundAssignmentSource;
+  }>;
+  isComplete: boolean;
+  unresolvedBusinessCount: number;
+};
+
+type AssignmentSearchState = {
+  draftState: RoundDraftState;
+  skippedHostBusinessIds: Set<number>;
+  selectedAssignments: DraftAssignmentCandidate[];
+  totalScore: number;
+};
+
+type AssignmentSearchBestResult = {
+  assignments: DraftAssignmentCandidate[];
+  totalScore: number;
+};
+
 const roundBusinessRelationPriority = [
   "same-category",
   "related-category",
   "same-sector",
 ] as const satisfies readonly RoundBusinessRelation[];
 
-const roundBusinessRelationScore: Record<RoundBusinessRelation, number> = {
+const roundAssignmentRelationPriority = [
+  ...roundBusinessRelationPriority,
+  "fallback",
+] as const satisfies readonly RoundAssignmentRelation[];
+
+const roundAssignmentRelationScore: Record<RoundAssignmentRelation, number> = {
+  fallback: 20,
   "related-category": 80,
   "same-category": 100,
   "same-sector": 60,
@@ -376,7 +407,7 @@ function getDraftCandidateScore(
   hostBusiness: RoundBusiness,
   guestBusiness: RoundBusiness,
   balanceByBusinessId: Map<number, number | null>,
-  relation: RoundBusinessRelation,
+  relation: RoundAssignmentRelation,
 ) {
   const hostContribution = getDirectionalContribution(
     hostBusiness.domain_rating,
@@ -392,7 +423,7 @@ function getDraftCandidateScore(
     balanceByBusinessId.get(guestBusiness.id) ?? null,
     guestContribution,
   );
-  const relevanceScore = roundBusinessRelationScore[relation];
+  const relevanceScore = roundAssignmentRelationScore[relation];
   const domainRatingScore = hostContribution === null ? 0 : 5;
   const proximityScore =
     hostContribution === null ? 0 : -Math.abs(hostContribution) / 100;
@@ -575,7 +606,7 @@ function isDirectedAssignmentEligible(params: {
   guestBusinessId: number;
   hostBusinessId: number;
   pairedBusinessIdsByBusinessId: Map<number, Set<number>>;
-  requiredRelation?: RoundBusinessRelation;
+  requiredRelation?: RoundAssignmentRelation;
   roundBusinessesById: Map<number, RoundBusiness>;
 }) {
   const {
@@ -603,8 +634,9 @@ function isDirectedAssignmentEligible(params: {
   }
 
   const relation = getRoundBusinessRelation(hostBusiness, guestBusiness);
+  const assignmentRelation = relation ?? "fallback";
 
-  if (requiredRelation && relation !== requiredRelation) {
+  if (requiredRelation && assignmentRelation !== requiredRelation) {
     return false;
   }
 
@@ -626,7 +658,7 @@ function isDirectedAssignmentEligible(params: {
       return false;
     }
 
-    if (!relation) {
+    if (!relation && requiredRelation !== "fallback") {
       return false;
     }
 
@@ -684,51 +716,42 @@ function isDirectedAssignmentEligible(params: {
 function buildCandidateAssignmentsForRelation(params: {
   activeBusinesses: RoundBusiness[];
   balanceByBusinessId: Map<number, number | null>;
-  draftState: RoundDraftState;
   forbiddenBusinessIdsByBusinessId: Map<number, Set<number>>;
   pairedBusinessIdsByBusinessId: Map<number, Set<number>>;
-  relation: RoundBusinessRelation;
+  relation: RoundAssignmentRelation;
   roundBusinessesById: Map<number, RoundBusiness>;
 }) {
   const {
     activeBusinesses,
     balanceByBusinessId,
-    draftState,
     forbiddenBusinessIdsByBusinessId,
     pairedBusinessIdsByBusinessId,
     relation,
     roundBusinessesById,
   } = params;
   const candidateAssignments: DraftAssignmentCandidate[] = [];
+  const emptyDraftState = buildRoundDraftState([]);
 
   for (const hostBusiness of activeBusinesses) {
-    if (draftState.assignmentByHostId.has(hostBusiness.id)) {
-      continue;
-    }
-
     for (const guestBusiness of activeBusinesses) {
       if (
-        draftState.assignmentByGuestId.has(guestBusiness.id) ||
-        hostBusiness.id === guestBusiness.id ||
-        isForbiddenRoundPair({
+        !isDirectedAssignmentEligible({
+          draftState: emptyDraftState,
           forbiddenBusinessIdsByBusinessId,
           guestBusinessId: guestBusiness.id,
           hostBusinessId: hostBusiness.id,
-        }) ||
-        pairedBusinessIdsByBusinessId
-          .get(hostBusiness.id)
-          ?.has(guestBusiness.id)
+          pairedBusinessIdsByBusinessId,
+          requiredRelation: relation,
+          roundBusinessesById,
+        })
       ) {
-        continue;
-      }
-
-      if (getRoundBusinessRelation(hostBusiness, guestBusiness) !== relation) {
         continue;
       }
 
       candidateAssignments.push({
         guestBusinessId: guestBusiness.id,
         hostBusinessId: hostBusiness.id,
+        relation,
         score: getDraftCandidateScore(
           hostBusiness,
           guestBusiness,
@@ -740,6 +763,301 @@ function buildCandidateAssignmentsForRelation(params: {
   }
 
   return sortDraftAssignmentCandidates(candidateAssignments, roundBusinessesById);
+}
+
+function buildCandidateAssignmentsByHostId(params: {
+  activeBusinesses: RoundBusiness[];
+  balanceByBusinessId: Map<number, number | null>;
+  forbiddenBusinessIdsByBusinessId: Map<number, Set<number>>;
+  pairedBusinessIdsByBusinessId: Map<number, Set<number>>;
+  relationPriority: readonly RoundAssignmentRelation[];
+}) {
+  const {
+    activeBusinesses,
+    balanceByBusinessId,
+    forbiddenBusinessIdsByBusinessId,
+    pairedBusinessIdsByBusinessId,
+    relationPriority,
+  } = params;
+  const roundBusinessesById = new Map(
+    activeBusinesses.map((business) => [business.id, business] as const),
+  );
+  const candidateAssignmentsByHostId = new Map<number, DraftAssignmentCandidate[]>();
+
+  for (const relation of relationPriority) {
+    const candidateAssignments = buildCandidateAssignmentsForRelation({
+      activeBusinesses,
+      balanceByBusinessId,
+      forbiddenBusinessIdsByBusinessId,
+      pairedBusinessIdsByBusinessId,
+      relation,
+      roundBusinessesById,
+    });
+
+    for (const candidateAssignment of candidateAssignments) {
+      const hostCandidates =
+        candidateAssignmentsByHostId.get(candidateAssignment.hostBusinessId) ?? [];
+
+      hostCandidates.push(candidateAssignment);
+      candidateAssignmentsByHostId.set(
+        candidateAssignment.hostBusinessId,
+        hostCandidates,
+      );
+    }
+  }
+
+  return {
+    candidateAssignmentsByHostId,
+    roundBusinessesById,
+  };
+}
+
+function toDraftAssignmentRecord(
+  candidateAssignment: DraftAssignmentCandidate,
+  roundBusinessesById: Map<number, RoundBusiness>,
+  index: number,
+): RoundAssignmentRecord {
+  const hostBusiness = roundBusinessesById.get(candidateAssignment.hostBusinessId)!;
+  const guestBusiness = roundBusinessesById.get(candidateAssignment.guestBusinessId)!;
+
+  return {
+    createdAt: new Date(0),
+    guestBusiness,
+    guestBusinessId: guestBusiness.id,
+    hostBusiness,
+    hostBusinessId: hostBusiness.id,
+    id: index * -1 - 1,
+    roundBatchId: 0,
+    source: "auto",
+    updatedAt: new Date(0),
+  } satisfies RoundAssignmentRecord;
+}
+
+function selectNextHostBusinessId(params: {
+  activeBusinesses: RoundBusiness[];
+  candidateAssignmentsByHostId: Map<number, DraftAssignmentCandidate[]>;
+  draftState: RoundDraftState;
+  forbiddenBusinessIdsByBusinessId: Map<number, Set<number>>;
+  pairedBusinessIdsByBusinessId: Map<number, Set<number>>;
+  roundBusinessesById: Map<number, RoundBusiness>;
+  skippedHostBusinessIds: Set<number>;
+}) {
+  const {
+    activeBusinesses,
+    candidateAssignmentsByHostId,
+    draftState,
+    forbiddenBusinessIdsByBusinessId,
+    pairedBusinessIdsByBusinessId,
+    roundBusinessesById,
+    skippedHostBusinessIds,
+  } = params;
+  let selectedHostBusinessId: number | null = null;
+  let selectedCandidateCount = Number.POSITIVE_INFINITY;
+
+  for (const business of activeBusinesses) {
+    if (
+      draftState.assignmentByHostId.has(business.id) ||
+      skippedHostBusinessIds.has(business.id)
+    ) {
+      continue;
+    }
+
+    const candidateCount = (
+      candidateAssignmentsByHostId.get(business.id) ?? []
+    ).filter((candidateAssignment) =>
+      isDirectedAssignmentEligible({
+        draftState,
+        enforceSingleSlotPerDirection: true,
+        forbiddenBusinessIdsByBusinessId,
+        guestBusinessId: candidateAssignment.guestBusinessId,
+        hostBusinessId: candidateAssignment.hostBusinessId,
+        pairedBusinessIdsByBusinessId,
+        requiredRelation: candidateAssignment.relation,
+        roundBusinessesById,
+      }),
+    ).length;
+
+    if (candidateCount < selectedCandidateCount) {
+      selectedHostBusinessId = business.id;
+      selectedCandidateCount = candidateCount;
+
+      if (candidateCount === 0) {
+        break;
+      }
+    }
+  }
+
+  return selectedHostBusinessId;
+}
+
+function searchRoundAssignments(params: {
+  activeBusinesses: RoundBusiness[];
+  candidateAssignmentsByHostId: Map<number, DraftAssignmentCandidate[]>;
+  forbiddenBusinessIdsByBusinessId: Map<number, Set<number>>;
+  pairedBusinessIdsByBusinessId: Map<number, Set<number>>;
+  requireCompleteCoverage: boolean;
+  roundBusinessesById: Map<number, RoundBusiness>;
+}) {
+  const {
+    activeBusinesses,
+    candidateAssignmentsByHostId,
+    forbiddenBusinessIdsByBusinessId,
+    pairedBusinessIdsByBusinessId,
+    requireCompleteCoverage,
+    roundBusinessesById,
+  } = params;
+  let bestResult: AssignmentSearchBestResult = {
+    assignments: [],
+    totalScore: Number.NEGATIVE_INFINITY,
+  };
+
+  const searchState: AssignmentSearchState = {
+    draftState: buildRoundDraftState([]),
+    skippedHostBusinessIds: new Set<number>(),
+    selectedAssignments: [],
+    totalScore: 0,
+  };
+
+  function commitBestResult() {
+    if (
+      searchState.selectedAssignments.length > bestResult.assignments.length ||
+      (searchState.selectedAssignments.length === bestResult.assignments.length &&
+        searchState.totalScore > bestResult.totalScore)
+    ) {
+      bestResult = {
+        assignments: [...searchState.selectedAssignments],
+        totalScore: searchState.totalScore,
+      };
+    }
+  }
+
+  function visit() {
+    if (
+      !requireCompleteCoverage &&
+      searchState.selectedAssignments.length +
+        (activeBusinesses.length -
+          searchState.draftState.assignmentByHostId.size -
+          searchState.skippedHostBusinessIds.size) <=
+        bestResult.assignments.length
+    ) {
+      return false;
+    }
+
+    if (
+      searchState.draftState.assignmentByHostId.size +
+        searchState.skippedHostBusinessIds.size ===
+      activeBusinesses.length
+    ) {
+      commitBestResult();
+      return searchState.selectedAssignments.length === activeBusinesses.length;
+    }
+
+    const nextHostBusinessId = selectNextHostBusinessId({
+      activeBusinesses,
+      candidateAssignmentsByHostId,
+      draftState: searchState.draftState,
+      forbiddenBusinessIdsByBusinessId,
+      pairedBusinessIdsByBusinessId,
+      roundBusinessesById,
+      skippedHostBusinessIds: searchState.skippedHostBusinessIds,
+    });
+
+    if (nextHostBusinessId === null) {
+      commitBestResult();
+      return false;
+    }
+
+    const availableCandidates = (
+      candidateAssignmentsByHostId.get(nextHostBusinessId) ?? []
+    ).filter((candidateAssignment) =>
+      isDirectedAssignmentEligible({
+        draftState: searchState.draftState,
+        enforceSingleSlotPerDirection: true,
+        forbiddenBusinessIdsByBusinessId,
+        guestBusinessId: candidateAssignment.guestBusinessId,
+        hostBusinessId: candidateAssignment.hostBusinessId,
+        pairedBusinessIdsByBusinessId,
+        requiredRelation: candidateAssignment.relation,
+        roundBusinessesById,
+      }),
+    );
+
+    if (availableCandidates.length === 0) {
+      if (requireCompleteCoverage) {
+        return false;
+      }
+
+      searchState.skippedHostBusinessIds.add(nextHostBusinessId);
+      visit();
+      searchState.skippedHostBusinessIds.delete(nextHostBusinessId);
+      return false;
+    }
+
+    for (const candidateAssignment of availableCandidates) {
+      const nextAssignment = toDraftAssignmentRecord(
+        candidateAssignment,
+        roundBusinessesById,
+        searchState.selectedAssignments.length,
+      );
+
+      addRoundAssignmentToState(searchState.draftState, nextAssignment);
+      searchState.selectedAssignments.push(candidateAssignment);
+      searchState.totalScore += candidateAssignment.score;
+
+      const completed = visit();
+
+      searchState.totalScore -= candidateAssignment.score;
+      searchState.selectedAssignments.pop();
+      searchState.draftState.assignments.pop();
+      searchState.draftState.assignmentByHostId.delete(
+        nextAssignment.hostBusinessId,
+      );
+      searchState.draftState.assignmentByGuestId.delete(
+        nextAssignment.guestBusinessId,
+      );
+      searchState.draftState.assignmentByPairKey.delete(
+        pairKey(nextAssignment.hostBusinessId, nextAssignment.guestBusinessId),
+      );
+
+      if (completed && requireCompleteCoverage) {
+        return true;
+      }
+    }
+
+    if (!requireCompleteCoverage) {
+      searchState.skippedHostBusinessIds.add(nextHostBusinessId);
+      visit();
+      searchState.skippedHostBusinessIds.delete(nextHostBusinessId);
+      commitBestResult();
+    }
+
+    return false;
+  }
+
+  visit();
+
+  return {
+    assignments: bestResult.assignments,
+    isComplete: bestResult.assignments.length === activeBusinesses.length,
+  };
+}
+
+function countUnresolvedBusinesses(params: {
+  activeBusinesses: RoundBusiness[];
+  assignments: DraftAssignmentCandidate[];
+}) {
+  const { activeBusinesses, assignments } = params;
+  const hostBusinessIds = new Set(
+    assignments.map((assignment) => assignment.hostBusinessId),
+  );
+  const guestBusinessIds = new Set(
+    assignments.map((assignment) => assignment.guestBusinessId),
+  );
+
+  return activeBusinesses.filter(
+    (business) =>
+      !hostBusinessIds.has(business.id) || !guestBusinessIds.has(business.id),
+  ).length;
 }
 
 function buildAutomaticRoundAssignments(params: {
@@ -754,68 +1072,62 @@ function buildAutomaticRoundAssignments(params: {
     forbiddenBusinessIdsByBusinessId,
     pairedBusinessIdsByBusinessId,
   } = params;
-  const roundBusinessesById = new Map(
-    activeBusinesses.map((business) => [business.id, business] as const),
-  );
+  const standardCandidates = buildCandidateAssignmentsByHostId({
+    activeBusinesses,
+    balanceByBusinessId,
+    forbiddenBusinessIdsByBusinessId,
+    pairedBusinessIdsByBusinessId,
+    relationPriority: roundBusinessRelationPriority,
+  });
+  const standardSearchResult = searchRoundAssignments({
+    activeBusinesses,
+    candidateAssignmentsByHostId: standardCandidates.candidateAssignmentsByHostId,
+    forbiddenBusinessIdsByBusinessId,
+    pairedBusinessIdsByBusinessId,
+    requireCompleteCoverage: true,
+    roundBusinessesById: standardCandidates.roundBusinessesById,
+  });
 
-  const selectedAssignments: RoundAssignmentRecord[] = [];
-  const selectedState = buildRoundDraftState([]);
-
-  for (const relation of roundBusinessRelationPriority) {
-    const candidateAssignments = buildCandidateAssignmentsForRelation({
-      activeBusinesses,
-      balanceByBusinessId,
-      draftState: selectedState,
-      forbiddenBusinessIdsByBusinessId,
-      pairedBusinessIdsByBusinessId,
-      relation,
-      roundBusinessesById,
-    });
-
-    for (const candidateAssignment of candidateAssignments) {
-      if (
-        !isDirectedAssignmentEligible({
-          draftState: selectedState,
-          enforceSingleSlotPerDirection: true,
-          forbiddenBusinessIdsByBusinessId,
-          guestBusinessId: candidateAssignment.guestBusinessId,
-          hostBusinessId: candidateAssignment.hostBusinessId,
-          pairedBusinessIdsByBusinessId,
-          requiredRelation: relation,
-          roundBusinessesById,
-        })
-      ) {
-        continue;
-      }
-
-      const hostBusiness = roundBusinessesById.get(
-        candidateAssignment.hostBusinessId,
-      )!;
-      const guestBusiness = roundBusinessesById.get(
-        candidateAssignment.guestBusinessId,
-      )!;
-      const nextAssignment = {
-        createdAt: new Date(0),
-        guestBusiness,
-        guestBusinessId: guestBusiness.id,
-        hostBusiness,
-        hostBusinessId: hostBusiness.id,
-        id: selectedAssignments.length * -1 - 1,
-        roundBatchId: 0,
+  if (standardSearchResult.isComplete) {
+    return {
+      assignments: standardSearchResult.assignments.map((assignment) => ({
+        guestBusinessId: assignment.guestBusinessId,
+        hostBusinessId: assignment.hostBusinessId,
         source: "auto" as const,
-        updatedAt: new Date(0),
-      } satisfies RoundAssignmentRecord;
-
-      selectedAssignments.push(nextAssignment);
-      addRoundAssignmentToState(selectedState, nextAssignment);
-    }
+      })),
+      isComplete: true,
+      unresolvedBusinessCount: 0,
+    } satisfies GeneratedRoundAssignments;
   }
 
-  return selectedAssignments.map((assignment) => ({
-    guestBusinessId: assignment.guestBusinessId,
-    hostBusinessId: assignment.hostBusinessId,
-    source: assignment.source,
-  }));
+  const fallbackCandidates = buildCandidateAssignmentsByHostId({
+    activeBusinesses,
+    balanceByBusinessId,
+    forbiddenBusinessIdsByBusinessId,
+    pairedBusinessIdsByBusinessId,
+    relationPriority: roundAssignmentRelationPriority,
+  });
+  const fallbackSearchResult = searchRoundAssignments({
+    activeBusinesses,
+    candidateAssignmentsByHostId: fallbackCandidates.candidateAssignmentsByHostId,
+    forbiddenBusinessIdsByBusinessId,
+    pairedBusinessIdsByBusinessId,
+    requireCompleteCoverage: false,
+    roundBusinessesById: fallbackCandidates.roundBusinessesById,
+  });
+
+  return {
+    assignments: fallbackSearchResult.assignments.map((assignment) => ({
+      guestBusinessId: assignment.guestBusinessId,
+      hostBusinessId: assignment.hostBusinessId,
+      source: "auto" as const,
+    })),
+    isComplete: fallbackSearchResult.isComplete,
+    unresolvedBusinessCount: countUnresolvedBusinesses({
+      activeBusinesses,
+      assignments: fallbackSearchResult.assignments,
+    }),
+  } satisfies GeneratedRoundAssignments;
 }
 
 function toRoundDraftOption(business: RoundBusiness): RoundDraftOption {
@@ -943,6 +1255,20 @@ async function getSelectableRoundBusinessesFromDatabase(
 ) {
   const businesses = await database.business.findMany({
     select: roundBusinessSelect,
+    where: {
+      aiAuthorityExchangeRetiredAt: null,
+      client_status: "active",
+      OR: [
+        {
+          aiAuthorityExchangeJoinedAt: {
+            not: null,
+          },
+        },
+        {
+          isActiveOnAiAuthorityExchange: true,
+        },
+      ],
+    },
   });
 
   return businesses
@@ -1299,7 +1625,7 @@ export async function createRoundDraftBatch() {
         toForbiddenBusinessIdSetMap(forbiddenBusinessIdsByBusinessId),
         historicalMatches,
       );
-      const generatedAssignments = buildAutomaticRoundAssignments({
+      const generationResult = buildAutomaticRoundAssignments({
         activeBusinesses,
         balanceByBusinessId: historicalContext.balanceByBusinessId,
         forbiddenBusinessIdsByBusinessId:
@@ -1308,9 +1634,9 @@ export async function createRoundDraftBatch() {
           historicalContext.pairedBusinessIdsByBusinessId,
       });
 
-      if (generatedAssignments.length > 0) {
+      if (generationResult.assignments.length > 0) {
         await transaction.roundAssignment.createMany({
-          data: generatedAssignments.map((assignment) => ({
+          data: generationResult.assignments.map((assignment) => ({
             guestBusinessId: assignment.guestBusinessId,
             hostBusinessId: assignment.hostBusinessId,
             roundBatchId: batch.id,
@@ -1321,8 +1647,10 @@ export async function createRoundDraftBatch() {
 
       return {
         activeBusinessCount: activeBusinesses.length,
-        assignmentCount: generatedAssignments.length,
+        assignmentCount: generationResult.assignments.length,
         id: batch.id,
+        isComplete: generationResult.isComplete,
+        unresolvedBusinessCount: generationResult.unresolvedBusinessCount,
         sequenceNumber: batch.sequenceNumber,
       };
     });
@@ -1384,7 +1712,7 @@ export async function generateRoundDraftForBatch(roundBatchId: number) {
       toForbiddenBusinessIdSetMap(forbiddenBusinessIdsByBusinessId),
       historicalMatches,
     );
-    const generatedAssignments = buildAutomaticRoundAssignments({
+    const generationResult = buildAutomaticRoundAssignments({
       activeBusinesses,
       balanceByBusinessId: historicalContext.balanceByBusinessId,
       forbiddenBusinessIdsByBusinessId:
@@ -1393,9 +1721,9 @@ export async function generateRoundDraftForBatch(roundBatchId: number) {
         historicalContext.pairedBusinessIdsByBusinessId,
     });
 
-    if (generatedAssignments.length > 0) {
+    if (generationResult.assignments.length > 0) {
       await database.roundAssignment.createMany({
-        data: generatedAssignments.map((assignment) => ({
+        data: generationResult.assignments.map((assignment) => ({
           guestBusinessId: assignment.guestBusinessId,
           hostBusinessId: assignment.hostBusinessId,
           roundBatchId,
@@ -1406,8 +1734,10 @@ export async function generateRoundDraftForBatch(roundBatchId: number) {
 
     return {
       activeBusinessCount: activeBusinesses.length,
-      assignmentCount: generatedAssignments.length,
+      assignmentCount: generationResult.assignments.length,
       id: batch.id,
+      isComplete: generationResult.isComplete,
+      unresolvedBusinessCount: generationResult.unresolvedBusinessCount,
       sequenceNumber: batch.sequenceNumber,
     };
   });
