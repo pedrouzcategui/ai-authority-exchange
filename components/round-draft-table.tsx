@@ -4,11 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import {
-  ActionTooltip,
-  PlusIcon,
-  TrashIcon,
-} from "@/components/action-icons";
+import { ActionTooltip, PlusIcon, TrashIcon } from "@/components/action-icons";
 import {
   RoundBusinessCombobox,
   type RoundBusinessComboboxOption,
@@ -26,7 +22,10 @@ import {
   type RoundDraftPlacementStatus,
 } from "@/lib/round-email-draft-eligibility";
 import { setRoundEditorBusy } from "@/lib/rounds-editor-busy";
-import { getRoundMatchMethod, type RoundMatchMethod } from "@/lib/round-match-method";
+import {
+  getRoundMatchMethod,
+  type RoundMatchMethod,
+} from "@/lib/round-match-method";
 import type {
   RoundDraftAssignmentRow,
   RoundDraftOption,
@@ -92,9 +91,7 @@ function hasOutsideTaxonomyMatch(params: {
   counterpartBusinessId: number;
   currentBusinessId: number;
 }) {
-  return (
-    getLinkedBusinessMatchMethod(params) === null
-  );
+  return getLinkedBusinessMatchMethod(params) === null;
 }
 
 const draftOverviewNameCollator = new Intl.Collator(undefined, {
@@ -317,7 +314,9 @@ function buildDraftOverviewRows(params: {
       return existingRow;
     }
 
-    const baseRow = rows.find((candidateRow) => candidateRow.businessId === businessId);
+    const baseRow = rows.find(
+      (candidateRow) => candidateRow.businessId === businessId,
+    );
     const business = businessById.get(businessId);
     const nextRow = {
       businessId,
@@ -355,40 +354,45 @@ function buildDraftOverviewRows(params: {
   }
 
   return Array.from(rowByBusinessId.values())
-    .map((row) => ({
-      ...row,
-      hasOutsideTaxonomy:
-        row.publishedForRows.some((draftRow) => {
-          const guestBusinessId = parseSelectedId(draftRow.guestBusinessId);
+    .map(
+      (row) =>
+        ({
+          ...row,
+          hasOutsideTaxonomy:
+            row.publishedForRows.some((draftRow) => {
+              const guestBusinessId = parseSelectedId(draftRow.guestBusinessId);
 
-          return (
-            guestBusinessId !== null &&
-            hasOutsideTaxonomyMatch({
-              businessById,
-              counterpartBusinessId: guestBusinessId,
-              currentBusinessId: row.businessId,
-            })
-          );
-        }) ||
-        row.publishedByRows.some((draftRow) => {
-          const hostBusinessId = parseSelectedId(draftRow.hostBusinessId);
+              return (
+                guestBusinessId !== null &&
+                hasOutsideTaxonomyMatch({
+                  businessById,
+                  counterpartBusinessId: guestBusinessId,
+                  currentBusinessId: row.businessId,
+                })
+              );
+            }) ||
+            row.publishedByRows.some((draftRow) => {
+              const hostBusinessId = parseSelectedId(draftRow.hostBusinessId);
 
-          return (
-            hostBusinessId !== null &&
-            hasOutsideTaxonomyMatch({
-              businessById,
-              counterpartBusinessId: hostBusinessId,
-              currentBusinessId: row.businessId,
-            })
-          );
-        }),
-      rowStatus:
-        row.publishedByRows.length === 0 && row.publishedForRows.length === 0
-          ? "empty"
-          : row.publishedByRows.length === 0 || row.publishedForRows.length === 0
-            ? "partial"
-            : "complete",
-    }) satisfies DraftOverviewRow)
+              return (
+                hostBusinessId !== null &&
+                hasOutsideTaxonomyMatch({
+                  businessById,
+                  counterpartBusinessId: hostBusinessId,
+                  currentBusinessId: row.businessId,
+                })
+              );
+            }),
+          rowStatus:
+            row.publishedByRows.length === 0 &&
+            row.publishedForRows.length === 0
+              ? "empty"
+              : row.publishedByRows.length === 0 ||
+                  row.publishedForRows.length === 0
+                ? "partial"
+                : "complete",
+        }) satisfies DraftOverviewRow,
+    )
     .toSorted((left, right) =>
       draftOverviewNameCollator.compare(left.businessName, right.businessName),
     );
@@ -411,8 +415,9 @@ export function RoundDraftTable({
   const [isPending, startTransition] = useTransition();
   const [placementFilter, setPlacementFilter] =
     useState<PlacementFilter>("all");
-  const [placementSort, setPlacementSort] =
-    useState<PlacementSort>("needs-matches-first");
+  const [placementSort, setPlacementSort] = useState<PlacementSort>(
+    "needs-matches-first",
+  );
   const [activeRowId, setActiveRowId] = useState<string | null>(null);
   const [deleteConfirmationState, setDeleteConfirmationState] =
     useState<DeleteConfirmationState | null>(null);
@@ -427,18 +432,17 @@ export function RoundDraftTable({
   );
   const forbiddenBusinessIdSetByBusinessId = new Map(
     Object.entries(forbiddenBusinessIdsByBusinessId).map(
-      ([businessId, forbiddenBusinessIds]) => [
-        Number.parseInt(businessId, 10),
-        new Set(forbiddenBusinessIds),
-      ] as const,
+      ([businessId, forbiddenBusinessIds]) =>
+        [
+          Number.parseInt(businessId, 10),
+          new Set(forbiddenBusinessIds),
+        ] as const,
     ),
   );
   const pairedBusinessIdSetByBusinessId = new Map(
     Object.entries(pairedBusinessIdsByBusinessId).map(
-      ([businessId, pairedBusinessIds]) => [
-        Number.parseInt(businessId, 10),
-        new Set(pairedBusinessIds),
-      ] as const,
+      ([businessId, pairedBusinessIds]) =>
+        [Number.parseInt(businessId, 10), new Set(pairedBusinessIds)] as const,
     ),
   );
 
@@ -1107,13 +1111,12 @@ export function RoundDraftTable({
 
     return (
       <div className="space-y-2">
-        {targets.map((target) => (
+        {targets.map((target) =>
           (() => {
-            const draftButtonDisabledLabel =
-              getRoundEmailDraftBlockedReason({
-                matchStatus: target.matchStatus,
-                placementStatus: hostPlacementStatus,
-              });
+            const draftButtonDisabledLabel = getRoundEmailDraftBlockedReason({
+              matchStatus: target.matchStatus,
+              placementStatus: hostPlacementStatus,
+            });
 
             return (
               <div
@@ -1133,8 +1136,8 @@ export function RoundDraftTable({
                 />
               </div>
             );
-          })()
-        ))}
+          })(),
+        )}
       </div>
     );
   }
@@ -1209,8 +1212,8 @@ export function RoundDraftTable({
             <p className="text-xs leading-6 text-muted">
               {rowIsBusy
                 ? "Saving relationship..."
-                : validationMessage ??
-                "The server will still block forbidden pairs, self-pairs, duplicate rows, and reversed pairs."}
+                : (validationMessage ??
+                  "The server will still block forbidden pairs, self-pairs, duplicate rows, and reversed pairs.")}
             </p>
           </div>
 
@@ -1218,7 +1221,11 @@ export function RoundDraftTable({
             {canDeleteAssignments || row.assignmentId === null ? (
               <div className="group relative">
                 <button
-                  aria-label={row.assignmentId === null ? "Remove relationship" : "Delete relationship"}
+                  aria-label={
+                    row.assignmentId === null
+                      ? "Remove relationship"
+                      : "Delete relationship"
+                  }
                   className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#d98d8a] bg-[#fff5f4] text-[#a93e39] transition hover:-translate-y-0.5 hover:border-[#bf5d57] hover:text-[#8f2e2a] disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={isPending}
                   onClick={() => deleteRow(row)}
@@ -1254,8 +1261,10 @@ export function RoundDraftTable({
     if (!isDraft) {
       return renderRelationshipList(
         direction === "publishedBy"
-          ? rows.find((row) => row.businessId === businessId)?.publishedBy ?? []
-          : rows.find((row) => row.businessId === businessId)?.publishedFor ?? [],
+          ? (rows.find((row) => row.businessId === businessId)?.publishedBy ??
+              [])
+          : (rows.find((row) => row.businessId === businessId)?.publishedFor ??
+              []),
         businessId,
         emptyLabel,
         direction === "publishedBy" ? "neutral" : "accent",
@@ -1283,7 +1292,9 @@ export function RoundDraftTable({
           type="button"
         >
           <PlusIcon className="h-4 w-4" />
-          {direction === "publishedBy" ? "Add Published By" : "Add Published For"}
+          {direction === "publishedBy"
+            ? "Add Published By"
+            : "Add Published For"}
         </button>
       </div>
     );
@@ -1319,37 +1330,39 @@ export function RoundDraftTable({
 
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-            <label className="flex min-w-52 flex-col gap-2 text-xs font-semibold tracking-[0.08em] text-muted uppercase">
-              Placement Filter
-              <select
-                className="min-h-11 rounded-2xl border border-border bg-white/85 px-4 py-3 text-sm font-medium tracking-normal text-foreground normal-case outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
-                onChange={(event) =>
-                  setPlacementFilter(event.target.value as PlacementFilter)
-                }
-                value={placementFilter}
-              >
-                <option value="all">All businesses</option>
-                <option value="needs-matches">Needs matches</option>
-                <option value="partial">Partial placement</option>
-                <option value="unassigned">Unassigned</option>
-                <option value="outside-taxonomy">Outside taxonomy</option>
-                <option value="complete">Complete only</option>
-              </select>
-            </label>
+              <label className="flex min-w-52 flex-col gap-2 text-xs font-semibold tracking-[0.08em] text-muted uppercase">
+                Placement Filter
+                <select
+                  className="min-h-11 rounded-2xl border border-border bg-white/85 px-4 py-3 text-sm font-medium tracking-normal text-foreground normal-case outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
+                  onChange={(event) =>
+                    setPlacementFilter(event.target.value as PlacementFilter)
+                  }
+                  value={placementFilter}
+                >
+                  <option value="all">All businesses</option>
+                  <option value="needs-matches">Needs matches</option>
+                  <option value="partial">Partial placement</option>
+                  <option value="unassigned">Unassigned</option>
+                  <option value="outside-taxonomy">Outside taxonomy</option>
+                  <option value="complete">Complete only</option>
+                </select>
+              </label>
 
-            <label className="flex min-w-52 flex-col gap-2 text-xs font-semibold tracking-[0.08em] text-muted uppercase">
-              Placement Sort
-              <select
-                className="min-h-11 rounded-2xl border border-border bg-white/85 px-4 py-3 text-sm font-medium tracking-normal text-foreground normal-case outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
-                onChange={(event) =>
-                  setPlacementSort(event.target.value as PlacementSort)
-                }
-                value={placementSort}
-              >
-                <option value="needs-matches-first">Needs matches first</option>
-                <option value="business-name">Business name</option>
-              </select>
-            </label>
+              <label className="flex min-w-52 flex-col gap-2 text-xs font-semibold tracking-[0.08em] text-muted uppercase">
+                Placement Sort
+                <select
+                  className="min-h-11 rounded-2xl border border-border bg-white/85 px-4 py-3 text-sm font-medium tracking-normal text-foreground normal-case outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
+                  onChange={(event) =>
+                    setPlacementSort(event.target.value as PlacementSort)
+                  }
+                  value={placementSort}
+                >
+                  <option value="needs-matches-first">
+                    Needs matches first
+                  </option>
+                  <option value="business-name">Business name</option>
+                </select>
+              </label>
             </div>
 
             {!isDraft ? (
@@ -1370,7 +1383,8 @@ export function RoundDraftTable({
           ) : null}
         </div>
 
-        {(isDraft ? visibleDraftOverviewRows.length : visibleRows.length) === 0 ? (
+        {(isDraft ? visibleDraftOverviewRows.length : visibleRows.length) ===
+        0 ? (
           <div className="mt-6 rounded-4xl border border-dashed border-border bg-white/60 px-6 py-12 text-center">
             <p className="text-lg font-medium text-foreground">
               {rows.length === 0
@@ -1438,7 +1452,8 @@ export function RoundDraftTable({
                               })}
                               {row.publishedForRows.length > 1 ? (
                                 <p className="text-xs leading-6 text-muted">
-                                  {row.publishedForRows.length} linked businesses
+                                  {row.publishedForRows.length} linked
+                                  businesses
                                 </p>
                               ) : null}
                             </div>
@@ -1475,75 +1490,75 @@ export function RoundDraftTable({
                         >
                           <td className="border-t border-border px-5 py-4 sm:px-6">
                             <div className="space-y-1.5">
-                                <Link
-                                  className="block text-sm font-semibold text-foreground transition hover:text-accent"
-                                  href={getBusinessProfileHref(row.businessId)}
-                                >
-                                  {row.businessName}
-                                </Link>
-                                <span className="inline-flex items-center rounded-full border border-border bg-brand-deep-soft/55 px-2.5 py-0.5 text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">
-                                  {row.domainRating === null
-                                    ? "No DR"
-                                    : `DR ${row.domainRating}`}
-                                </span>
-                                {getOverviewStatusHelperLabel(row.rowStatus) ? (
-                                  <p className="text-xs font-medium leading-6 text-muted">
-                                    {getOverviewStatusHelperLabel(row.rowStatus)}
-                                  </p>
-                                ) : null}
-                              </div>
-                            </td>
-                            <td className="border-t border-border px-5 py-4 sm:px-6">
-                              <div className="space-y-2">
-                                {renderRelationshipList(
-                                  row.publishedFor,
-                                  row.businessId,
-                                  "No Published For relationships in this round yet.",
-                                  "accent",
-                                )}
-                                {row.publishedFor.length > 1 ? (
-                                  <p className="text-xs leading-6 text-muted">
-                                    {row.publishedFor.length} linked businesses
-                                  </p>
-                                ) : null}
-                              </div>
-                            </td>
-                            <td className="border-t border-border px-5 py-4 sm:px-6">
-                              <div className="space-y-2">
-                                {renderRelationshipList(
-                                  row.publishedBy,
-                                  row.businessId,
-                                  "No Published By relationships in this round yet.",
-                                  "neutral",
-                                )}
-                                {row.publishedBy.length > 1 ? (
-                                  <p className="text-xs leading-6 text-muted">
-                                    {row.publishedBy.length} linked businesses
-                                  </p>
-                                ) : null}
-                              </div>
-                            </td>
-                            <td className="border-t border-border px-5 py-4 sm:px-6">
-                              {renderAppliedDraftActions(
-                                row.businessId,
-                                row.businessName,
-                                row.rowStatus,
-                                row.publishedFor,
-                              )}
-                            </td>
-                            <td className="border-t border-border px-5 py-4 sm:px-6">
-                              <span
-                                className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold tracking-[0.08em] uppercase ${getOverviewStatusClassName(row.rowStatus)}`}
+                              <Link
+                                className="block text-sm font-semibold text-foreground transition hover:text-accent"
+                                href={getBusinessProfileHref(row.businessId)}
                               >
-                                {getOverviewStatusLabel(row.rowStatus)}
+                                {row.businessName}
+                              </Link>
+                              <span className="inline-flex items-center rounded-full border border-border bg-brand-deep-soft/55 px-2.5 py-0.5 text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">
+                                {row.domainRating === null
+                                  ? "No DR"
+                                  : `DR ${row.domainRating}`}
                               </span>
-                            </td>
-                          </tr>
-                        ))}
-                  </tbody>
-                </table>
-              </div>
+                              {getOverviewStatusHelperLabel(row.rowStatus) ? (
+                                <p className="text-xs font-medium leading-6 text-muted">
+                                  {getOverviewStatusHelperLabel(row.rowStatus)}
+                                </p>
+                              ) : null}
+                            </div>
+                          </td>
+                          <td className="border-t border-border px-5 py-4 sm:px-6">
+                            <div className="space-y-2">
+                              {renderRelationshipList(
+                                row.publishedFor,
+                                row.businessId,
+                                "No Published For relationships in this round yet.",
+                                "accent",
+                              )}
+                              {row.publishedFor.length > 1 ? (
+                                <p className="text-xs leading-6 text-muted">
+                                  {row.publishedFor.length} linked businesses
+                                </p>
+                              ) : null}
+                            </div>
+                          </td>
+                          <td className="border-t border-border px-5 py-4 sm:px-6">
+                            <div className="space-y-2">
+                              {renderRelationshipList(
+                                row.publishedBy,
+                                row.businessId,
+                                "No Published By relationships in this round yet.",
+                                "neutral",
+                              )}
+                              {row.publishedBy.length > 1 ? (
+                                <p className="text-xs leading-6 text-muted">
+                                  {row.publishedBy.length} linked businesses
+                                </p>
+                              ) : null}
+                            </div>
+                          </td>
+                          <td className="border-t border-border px-5 py-4 sm:px-6">
+                            {renderAppliedDraftActions(
+                              row.businessId,
+                              row.businessName,
+                              row.rowStatus,
+                              row.publishedFor,
+                            )}
+                          </td>
+                          <td className="border-t border-border px-5 py-4 sm:px-6">
+                            <span
+                              className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold tracking-[0.08em] uppercase ${getOverviewStatusClassName(row.rowStatus)}`}
+                            >
+                              {getOverviewStatusLabel(row.rowStatus)}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                </tbody>
+              </table>
             </div>
+          </div>
         )}
       </section>
 

@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  useDeferredValue,
-  useEffect,
-  useId,
-  useRef,
-  useState,
-} from "react";
+import { useDeferredValue, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 export type RoundBusinessComboboxOption = {
@@ -115,7 +109,10 @@ function getPanelPosition(triggerElement: HTMLButtonElement): PanelPosition {
     return {
       left,
       maxHeight: Math.max(180, Math.min(420, spaceAbove - 8)),
-      top: Math.max(viewportPadding, rect.top - Math.min(420, spaceAbove - 8) - 8),
+      top: Math.max(
+        viewportPadding,
+        rect.top - Math.min(420, spaceAbove - 8) - 8,
+      ),
       width,
     };
   }
@@ -139,14 +136,17 @@ export function RoundBusinessCombobox({
 }: RoundBusinessComboboxProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [panelPosition, setPanelPosition] = useState<PanelPosition | null>(null);
+  const [panelPosition, setPanelPosition] = useState<PanelPosition | null>(
+    null,
+  );
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const deferredQuery = useDeferredValue(query);
   const listboxId = useId();
   const normalizedQuery = deferredQuery.trim().toLocaleLowerCase();
-  const selectedOption = options.find((option) => option.value === value) ?? null;
+  const selectedOption =
+    options.find((option) => option.value === value) ?? null;
   const filteredOptions = options.filter((option) => {
     if (!normalizedQuery) {
       return true;
@@ -244,7 +244,11 @@ export function RoundBusinessCombobox({
           openPanel();
         }}
         onKeyDown={(event) => {
-          if (event.key === "ArrowDown" || event.key === "Enter" || event.key === " ") {
+          if (
+            event.key === "ArrowDown" ||
+            event.key === "Enter" ||
+            event.key === " "
+          ) {
             event.preventDefault();
             openPanel();
           }

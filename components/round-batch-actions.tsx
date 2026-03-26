@@ -80,9 +80,7 @@ export function RoundBatchActions({
       } | null;
 
       if (!response.ok || !payload?.batch) {
-        toast.error(
-          payload?.error ?? "The round draft could not be created.",
-        );
+        toast.error(payload?.error ?? "The round draft could not be created.");
         return;
       }
 
@@ -311,7 +309,8 @@ export function RoundBatchActions({
                       {conflict.hostBusiness} -&gt; {conflict.guestBusiness}
                     </p>
                     <p className="mt-1 text-sm leading-6 text-muted">
-                      Already matched as {conflict.existingHostBusiness} -&gt; {conflict.existingGuestBusiness}
+                      Already matched as {conflict.existingHostBusiness} -&gt;{" "}
+                      {conflict.existingGuestBusiness}
                       {conflict.existingRoundSequenceNumber === null
                         ? "."
                         : ` in round ${conflict.existingRoundSequenceNumber}.`}

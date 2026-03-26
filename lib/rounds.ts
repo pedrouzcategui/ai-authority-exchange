@@ -477,10 +477,10 @@ function toForbiddenBusinessIdSetMap(
   forbiddenBusinessIdsByBusinessId: Map<number, number[]>,
 ) {
   return new Map(
-    Array.from(forbiddenBusinessIdsByBusinessId.entries(), ([businessId, ids]) => [
-      businessId,
-      new Set(ids),
-    ]),
+    Array.from(
+      forbiddenBusinessIdsByBusinessId.entries(),
+      ([businessId, ids]) => [businessId, new Set(ids)],
+    ),
   );
 }
 
@@ -488,10 +488,10 @@ function serializeForbiddenBusinessIdsByBusinessId(
   forbiddenBusinessIdsByBusinessId: Map<number, number[]>,
 ) {
   return Object.fromEntries(
-    Array.from(forbiddenBusinessIdsByBusinessId.entries(), ([businessId, ids]) => [
-      businessId,
-      ids,
-    ]),
+    Array.from(
+      forbiddenBusinessIdsByBusinessId.entries(),
+      ([businessId, ids]) => [businessId, ids],
+    ),
   ) as Record<number, number[]>;
 }
 
@@ -511,11 +511,8 @@ function isForbiddenRoundPair(params: {
   guestBusinessId: number;
   hostBusinessId: number;
 }) {
-  const {
-    forbiddenBusinessIdsByBusinessId,
-    guestBusinessId,
-    hostBusinessId,
-  } = params;
+  const { forbiddenBusinessIdsByBusinessId, guestBusinessId, hostBusinessId } =
+    params;
 
   return (
     forbiddenBusinessIdsByBusinessId
@@ -532,11 +529,8 @@ function isHistoricalRoundPair(params: {
   hostBusinessId: number;
   pairedBusinessIdsByBusinessId: Map<number, Set<number>>;
 }) {
-  const {
-    guestBusinessId,
-    hostBusinessId,
-    pairedBusinessIdsByBusinessId,
-  } = params;
+  const { guestBusinessId, hostBusinessId, pairedBusinessIdsByBusinessId } =
+    params;
 
   return (
     pairedBusinessIdsByBusinessId.get(hostBusinessId)?.has(guestBusinessId) ===
@@ -740,9 +734,8 @@ function isDirectedAssignmentEligible(params: {
   }
 
   if (enforceSingleSlotPerDirection) {
-    const existingHostAssignment = draftState.assignmentByHostId.get(
-      hostBusinessId,
-    );
+    const existingHostAssignment =
+      draftState.assignmentByHostId.get(hostBusinessId);
 
     if (
       existingHostAssignment &&
@@ -751,9 +744,8 @@ function isDirectedAssignmentEligible(params: {
       return false;
     }
 
-    const existingGuestAssignment = draftState.assignmentByGuestId.get(
-      guestBusinessId,
-    );
+    const existingGuestAssignment =
+      draftState.assignmentByGuestId.get(guestBusinessId);
 
     if (
       existingGuestAssignment &&
@@ -831,7 +823,10 @@ function buildCandidateAssignmentsForRelation(params: {
     }
   }
 
-  return sortDraftAssignmentCandidates(candidateAssignments, roundBusinessesById);
+  return sortDraftAssignmentCandidates(
+    candidateAssignments,
+    roundBusinessesById,
+  );
 }
 
 function buildCandidateAssignmentsByHostId(params: {
@@ -851,7 +846,10 @@ function buildCandidateAssignmentsByHostId(params: {
   const roundBusinessesById = new Map(
     activeBusinesses.map((business) => [business.id, business] as const),
   );
-  const candidateAssignmentsByHostId = new Map<number, DraftAssignmentCandidate[]>();
+  const candidateAssignmentsByHostId = new Map<
+    number,
+    DraftAssignmentCandidate[]
+  >();
 
   for (const relation of relationPriority) {
     const candidateAssignments = buildCandidateAssignmentsForRelation({
@@ -865,7 +863,8 @@ function buildCandidateAssignmentsByHostId(params: {
 
     for (const candidateAssignment of candidateAssignments) {
       const hostCandidates =
-        candidateAssignmentsByHostId.get(candidateAssignment.hostBusinessId) ?? [];
+        candidateAssignmentsByHostId.get(candidateAssignment.hostBusinessId) ??
+        [];
 
       hostCandidates.push(candidateAssignment);
       candidateAssignmentsByHostId.set(
@@ -886,8 +885,12 @@ function toDraftAssignmentRecord(
   roundBusinessesById: Map<number, RoundBusiness>,
   index: number,
 ): RoundAssignmentRecord {
-  const hostBusiness = roundBusinessesById.get(candidateAssignment.hostBusinessId)!;
-  const guestBusiness = roundBusinessesById.get(candidateAssignment.guestBusinessId)!;
+  const hostBusiness = roundBusinessesById.get(
+    candidateAssignment.hostBusinessId,
+  )!;
+  const guestBusiness = roundBusinessesById.get(
+    candidateAssignment.guestBusinessId,
+  )!;
 
   return {
     createdAt: new Date(0),
@@ -990,7 +993,8 @@ function searchRoundAssignments(params: {
   function commitBestResult() {
     if (
       searchState.selectedAssignments.length > bestResult.assignments.length ||
-      (searchState.selectedAssignments.length === bestResult.assignments.length &&
+      (searchState.selectedAssignments.length ===
+        bestResult.assignments.length &&
         searchState.totalScore > bestResult.totalScore)
     ) {
       bestResult = {
@@ -1150,7 +1154,8 @@ function buildAutomaticRoundAssignments(params: {
   });
   const standardSearchResult = searchRoundAssignments({
     activeBusinesses,
-    candidateAssignmentsByHostId: standardCandidates.candidateAssignmentsByHostId,
+    candidateAssignmentsByHostId:
+      standardCandidates.candidateAssignmentsByHostId,
     forbiddenBusinessIdsByBusinessId,
     pairedBusinessIdsByBusinessId,
     requireCompleteCoverage: true,
@@ -1178,7 +1183,8 @@ function buildAutomaticRoundAssignments(params: {
   });
   const fallbackSearchResult = searchRoundAssignments({
     activeBusinesses,
-    candidateAssignmentsByHostId: fallbackCandidates.candidateAssignmentsByHostId,
+    candidateAssignmentsByHostId:
+      fallbackCandidates.candidateAssignmentsByHostId,
     forbiddenBusinessIdsByBusinessId,
     pairedBusinessIdsByBusinessId,
     requireCompleteCoverage: false,
@@ -1518,9 +1524,12 @@ export const getRoundBatchView = cache(async (requestedBatchId?: number) => {
   const selectedBatch =
     (requestedBatchId === undefined
       ? batches[0]
-      : batches.find((batch) => batch.sequenceNumber === requestedBatchId) ??
-        batches.find((batch) => batch.id === requestedBatchId)) ?? batches[0];
-  const [{ assignments, forbiddenBusinessIdsByBusinessId, historicalContext }, roundBatchMatches] = await Promise.all([
+      : (batches.find((batch) => batch.sequenceNumber === requestedBatchId) ??
+        batches.find((batch) => batch.id === requestedBatchId))) ?? batches[0];
+  const [
+    { assignments, forbiddenBusinessIdsByBusinessId, historicalContext },
+    roundBatchMatches,
+  ] = await Promise.all([
     getRoundManagementContext(selectedBatch.id),
     prisma.match.findMany({
       select: roundBatchMatchSelect,
@@ -1530,10 +1539,10 @@ export const getRoundBatchView = cache(async (requestedBatchId?: number) => {
     }),
   ]);
   const matchStatusByPairKey = new Map(
-    roundBatchMatches.map((match) => [
-      pairKey(match.hostId, match.guestId),
-      match.status ?? null,
-    ] as const),
+    roundBatchMatches.map(
+      (match) =>
+        [pairKey(match.hostId, match.guestId), match.status ?? null] as const,
+    ),
   );
   const matchStatusRows = roundBatchMatches
     .map((match) => toRoundBatchMatchStatusRow(match))
@@ -1638,10 +1647,9 @@ export const getRoundBatchView = cache(async (requestedBatchId?: number) => {
     assignmentRows,
     batch: selectedBatch,
     batches,
-    forbiddenBusinessIdsByBusinessId:
-      serializeForbiddenBusinessIdsByBusinessId(
-        forbiddenBusinessIdsByBusinessId,
-      ),
+    forbiddenBusinessIdsByBusinessId: serializeForbiddenBusinessIdsByBusinessId(
+      forbiddenBusinessIdsByBusinessId,
+    ),
     pairedBusinessIdsByBusinessId: serializePairedBusinessIdsByBusinessId(
       historicalContext.pairedBusinessIdsByBusinessId,
     ),
@@ -1665,9 +1673,8 @@ export async function createRoundDraftBatch() {
         );
       }
 
-      const activeBusinesses = await getActiveRoundBusinessesFromDatabase(
-        transaction,
-      );
+      const activeBusinesses =
+        await getActiveRoundBusinessesFromDatabase(transaction);
 
       if (activeBusinesses.length === 0) {
         throw new Error(
@@ -2294,7 +2301,8 @@ export async function applyRoundBatch(roundBatchId: number) {
             existingGuestBusiness: match.guest.business,
             existingHostBusiness: match.host.business,
             existingMatchId: match.id,
-            existingRoundSequenceNumber: match.roundBatch?.sequenceNumber ?? null,
+            existingRoundSequenceNumber:
+              match.roundBatch?.sequenceNumber ?? null,
             guestBusiness: assignment.guestBusiness.business,
             hostBusiness: assignment.hostBusiness.business,
           })),
