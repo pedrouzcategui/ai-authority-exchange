@@ -16,6 +16,7 @@ type RoundsViewToggleProps = {
   batchId: number;
   canDeleteAssignments: boolean;
   forbiddenBusinessIdsByBusinessId: Record<number, number[]>;
+  pairedBusinessIdsByBusinessId: Record<number, number[]>;
   matchStatusRows: RoundBatchMatchStatusRow[];
   roundSequenceNumber: number | null;
   rows: RoundDraftRow[];
@@ -42,6 +43,7 @@ export function RoundsViewToggle({
   batchId,
   canDeleteAssignments,
   forbiddenBusinessIdsByBusinessId,
+  pairedBusinessIdsByBusinessId,
   matchStatusRows,
   roundSequenceNumber,
   rows,
@@ -89,6 +91,7 @@ export function RoundsViewToggle({
           assignmentRows={assignmentRows}
           canDeleteAssignments={canDeleteAssignments}
           forbiddenBusinessIdsByBusinessId={forbiddenBusinessIdsByBusinessId}
+          pairedBusinessIdsByBusinessId={pairedBusinessIdsByBusinessId}
           roundBatchId={batchId}
           roundSequenceNumber={roundSequenceNumber}
           rows={rows}

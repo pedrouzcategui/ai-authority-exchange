@@ -56,9 +56,9 @@ export default async function RoundsPage({ searchParams }: RoundsPageProps) {
             </h1>
             <p className="max-w-3xl text-base leading-7 text-muted sm:text-lg">
               Create the next round draft in one step, refine any pairings that
-              need manual changes, then apply the round once it is ready.
-              New rounds stay locked until the latest draft is explicitly
-              applied or deleted.
+              need manual changes, then apply the round once it is ready. New
+              rounds stay locked until the latest draft is explicitly applied or
+              deleted.
             </p>
           </div>
 
@@ -168,6 +168,9 @@ export default async function RoundsPage({ searchParams }: RoundsPageProps) {
           }
           key={roundBatchView.batch.id}
           matchStatusRows={roundBatchView.matchStatusRows}
+          pairedBusinessIdsByBusinessId={
+            roundBatchView.pairedBusinessIdsByBusinessId
+          }
           roundSequenceNumber={roundBatchView.batch.sequenceNumber}
           rows={roundBatchView.rows}
           roundStatus={roundBatchView.batch.status}

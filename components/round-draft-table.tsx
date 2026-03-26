@@ -4,12 +4,11 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { ActionTooltip, PlusIcon, TrashIcon } from "@/components/action-icons";
 import {
-  ActionTooltip,
-  PlusIcon,
-  SaveIcon,
-  TrashIcon,
-} from "@/components/action-icons";
+  RoundBusinessCombobox,
+  type RoundBusinessComboboxOption,
+} from "@/components/round-business-combobox";
 import { CreateEmailDraftButton } from "@/components/create-email-draft-button";
 import { CreateRoundEmailDraftsButton } from "@/components/create-round-email-drafts-button";
 import type {
@@ -22,7 +21,11 @@ import {
   getRoundEmailDraftBlockedReason,
   type RoundDraftPlacementStatus,
 } from "@/lib/round-email-draft-eligibility";
-import { getRoundMatchMethod, type RoundMatchMethod } from "@/lib/round-match-method";
+import { setRoundEditorBusy } from "@/lib/rounds-editor-busy";
+import {
+  getRoundMatchMethod,
+  type RoundMatchMethod,
+} from "@/lib/round-match-method";
 import type {
   RoundDraftAssignmentRow,
   RoundDraftOption,
@@ -33,6 +36,7 @@ type RoundDraftTableProps = {
   assignmentRows: RoundDraftAssignmentRow[];
   canDeleteAssignments: boolean;
   forbiddenBusinessIdsByBusinessId: Record<number, number[]>;
+  pairedBusinessIdsByBusinessId: Record<number, number[]>;
   roundBatchId: number;
   roundSequenceNumber: number | null;
   rows: RoundDraftRow[];
@@ -87,9 +91,7 @@ function hasOutsideTaxonomyMatch(params: {
   counterpartBusinessId: number;
   currentBusinessId: number;
 }) {
-  return (
-    getLinkedBusinessMatchMethod(params) === null
-  );
+  return getLinkedBusinessMatchMethod(params) === null;
 }
 
 const draftOverviewNameCollator = new Intl.Collator(undefined, {
@@ -193,6 +195,73 @@ function getMatchingMethodLabel(method: RoundMatchMethod | null) {
   }
 }
 
+function getBusinessCategoryLabel(categoryName: string | null) {
+  return categoryName?.trim() || "No category assigned";
+}
+
+function getBusinessDescriptionLabel(description: string | null) {
+  const trimmedDescription = description?.trim();
+
+  if (!trimmedDescription) {
+    return "No company description added yet.";
+  }
+
+  return trimmedDescription.length > 220
+    ? `${trimmedDescription.slice(0, 217)}...`
+    : trimmedDescription;
+}
+
+function getHistoricalMatchHelperText(hiddenMatchCount: number) {
+  if (hiddenMatchCount <= 0) {
+    return null;
+  }
+
+  return hiddenMatchCount === 1
+    ? "1 previously matched business is hidden from this list."
+    : `${hiddenMatchCount} previously matched businesses are hidden from this list.`;
+}
+
+function getBusinessOptionLabel(params: {
+  business: RoundDraftOption;
+  businessById: Map<number, RoundDraftOption>;
+  currentBusinessId: number;
+}) {
+  const { business, businessById, currentBusinessId } = params;
+  const matchingMethod = getLinkedBusinessMatchMethod({
+    businessById,
+    counterpartBusinessId: business.businessId,
+    currentBusinessId,
+  });
+
+  return `${business.businessName} - ${getMatchingMethodLabel(matchingMethod)}`;
+}
+
+function toRoundBusinessComboboxOption(params: {
+  business: RoundDraftOption;
+  businessById: Map<number, RoundDraftOption>;
+  currentBusinessId: number;
+}): RoundBusinessComboboxOption {
+  const { business, businessById, currentBusinessId } = params;
+  const matchingMethod = getLinkedBusinessMatchMethod({
+    businessById,
+    counterpartBusinessId: business.businessId,
+    currentBusinessId,
+  });
+
+  return {
+    categoryLabel: getBusinessCategoryLabel(business.businessCategoryName),
+    description: getBusinessDescriptionLabel(business.description),
+    label: getBusinessOptionLabel({
+      business,
+      businessById,
+      currentBusinessId,
+    }),
+    matchClassName: getMatchingMethodClassName(matchingMethod),
+    matchLabel: getMatchingMethodLabel(matchingMethod),
+    value: business.businessId.toString(),
+  };
+}
+
 function getLinkedBusinessMatchMethod(params: {
   businessById: Map<number, RoundDraftOption>;
   counterpartBusinessId: number;
@@ -245,7 +314,9 @@ function buildDraftOverviewRows(params: {
       return existingRow;
     }
 
-    const baseRow = rows.find((candidateRow) => candidateRow.businessId === businessId);
+    const baseRow = rows.find(
+      (candidateRow) => candidateRow.businessId === businessId,
+    );
     const business = businessById.get(businessId);
     const nextRow = {
       businessId,
@@ -283,40 +354,45 @@ function buildDraftOverviewRows(params: {
   }
 
   return Array.from(rowByBusinessId.values())
-    .map((row) => ({
-      ...row,
-      hasOutsideTaxonomy:
-        row.publishedForRows.some((draftRow) => {
-          const guestBusinessId = parseSelectedId(draftRow.guestBusinessId);
+    .map(
+      (row) =>
+        ({
+          ...row,
+          hasOutsideTaxonomy:
+            row.publishedForRows.some((draftRow) => {
+              const guestBusinessId = parseSelectedId(draftRow.guestBusinessId);
 
-          return (
-            guestBusinessId !== null &&
-            hasOutsideTaxonomyMatch({
-              businessById,
-              counterpartBusinessId: guestBusinessId,
-              currentBusinessId: row.businessId,
-            })
-          );
-        }) ||
-        row.publishedByRows.some((draftRow) => {
-          const hostBusinessId = parseSelectedId(draftRow.hostBusinessId);
+              return (
+                guestBusinessId !== null &&
+                hasOutsideTaxonomyMatch({
+                  businessById,
+                  counterpartBusinessId: guestBusinessId,
+                  currentBusinessId: row.businessId,
+                })
+              );
+            }) ||
+            row.publishedByRows.some((draftRow) => {
+              const hostBusinessId = parseSelectedId(draftRow.hostBusinessId);
 
-          return (
-            hostBusinessId !== null &&
-            hasOutsideTaxonomyMatch({
-              businessById,
-              counterpartBusinessId: hostBusinessId,
-              currentBusinessId: row.businessId,
-            })
-          );
-        }),
-      rowStatus:
-        row.publishedByRows.length === 0 && row.publishedForRows.length === 0
-          ? "empty"
-          : row.publishedByRows.length === 0 || row.publishedForRows.length === 0
-            ? "partial"
-            : "complete",
-    }) satisfies DraftOverviewRow)
+              return (
+                hostBusinessId !== null &&
+                hasOutsideTaxonomyMatch({
+                  businessById,
+                  counterpartBusinessId: hostBusinessId,
+                  currentBusinessId: row.businessId,
+                })
+              );
+            }),
+          rowStatus:
+            row.publishedByRows.length === 0 &&
+            row.publishedForRows.length === 0
+              ? "empty"
+              : row.publishedByRows.length === 0 ||
+                  row.publishedForRows.length === 0
+                ? "partial"
+                : "complete",
+        }) satisfies DraftOverviewRow,
+    )
     .toSorted((left, right) =>
       draftOverviewNameCollator.compare(left.businessName, right.businessName),
     );
@@ -326,6 +402,7 @@ export function RoundDraftTable({
   assignmentRows,
   canDeleteAssignments,
   forbiddenBusinessIdsByBusinessId,
+  pairedBusinessIdsByBusinessId,
   roundBatchId,
   roundSequenceNumber,
   rows,
@@ -338,8 +415,9 @@ export function RoundDraftTable({
   const [isPending, startTransition] = useTransition();
   const [placementFilter, setPlacementFilter] =
     useState<PlacementFilter>("all");
-  const [placementSort, setPlacementSort] =
-    useState<PlacementSort>("needs-matches-first");
+  const [placementSort, setPlacementSort] = useState<PlacementSort>(
+    "needs-matches-first",
+  );
   const [activeRowId, setActiveRowId] = useState<string | null>(null);
   const [deleteConfirmationState, setDeleteConfirmationState] =
     useState<DeleteConfirmationState | null>(null);
@@ -354,16 +432,31 @@ export function RoundDraftTable({
   );
   const forbiddenBusinessIdSetByBusinessId = new Map(
     Object.entries(forbiddenBusinessIdsByBusinessId).map(
-      ([businessId, forbiddenBusinessIds]) => [
-        Number.parseInt(businessId, 10),
-        new Set(forbiddenBusinessIds),
-      ] as const,
+      ([businessId, forbiddenBusinessIds]) =>
+        [
+          Number.parseInt(businessId, 10),
+          new Set(forbiddenBusinessIds),
+        ] as const,
+    ),
+  );
+  const pairedBusinessIdSetByBusinessId = new Map(
+    Object.entries(pairedBusinessIdsByBusinessId).map(
+      ([businessId, pairedBusinessIds]) =>
+        [Number.parseInt(businessId, 10), new Set(pairedBusinessIds)] as const,
     ),
   );
 
   useEffect(() => {
     setDraftRows(assignmentRows.map((row) => createEditableAssignmentRow(row)));
   }, [assignmentRows]);
+
+  useEffect(() => {
+    setRoundEditorBusy(isPending);
+
+    return () => {
+      setRoundEditorBusy(false);
+    };
+  }, [isPending]);
 
   const draftOverviewRows = buildDraftOverviewRows({
     businessById,
@@ -450,6 +543,38 @@ export function RoundDraftTable({
     );
   }
 
+  function updateRowAndPersist(params: {
+    field: "guestBusinessId" | "hostBusinessId";
+    row: EditableAssignmentRow;
+    value: string;
+  }) {
+    const { field, row, value } = params;
+
+    if (row[field] === value) {
+      return;
+    }
+
+    const nextRow = {
+      ...row,
+      [field]: value,
+    } satisfies EditableAssignmentRow;
+
+    updateRow(row.clientId, field, value);
+
+    if (!value) {
+      return;
+    }
+
+    const validationMessage = getLocalValidationMessage(nextRow);
+
+    if (validationMessage) {
+      toast.error(validationMessage);
+      return;
+    }
+
+    saveRow(nextRow, { showSuccessToast: false });
+  }
+
   function getRowsExcluding(clientId: string) {
     return draftRows.filter((row) => row.clientId !== clientId);
   }
@@ -487,6 +612,17 @@ export function RoundDraftTable({
     );
   }
 
+  function isHistoricalPair(hostBusinessId: number, guestBusinessId: number) {
+    return (
+      pairedBusinessIdSetByBusinessId
+        .get(hostBusinessId)
+        ?.has(guestBusinessId) === true ||
+      pairedBusinessIdSetByBusinessId
+        .get(guestBusinessId)
+        ?.has(hostBusinessId) === true
+    );
+  }
+
   function getHostOptions(row: EditableAssignmentRow) {
     const currentHostBusinessId = parseSelectedId(row.hostBusinessId);
     const currentGuestBusinessId = parseSelectedId(row.guestBusinessId);
@@ -506,6 +642,13 @@ export function RoundDraftTable({
       if (
         currentGuestBusinessId !== null &&
         isForbiddenPair(business.businessId, currentGuestBusinessId)
+      ) {
+        return false;
+      }
+
+      if (
+        currentGuestBusinessId !== null &&
+        isHistoricalPair(business.businessId, currentGuestBusinessId)
       ) {
         return false;
       }
@@ -550,6 +693,13 @@ export function RoundDraftTable({
 
       if (
         currentHostBusinessId !== null &&
+        isHistoricalPair(currentHostBusinessId, business.businessId)
+      ) {
+        return false;
+      }
+
+      if (
+        currentHostBusinessId !== null &&
         hasPairConflict(
           row.clientId,
           currentHostBusinessId,
@@ -563,13 +713,33 @@ export function RoundDraftTable({
     });
   }
 
+  function getHiddenHistoricalMatchCount(params: {
+    currentBusinessId: number;
+    selectedBusinessId: string;
+  }) {
+    const { currentBusinessId, selectedBusinessId } = params;
+    const parsedSelectedBusinessId = parseSelectedId(selectedBusinessId);
+
+    return selectableBusinesses.filter((business) => {
+      if (business.businessId === currentBusinessId) {
+        return false;
+      }
+
+      if (business.businessId === parsedSelectedBusinessId) {
+        return false;
+      }
+
+      return isHistoricalPair(currentBusinessId, business.businessId);
+    }).length;
+  }
+
   function getLocalValidationMessage(row: EditableAssignmentRow) {
     const hostBusinessId = parseSelectedId(row.hostBusinessId);
     const guestBusinessId = parseSelectedId(row.guestBusinessId);
     const otherRows = getRowsExcluding(row.clientId);
 
     if (hostBusinessId === null || guestBusinessId === null) {
-      return "Choose both businesses before saving this row.";
+      return "Choose both businesses to finish this relationship.";
     }
 
     if (hostBusinessId === guestBusinessId) {
@@ -578,6 +748,10 @@ export function RoundDraftTable({
 
     if (isForbiddenPair(hostBusinessId, guestBusinessId)) {
       return "This business pair is blocked in forbidden matches.";
+    }
+
+    if (isHistoricalPair(hostBusinessId, guestBusinessId)) {
+      return "These businesses already matched in a previous round.";
     }
 
     if (
@@ -625,10 +799,16 @@ export function RoundDraftTable({
     );
   }
 
-  function saveRow(row: EditableAssignmentRow) {
+  function saveRow(
+    row: EditableAssignmentRow,
+    options?: {
+      showSuccessToast?: boolean;
+    },
+  ) {
     const hostBusinessId = parseSelectedId(row.hostBusinessId);
     const guestBusinessId = parseSelectedId(row.guestBusinessId);
     const validationMessage = getLocalValidationMessage(row);
+    const showSuccessToast = options?.showSuccessToast ?? false;
 
     if (validationMessage) {
       toast.error(validationMessage);
@@ -668,7 +848,10 @@ export function RoundDraftTable({
           return;
         }
 
-        toast.success(payload?.message ?? "Round row saved.");
+        if (showSuccessToast) {
+          toast.success(payload?.message ?? "Round row saved.");
+        }
+
         router.refresh();
       } finally {
         setActiveRowId(null);
@@ -746,7 +929,10 @@ export function RoundDraftTable({
     });
   }
 
-  function renderBusinessPreview(businessId: string) {
+  function renderBusinessPreview(
+    businessId: string,
+    currentBusinessId: number,
+  ) {
     const parsedBusinessId = parseSelectedId(businessId);
 
     if (parsedBusinessId === null) {
@@ -768,13 +954,31 @@ export function RoundDraftTable({
     }
 
     return (
-      <div className="flex flex-wrap items-center justify-center gap-2 text-center">
-        <Link
-          className="text-sm font-semibold text-foreground transition hover:text-accent"
-          href={getBusinessProfileHref(business.businessId)}
-        >
-          {business.businessName}
-        </Link>
+      <div className="rounded-2xl border border-border bg-brand-deep-soft/30 px-3 py-3">
+        <div className="space-y-2 text-left">
+          <Link
+            className="block text-sm font-semibold text-foreground transition hover:text-accent"
+            href={getBusinessProfileHref(business.businessId)}
+          >
+            {getBusinessOptionLabel({
+              business,
+              businessById,
+              currentBusinessId,
+            })}
+          </Link>
+          <p className="text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">
+            Category
+          </p>
+          <p className="text-xs font-medium leading-6 text-foreground/85">
+            {getBusinessCategoryLabel(business.businessCategoryName)}
+          </p>
+          <p className="text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">
+            Description
+          </p>
+          <p className="text-xs leading-6 text-muted">
+            {getBusinessDescriptionLabel(business.description)}
+          </p>
+        </div>
       </div>
     );
   }
@@ -907,13 +1111,12 @@ export function RoundDraftTable({
 
     return (
       <div className="space-y-2">
-        {targets.map((target) => (
+        {targets.map((target) =>
           (() => {
-            const draftButtonDisabledLabel =
-              getRoundEmailDraftBlockedReason({
-                matchStatus: target.matchStatus,
-                placementStatus: hostPlacementStatus,
-              });
+            const draftButtonDisabledLabel = getRoundEmailDraftBlockedReason({
+              matchStatus: target.matchStatus,
+              placementStatus: hostPlacementStatus,
+            });
 
             return (
               <div
@@ -933,14 +1136,15 @@ export function RoundDraftTable({
                 />
               </div>
             );
-          })()
-        ))}
+          })(),
+        )}
       </div>
     );
   }
 
   function renderOverviewRelationshipEditor(
     row: EditableAssignmentRow,
+    currentBusinessId: number,
     direction: "publishedBy" | "publishedFor",
   ) {
     const isPublishedBy = direction === "publishedBy";
@@ -954,6 +1158,19 @@ export function RoundDraftTable({
     const validationMessage = getLocalValidationMessage(row);
     const rowIsBusy = isPending && activeRowId === row.clientId;
     const matchingMethod = getRowMatchMethod(row);
+    const comboboxOptions = options.map((business) =>
+      toRoundBusinessComboboxOption({
+        business,
+        businessById,
+        currentBusinessId,
+      }),
+    );
+    const historicalMatchHelperText = getHistoricalMatchHelperText(
+      getHiddenHistoricalMatchCount({
+        currentBusinessId,
+        selectedBusinessId: counterpartBusinessId,
+      }),
+    );
 
     return (
       <div
@@ -962,26 +1179,22 @@ export function RoundDraftTable({
       >
         <div className="flex flex-col gap-3 xl:flex-row xl:items-start">
           <div className="min-w-0 flex-1 space-y-3">
-            <select
-              className="block min-h-11 w-full rounded-2xl border border-border bg-white/85 px-4 py-3 text-sm text-foreground outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15 disabled:cursor-not-allowed disabled:bg-white/55 disabled:text-muted"
+            <RoundBusinessCombobox
               disabled={isPending}
-              onChange={(event) =>
-                updateRow(row.clientId, field, event.target.value)
+              helperText={historicalMatchHelperText ?? undefined}
+              onChange={(nextValue) =>
+                updateRowAndPersist({
+                  field,
+                  row,
+                  value: nextValue,
+                })
               }
+              options={comboboxOptions}
+              placeholder={placeholder}
               value={counterpartBusinessId}
-            >
-              <option value="">{placeholder}</option>
-              {options.map((business) => (
-                <option
-                  key={`${direction}-${row.clientId}-${business.businessId}`}
-                  value={business.businessId}
-                >
-                  {business.businessName}
-                </option>
-              ))}
-            </select>
+            />
 
-            {renderBusinessPreview(counterpartBusinessId)}
+            {renderBusinessPreview(counterpartBusinessId, currentBusinessId)}
 
             <div className="flex flex-wrap gap-2">
               <span
@@ -997,37 +1210,22 @@ export function RoundDraftTable({
             </div>
 
             <p className="text-xs leading-6 text-muted">
-              {validationMessage ??
-                "The server will still block forbidden pairs, self-pairs, duplicate rows, and reversed pairs."}
+              {rowIsBusy
+                ? "Saving relationship..."
+                : (validationMessage ??
+                  "The server will still block forbidden pairs, self-pairs, duplicate rows, and reversed pairs.")}
             </p>
           </div>
 
           <div className="flex shrink-0 items-center gap-3 xl:pt-0.5">
-            <div className="group relative">
-              <button
-                aria-label={row.assignmentId === null ? "Add relationship" : "Save relationship"}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-white/80 text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-60"
-                disabled={isPending || validationMessage !== null}
-                onClick={() => saveRow(row)}
-                type="button"
-              >
-                <SaveIcon className="h-4 w-4" />
-              </button>
-              <ActionTooltip
-                label={
-                  rowIsBusy
-                    ? "Saving relationship"
-                    : row.assignmentId === null
-                      ? "Add relationship"
-                      : "Save relationship"
-                }
-              />
-            </div>
-
             {canDeleteAssignments || row.assignmentId === null ? (
               <div className="group relative">
                 <button
-                  aria-label={row.assignmentId === null ? "Remove relationship" : "Delete relationship"}
+                  aria-label={
+                    row.assignmentId === null
+                      ? "Remove relationship"
+                      : "Delete relationship"
+                  }
                   className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#d98d8a] bg-[#fff5f4] text-[#a93e39] transition hover:-translate-y-0.5 hover:border-[#bf5d57] hover:text-[#8f2e2a] disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={isPending}
                   onClick={() => deleteRow(row)}
@@ -1063,8 +1261,10 @@ export function RoundDraftTable({
     if (!isDraft) {
       return renderRelationshipList(
         direction === "publishedBy"
-          ? rows.find((row) => row.businessId === businessId)?.publishedBy ?? []
-          : rows.find((row) => row.businessId === businessId)?.publishedFor ?? [],
+          ? (rows.find((row) => row.businessId === businessId)?.publishedBy ??
+              [])
+          : (rows.find((row) => row.businessId === businessId)?.publishedFor ??
+              []),
         businessId,
         emptyLabel,
         direction === "publishedBy" ? "neutral" : "accent",
@@ -1077,7 +1277,11 @@ export function RoundDraftTable({
           <p className="text-sm leading-7 text-muted">{emptyLabel}</p>
         ) : (
           relationships.map((relationship) =>
-            renderOverviewRelationshipEditor(relationship, direction),
+            renderOverviewRelationshipEditor(
+              relationship,
+              businessId,
+              direction,
+            ),
           )
         )}
 
@@ -1088,7 +1292,9 @@ export function RoundDraftTable({
           type="button"
         >
           <PlusIcon className="h-4 w-4" />
-          {direction === "publishedBy" ? "Add Published By" : "Add Published For"}
+          {direction === "publishedBy"
+            ? "Add Published By"
+            : "Add Published For"}
         </button>
       </div>
     );
@@ -1124,37 +1330,39 @@ export function RoundDraftTable({
 
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-            <label className="flex min-w-52 flex-col gap-2 text-xs font-semibold tracking-[0.08em] text-muted uppercase">
-              Placement Filter
-              <select
-                className="min-h-11 rounded-2xl border border-border bg-white/85 px-4 py-3 text-sm font-medium tracking-normal text-foreground normal-case outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
-                onChange={(event) =>
-                  setPlacementFilter(event.target.value as PlacementFilter)
-                }
-                value={placementFilter}
-              >
-                <option value="all">All businesses</option>
-                <option value="needs-matches">Needs matches</option>
-                <option value="partial">Partial placement</option>
-                <option value="unassigned">Unassigned</option>
-                <option value="outside-taxonomy">Outside taxonomy</option>
-                <option value="complete">Complete only</option>
-              </select>
-            </label>
+              <label className="flex min-w-52 flex-col gap-2 text-xs font-semibold tracking-[0.08em] text-muted uppercase">
+                Placement Filter
+                <select
+                  className="min-h-11 rounded-2xl border border-border bg-white/85 px-4 py-3 text-sm font-medium tracking-normal text-foreground normal-case outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
+                  onChange={(event) =>
+                    setPlacementFilter(event.target.value as PlacementFilter)
+                  }
+                  value={placementFilter}
+                >
+                  <option value="all">All businesses</option>
+                  <option value="needs-matches">Needs matches</option>
+                  <option value="partial">Partial placement</option>
+                  <option value="unassigned">Unassigned</option>
+                  <option value="outside-taxonomy">Outside taxonomy</option>
+                  <option value="complete">Complete only</option>
+                </select>
+              </label>
 
-            <label className="flex min-w-52 flex-col gap-2 text-xs font-semibold tracking-[0.08em] text-muted uppercase">
-              Placement Sort
-              <select
-                className="min-h-11 rounded-2xl border border-border bg-white/85 px-4 py-3 text-sm font-medium tracking-normal text-foreground normal-case outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
-                onChange={(event) =>
-                  setPlacementSort(event.target.value as PlacementSort)
-                }
-                value={placementSort}
-              >
-                <option value="needs-matches-first">Needs matches first</option>
-                <option value="business-name">Business name</option>
-              </select>
-            </label>
+              <label className="flex min-w-52 flex-col gap-2 text-xs font-semibold tracking-[0.08em] text-muted uppercase">
+                Placement Sort
+                <select
+                  className="min-h-11 rounded-2xl border border-border bg-white/85 px-4 py-3 text-sm font-medium tracking-normal text-foreground normal-case outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
+                  onChange={(event) =>
+                    setPlacementSort(event.target.value as PlacementSort)
+                  }
+                  value={placementSort}
+                >
+                  <option value="needs-matches-first">
+                    Needs matches first
+                  </option>
+                  <option value="business-name">Business name</option>
+                </select>
+              </label>
             </div>
 
             {!isDraft ? (
@@ -1175,7 +1383,8 @@ export function RoundDraftTable({
           ) : null}
         </div>
 
-        {(isDraft ? visibleDraftOverviewRows.length : visibleRows.length) === 0 ? (
+        {(isDraft ? visibleDraftOverviewRows.length : visibleRows.length) ===
+        0 ? (
           <div className="mt-6 rounded-4xl border border-dashed border-border bg-white/60 px-6 py-12 text-center">
             <p className="text-lg font-medium text-foreground">
               {rows.length === 0
@@ -1243,7 +1452,8 @@ export function RoundDraftTable({
                               })}
                               {row.publishedForRows.length > 1 ? (
                                 <p className="text-xs leading-6 text-muted">
-                                  {row.publishedForRows.length} linked businesses
+                                  {row.publishedForRows.length} linked
+                                  businesses
                                 </p>
                               ) : null}
                             </div>
@@ -1280,75 +1490,75 @@ export function RoundDraftTable({
                         >
                           <td className="border-t border-border px-5 py-4 sm:px-6">
                             <div className="space-y-1.5">
-                                <Link
-                                  className="block text-sm font-semibold text-foreground transition hover:text-accent"
-                                  href={getBusinessProfileHref(row.businessId)}
-                                >
-                                  {row.businessName}
-                                </Link>
-                                <span className="inline-flex items-center rounded-full border border-border bg-brand-deep-soft/55 px-2.5 py-0.5 text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">
-                                  {row.domainRating === null
-                                    ? "No DR"
-                                    : `DR ${row.domainRating}`}
-                                </span>
-                                {getOverviewStatusHelperLabel(row.rowStatus) ? (
-                                  <p className="text-xs font-medium leading-6 text-muted">
-                                    {getOverviewStatusHelperLabel(row.rowStatus)}
-                                  </p>
-                                ) : null}
-                              </div>
-                            </td>
-                            <td className="border-t border-border px-5 py-4 sm:px-6">
-                              <div className="space-y-2">
-                                {renderRelationshipList(
-                                  row.publishedFor,
-                                  row.businessId,
-                                  "No Published For relationships in this round yet.",
-                                  "accent",
-                                )}
-                                {row.publishedFor.length > 1 ? (
-                                  <p className="text-xs leading-6 text-muted">
-                                    {row.publishedFor.length} linked businesses
-                                  </p>
-                                ) : null}
-                              </div>
-                            </td>
-                            <td className="border-t border-border px-5 py-4 sm:px-6">
-                              <div className="space-y-2">
-                                {renderRelationshipList(
-                                  row.publishedBy,
-                                  row.businessId,
-                                  "No Published By relationships in this round yet.",
-                                  "neutral",
-                                )}
-                                {row.publishedBy.length > 1 ? (
-                                  <p className="text-xs leading-6 text-muted">
-                                    {row.publishedBy.length} linked businesses
-                                  </p>
-                                ) : null}
-                              </div>
-                            </td>
-                            <td className="border-t border-border px-5 py-4 sm:px-6">
-                              {renderAppliedDraftActions(
-                                row.businessId,
-                                row.businessName,
-                                row.rowStatus,
-                                row.publishedFor,
-                              )}
-                            </td>
-                            <td className="border-t border-border px-5 py-4 sm:px-6">
-                              <span
-                                className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold tracking-[0.08em] uppercase ${getOverviewStatusClassName(row.rowStatus)}`}
+                              <Link
+                                className="block text-sm font-semibold text-foreground transition hover:text-accent"
+                                href={getBusinessProfileHref(row.businessId)}
                               >
-                                {getOverviewStatusLabel(row.rowStatus)}
+                                {row.businessName}
+                              </Link>
+                              <span className="inline-flex items-center rounded-full border border-border bg-brand-deep-soft/55 px-2.5 py-0.5 text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">
+                                {row.domainRating === null
+                                  ? "No DR"
+                                  : `DR ${row.domainRating}`}
                               </span>
-                            </td>
-                          </tr>
-                        ))}
-                  </tbody>
-                </table>
-              </div>
+                              {getOverviewStatusHelperLabel(row.rowStatus) ? (
+                                <p className="text-xs font-medium leading-6 text-muted">
+                                  {getOverviewStatusHelperLabel(row.rowStatus)}
+                                </p>
+                              ) : null}
+                            </div>
+                          </td>
+                          <td className="border-t border-border px-5 py-4 sm:px-6">
+                            <div className="space-y-2">
+                              {renderRelationshipList(
+                                row.publishedFor,
+                                row.businessId,
+                                "No Published For relationships in this round yet.",
+                                "accent",
+                              )}
+                              {row.publishedFor.length > 1 ? (
+                                <p className="text-xs leading-6 text-muted">
+                                  {row.publishedFor.length} linked businesses
+                                </p>
+                              ) : null}
+                            </div>
+                          </td>
+                          <td className="border-t border-border px-5 py-4 sm:px-6">
+                            <div className="space-y-2">
+                              {renderRelationshipList(
+                                row.publishedBy,
+                                row.businessId,
+                                "No Published By relationships in this round yet.",
+                                "neutral",
+                              )}
+                              {row.publishedBy.length > 1 ? (
+                                <p className="text-xs leading-6 text-muted">
+                                  {row.publishedBy.length} linked businesses
+                                </p>
+                              ) : null}
+                            </div>
+                          </td>
+                          <td className="border-t border-border px-5 py-4 sm:px-6">
+                            {renderAppliedDraftActions(
+                              row.businessId,
+                              row.businessName,
+                              row.rowStatus,
+                              row.publishedFor,
+                            )}
+                          </td>
+                          <td className="border-t border-border px-5 py-4 sm:px-6">
+                            <span
+                              className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold tracking-[0.08em] uppercase ${getOverviewStatusClassName(row.rowStatus)}`}
+                            >
+                              {getOverviewStatusLabel(row.rowStatus)}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                </tbody>
+              </table>
             </div>
+          </div>
         )}
       </section>
 

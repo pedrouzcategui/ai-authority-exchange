@@ -1,10 +1,14 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useSyncExternalStore, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { RoundBatchStatus } from "@/generated/prisma/client";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
+import {
+  getRoundEditorBusySnapshot,
+  subscribeToRoundEditorBusy,
+} from "@/lib/rounds-editor-busy";
 
 type RoundApplyConflict = {
   assignmentId: number;
@@ -53,6 +57,12 @@ export function RoundBatchActions({
     useState<ConfirmationState>(null);
   const [applyConflictState, setApplyConflictState] =
     useState<ApplyConflictState>(null);
+  const roundEditorBusy = useSyncExternalStore(
+    subscribeToRoundEditorBusy,
+    getRoundEditorBusySnapshot,
+    () => false,
+  );
+  const applyButtonDisabled = isPending || roundEditorBusy;
 
   function createRoundDraft() {
     startTransition(async () => {
@@ -70,9 +80,7 @@ export function RoundBatchActions({
       } | null;
 
       if (!response.ok || !payload?.batch) {
-        toast.error(
-          payload?.error ?? "The round draft could not be created.",
-        );
+        toast.error(payload?.error ?? "The round draft could not be created.");
         return;
       }
 
@@ -255,11 +263,20 @@ export function RoundBatchActions({
         {canApply && roundBatchId ? (
           <button
             className="inline-flex min-h-11 items-center justify-center rounded-full bg-accent px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-accent-strong disabled:cursor-not-allowed disabled:bg-accent/45"
-            disabled={isPending}
+            disabled={applyButtonDisabled}
             onClick={applyRoundDraft}
+            title={
+              roundEditorBusy
+                ? "Wait for round edits to finish saving before applying this round"
+                : undefined
+            }
             type="button"
           >
-            {isPending ? "Applying round..." : "Apply Round"}
+            {isPending
+              ? "Applying round..."
+              : roundEditorBusy
+                ? "Waiting For Saves..."
+                : "Apply Round"}
           </button>
         ) : null}
       </div>
@@ -292,7 +309,8 @@ export function RoundBatchActions({
                       {conflict.hostBusiness} -&gt; {conflict.guestBusiness}
                     </p>
                     <p className="mt-1 text-sm leading-6 text-muted">
-                      Already matched as {conflict.existingHostBusiness} -&gt; {conflict.existingGuestBusiness}
+                      Already matched as {conflict.existingHostBusiness} -&gt;{" "}
+                      {conflict.existingGuestBusiness}
                       {conflict.existingRoundSequenceNumber === null
                         ? "."
                         : ` in round ${conflict.existingRoundSequenceNumber}.`}
