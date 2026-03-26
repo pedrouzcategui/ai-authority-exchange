@@ -168,6 +168,9 @@ export default async function RoundsPage({ searchParams }: RoundsPageProps) {
           }
           key={roundBatchView.batch.id}
           matchStatusRows={roundBatchView.matchStatusRows}
+          pairedBusinessIdsByBusinessId={
+            roundBatchView.pairedBusinessIdsByBusinessId
+          }
           roundSequenceNumber={roundBatchView.batch.sequenceNumber}
           rows={roundBatchView.rows}
           roundStatus={roundBatchView.batch.status}

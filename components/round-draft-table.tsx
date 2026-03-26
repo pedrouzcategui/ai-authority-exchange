@@ -7,9 +7,12 @@ import { toast } from "sonner";
 import {
   ActionTooltip,
   PlusIcon,
-  SaveIcon,
   TrashIcon,
 } from "@/components/action-icons";
+import {
+  RoundBusinessCombobox,
+  type RoundBusinessComboboxOption,
+} from "@/components/round-business-combobox";
 import { CreateEmailDraftButton } from "@/components/create-email-draft-button";
 import { CreateRoundEmailDraftsButton } from "@/components/create-round-email-drafts-button";
 import type {
@@ -33,6 +36,7 @@ type RoundDraftTableProps = {
   assignmentRows: RoundDraftAssignmentRow[];
   canDeleteAssignments: boolean;
   forbiddenBusinessIdsByBusinessId: Record<number, number[]>;
+  pairedBusinessIdsByBusinessId: Record<number, number[]>;
   roundBatchId: number;
   roundSequenceNumber: number | null;
   rows: RoundDraftRow[];
@@ -193,6 +197,63 @@ function getMatchingMethodLabel(method: RoundMatchMethod | null) {
   }
 }
 
+function getBusinessCategoryLabel(categoryName: string | null) {
+  return categoryName?.trim() || "No category assigned";
+}
+
+function getBusinessDescriptionLabel(description: string | null) {
+  const trimmedDescription = description?.trim();
+
+  if (!trimmedDescription) {
+    return "No company description added yet.";
+  }
+
+  return trimmedDescription.length > 220
+    ? `${trimmedDescription.slice(0, 217)}...`
+    : trimmedDescription;
+}
+
+function getBusinessOptionLabel(params: {
+  business: RoundDraftOption;
+  businessById: Map<number, RoundDraftOption>;
+  currentBusinessId: number;
+}) {
+  const { business, businessById, currentBusinessId } = params;
+  const matchingMethod = getLinkedBusinessMatchMethod({
+    businessById,
+    counterpartBusinessId: business.businessId,
+    currentBusinessId,
+  });
+
+  return `${business.businessName} - ${getMatchingMethodLabel(matchingMethod)}`;
+}
+
+function toRoundBusinessComboboxOption(params: {
+  business: RoundDraftOption;
+  businessById: Map<number, RoundDraftOption>;
+  currentBusinessId: number;
+}): RoundBusinessComboboxOption {
+  const { business, businessById, currentBusinessId } = params;
+  const matchingMethod = getLinkedBusinessMatchMethod({
+    businessById,
+    counterpartBusinessId: business.businessId,
+    currentBusinessId,
+  });
+
+  return {
+    categoryLabel: getBusinessCategoryLabel(business.businessCategoryName),
+    description: getBusinessDescriptionLabel(business.description),
+    label: getBusinessOptionLabel({
+      business,
+      businessById,
+      currentBusinessId,
+    }),
+    matchClassName: getMatchingMethodClassName(matchingMethod),
+    matchLabel: getMatchingMethodLabel(matchingMethod),
+    value: business.businessId.toString(),
+  };
+}
+
 function getLinkedBusinessMatchMethod(params: {
   businessById: Map<number, RoundDraftOption>;
   counterpartBusinessId: number;
@@ -326,6 +387,7 @@ export function RoundDraftTable({
   assignmentRows,
   canDeleteAssignments,
   forbiddenBusinessIdsByBusinessId,
+  pairedBusinessIdsByBusinessId,
   roundBatchId,
   roundSequenceNumber,
   rows,
@@ -357,6 +419,14 @@ export function RoundDraftTable({
       ([businessId, forbiddenBusinessIds]) => [
         Number.parseInt(businessId, 10),
         new Set(forbiddenBusinessIds),
+      ] as const,
+    ),
+  );
+  const pairedBusinessIdSetByBusinessId = new Map(
+    Object.entries(pairedBusinessIdsByBusinessId).map(
+      ([businessId, pairedBusinessIds]) => [
+        Number.parseInt(businessId, 10),
+        new Set(pairedBusinessIds),
       ] as const,
     ),
   );
@@ -450,6 +520,38 @@ export function RoundDraftTable({
     );
   }
 
+  function updateRowAndPersist(params: {
+    field: "guestBusinessId" | "hostBusinessId";
+    row: EditableAssignmentRow;
+    value: string;
+  }) {
+    const { field, row, value } = params;
+
+    if (row[field] === value) {
+      return;
+    }
+
+    const nextRow = {
+      ...row,
+      [field]: value,
+    } satisfies EditableAssignmentRow;
+
+    updateRow(row.clientId, field, value);
+
+    if (!value) {
+      return;
+    }
+
+    const validationMessage = getLocalValidationMessage(nextRow);
+
+    if (validationMessage) {
+      toast.error(validationMessage);
+      return;
+    }
+
+    saveRow(nextRow, { showSuccessToast: false });
+  }
+
   function getRowsExcluding(clientId: string) {
     return draftRows.filter((row) => row.clientId !== clientId);
   }
@@ -487,6 +589,17 @@ export function RoundDraftTable({
     );
   }
 
+  function isHistoricalPair(hostBusinessId: number, guestBusinessId: number) {
+    return (
+      pairedBusinessIdSetByBusinessId
+        .get(hostBusinessId)
+        ?.has(guestBusinessId) === true ||
+      pairedBusinessIdSetByBusinessId
+        .get(guestBusinessId)
+        ?.has(hostBusinessId) === true
+    );
+  }
+
   function getHostOptions(row: EditableAssignmentRow) {
     const currentHostBusinessId = parseSelectedId(row.hostBusinessId);
     const currentGuestBusinessId = parseSelectedId(row.guestBusinessId);
@@ -506,6 +619,13 @@ export function RoundDraftTable({
       if (
         currentGuestBusinessId !== null &&
         isForbiddenPair(business.businessId, currentGuestBusinessId)
+      ) {
+        return false;
+      }
+
+      if (
+        currentGuestBusinessId !== null &&
+        isHistoricalPair(business.businessId, currentGuestBusinessId)
       ) {
         return false;
       }
@@ -550,6 +670,13 @@ export function RoundDraftTable({
 
       if (
         currentHostBusinessId !== null &&
+        isHistoricalPair(currentHostBusinessId, business.businessId)
+      ) {
+        return false;
+      }
+
+      if (
+        currentHostBusinessId !== null &&
         hasPairConflict(
           row.clientId,
           currentHostBusinessId,
@@ -569,7 +696,7 @@ export function RoundDraftTable({
     const otherRows = getRowsExcluding(row.clientId);
 
     if (hostBusinessId === null || guestBusinessId === null) {
-      return "Choose both businesses before saving this row.";
+      return "Choose both businesses to finish this relationship.";
     }
 
     if (hostBusinessId === guestBusinessId) {
@@ -578,6 +705,10 @@ export function RoundDraftTable({
 
     if (isForbiddenPair(hostBusinessId, guestBusinessId)) {
       return "This business pair is blocked in forbidden matches.";
+    }
+
+    if (isHistoricalPair(hostBusinessId, guestBusinessId)) {
+      return "These businesses already matched in a previous round.";
     }
 
     if (
@@ -625,10 +756,16 @@ export function RoundDraftTable({
     );
   }
 
-  function saveRow(row: EditableAssignmentRow) {
+  function saveRow(
+    row: EditableAssignmentRow,
+    options?: {
+      showSuccessToast?: boolean;
+    },
+  ) {
     const hostBusinessId = parseSelectedId(row.hostBusinessId);
     const guestBusinessId = parseSelectedId(row.guestBusinessId);
     const validationMessage = getLocalValidationMessage(row);
+    const showSuccessToast = options?.showSuccessToast ?? false;
 
     if (validationMessage) {
       toast.error(validationMessage);
@@ -668,7 +805,10 @@ export function RoundDraftTable({
           return;
         }
 
-        toast.success(payload?.message ?? "Round row saved.");
+        if (showSuccessToast) {
+          toast.success(payload?.message ?? "Round row saved.");
+        }
+
         router.refresh();
       } finally {
         setActiveRowId(null);
@@ -746,7 +886,10 @@ export function RoundDraftTable({
     });
   }
 
-  function renderBusinessPreview(businessId: string) {
+  function renderBusinessPreview(
+    businessId: string,
+    currentBusinessId: number,
+  ) {
     const parsedBusinessId = parseSelectedId(businessId);
 
     if (parsedBusinessId === null) {
@@ -768,13 +911,31 @@ export function RoundDraftTable({
     }
 
     return (
-      <div className="flex flex-wrap items-center justify-center gap-2 text-center">
-        <Link
-          className="text-sm font-semibold text-foreground transition hover:text-accent"
-          href={getBusinessProfileHref(business.businessId)}
-        >
-          {business.businessName}
-        </Link>
+      <div className="rounded-2xl border border-border bg-brand-deep-soft/30 px-3 py-3">
+        <div className="space-y-2 text-left">
+          <Link
+            className="block text-sm font-semibold text-foreground transition hover:text-accent"
+            href={getBusinessProfileHref(business.businessId)}
+          >
+            {getBusinessOptionLabel({
+              business,
+              businessById,
+              currentBusinessId,
+            })}
+          </Link>
+          <p className="text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">
+            Category
+          </p>
+          <p className="text-xs font-medium leading-6 text-foreground/85">
+            {getBusinessCategoryLabel(business.businessCategoryName)}
+          </p>
+          <p className="text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">
+            Description
+          </p>
+          <p className="text-xs leading-6 text-muted">
+            {getBusinessDescriptionLabel(business.description)}
+          </p>
+        </div>
       </div>
     );
   }
@@ -941,6 +1102,7 @@ export function RoundDraftTable({
 
   function renderOverviewRelationshipEditor(
     row: EditableAssignmentRow,
+    currentBusinessId: number,
     direction: "publishedBy" | "publishedFor",
   ) {
     const isPublishedBy = direction === "publishedBy";
@@ -954,6 +1116,13 @@ export function RoundDraftTable({
     const validationMessage = getLocalValidationMessage(row);
     const rowIsBusy = isPending && activeRowId === row.clientId;
     const matchingMethod = getRowMatchMethod(row);
+    const comboboxOptions = options.map((business) =>
+      toRoundBusinessComboboxOption({
+        business,
+        businessById,
+        currentBusinessId,
+      }),
+    );
 
     return (
       <div
@@ -962,26 +1131,21 @@ export function RoundDraftTable({
       >
         <div className="flex flex-col gap-3 xl:flex-row xl:items-start">
           <div className="min-w-0 flex-1 space-y-3">
-            <select
-              className="block min-h-11 w-full rounded-2xl border border-border bg-white/85 px-4 py-3 text-sm text-foreground outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15 disabled:cursor-not-allowed disabled:bg-white/55 disabled:text-muted"
+            <RoundBusinessCombobox
               disabled={isPending}
-              onChange={(event) =>
-                updateRow(row.clientId, field, event.target.value)
+              onChange={(nextValue) =>
+                updateRowAndPersist({
+                  field,
+                  row,
+                  value: nextValue,
+                })
               }
+              options={comboboxOptions}
+              placeholder={placeholder}
               value={counterpartBusinessId}
-            >
-              <option value="">{placeholder}</option>
-              {options.map((business) => (
-                <option
-                  key={`${direction}-${row.clientId}-${business.businessId}`}
-                  value={business.businessId}
-                >
-                  {business.businessName}
-                </option>
-              ))}
-            </select>
+            />
 
-            {renderBusinessPreview(counterpartBusinessId)}
+            {renderBusinessPreview(counterpartBusinessId, currentBusinessId)}
 
             <div className="flex flex-wrap gap-2">
               <span
@@ -997,33 +1161,14 @@ export function RoundDraftTable({
             </div>
 
             <p className="text-xs leading-6 text-muted">
-              {validationMessage ??
+              {rowIsBusy
+                ? "Saving relationship..."
+                : validationMessage ??
                 "The server will still block forbidden pairs, self-pairs, duplicate rows, and reversed pairs."}
             </p>
           </div>
 
           <div className="flex shrink-0 items-center gap-3 xl:pt-0.5">
-            <div className="group relative">
-              <button
-                aria-label={row.assignmentId === null ? "Add relationship" : "Save relationship"}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-white/80 text-foreground transition hover:-translate-y-0.5 hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-60"
-                disabled={isPending || validationMessage !== null}
-                onClick={() => saveRow(row)}
-                type="button"
-              >
-                <SaveIcon className="h-4 w-4" />
-              </button>
-              <ActionTooltip
-                label={
-                  rowIsBusy
-                    ? "Saving relationship"
-                    : row.assignmentId === null
-                      ? "Add relationship"
-                      : "Save relationship"
-                }
-              />
-            </div>
-
             {canDeleteAssignments || row.assignmentId === null ? (
               <div className="group relative">
                 <button
@@ -1077,7 +1222,11 @@ export function RoundDraftTable({
           <p className="text-sm leading-7 text-muted">{emptyLabel}</p>
         ) : (
           relationships.map((relationship) =>
-            renderOverviewRelationshipEditor(relationship, direction),
+            renderOverviewRelationshipEditor(
+              relationship,
+              businessId,
+              direction,
+            ),
           )
         )}
 

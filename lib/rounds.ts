@@ -52,11 +52,13 @@ const roundBusinessSelect = {
   business: true,
   business_categories: {
     select: {
+      name: true,
       sector_id: true,
     },
   },
   business_category_id: true,
   clientType: true,
+  description: true,
   domain_rating: true,
   id: true,
   isActiveOnAiAuthorityExchange: true,
@@ -118,10 +120,12 @@ type RoundBusiness = {
   aiAuthorityExchangeRetiredAt: Date | null;
   business: string;
   business_categories: {
+    name: string | null;
     sector_id: number | null;
   } | null;
   business_category_id: number | null;
   clientType: "client" | "partner" | null;
+  description: string | null;
   domain_rating: number | null;
   id: number;
   isActiveOnAiAuthorityExchange: boolean;
@@ -138,6 +142,7 @@ function toRoundBusiness(business: RawRoundBusiness): RoundBusiness {
     business_categories: business.business_categories,
     business_category_id: business.business_category_id,
     clientType: business.clientType,
+    description: business.description,
     domain_rating: business.domain_rating,
     id: business.id,
     isActiveOnAiAuthorityExchange: isExchangeParticipationActive(business),
@@ -281,6 +286,8 @@ export type RoundDraftOption = {
   businessId: number;
   businessName: string;
   businessCategoryId: number | null;
+  businessCategoryName: string | null;
+  description: string | null;
   domainRating: number | null;
   relatedCategoryIds: number[];
   sectorId: number | null;
@@ -328,6 +335,7 @@ export type RoundBatchView = {
   batch: RoundBatchSummary | null;
   batches: RoundBatchSummary[];
   forbiddenBusinessIdsByBusinessId: Record<number, number[]>;
+  pairedBusinessIdsByBusinessId: Record<number, number[]>;
   matchStatusRows: RoundBatchMatchStatusRow[];
   rows: RoundDraftRow[];
   selectableBusinesses: RoundDraftOption[];
@@ -487,6 +495,17 @@ function serializeForbiddenBusinessIdsByBusinessId(
   ) as Record<number, number[]>;
 }
 
+function serializePairedBusinessIdsByBusinessId(
+  pairedBusinessIdsByBusinessId: Map<number, Set<number>>,
+) {
+  return Object.fromEntries(
+    Array.from(pairedBusinessIdsByBusinessId.entries(), ([businessId, ids]) => [
+      businessId,
+      Array.from(ids),
+    ]),
+  ) as Record<number, number[]>;
+}
+
 function isForbiddenRoundPair(params: {
   forbiddenBusinessIdsByBusinessId: Map<number, Set<number>>;
   guestBusinessId: number;
@@ -505,6 +524,25 @@ function isForbiddenRoundPair(params: {
     forbiddenBusinessIdsByBusinessId
       .get(guestBusinessId)
       ?.has(hostBusinessId) === true
+  );
+}
+
+function isHistoricalRoundPair(params: {
+  guestBusinessId: number;
+  hostBusinessId: number;
+  pairedBusinessIdsByBusinessId: Map<number, Set<number>>;
+}) {
+  const {
+    guestBusinessId,
+    hostBusinessId,
+    pairedBusinessIdsByBusinessId,
+  } = params;
+
+  return (
+    pairedBusinessIdsByBusinessId.get(hostBusinessId)?.has(guestBusinessId) ===
+      true ||
+    pairedBusinessIdsByBusinessId.get(guestBusinessId)?.has(hostBusinessId) ===
+      true
   );
 }
 
@@ -689,13 +727,16 @@ function isDirectedAssignmentEligible(params: {
     if (!relation && requiredRelation !== "fallback") {
       return false;
     }
+  }
 
-    if (
-      pairedBusinessIdsByBusinessId.get(hostBusinessId)?.has(guestBusinessId) ||
-      pairedBusinessIdsByBusinessId.get(guestBusinessId)?.has(hostBusinessId)
-    ) {
-      return false;
-    }
+  if (
+    isHistoricalRoundPair({
+      guestBusinessId,
+      hostBusinessId,
+      pairedBusinessIdsByBusinessId,
+    })
+  ) {
+    return false;
   }
 
   if (enforceSingleSlotPerDirection) {
@@ -1163,6 +1204,8 @@ function toRoundDraftOption(business: RoundBusiness): RoundDraftOption {
     businessId: business.id,
     businessName: business.business,
     businessCategoryId: business.business_category_id,
+    businessCategoryName: business.business_categories?.name ?? null,
+    description: business.description,
     domainRating: business.domain_rating,
     relatedCategoryIds: business.related_category_ids,
     sectorId: business.business_categories?.sector_id ?? null,
@@ -1455,6 +1498,7 @@ export const getRoundBatchView = cache(async (requestedBatchId?: number) => {
       batch: null,
       batches,
       forbiddenBusinessIdsByBusinessId: {},
+      pairedBusinessIdsByBusinessId: {},
       matchStatusRows: [],
       rows: activeBusinesses.map((business) => ({
         businessId: business.id,
@@ -1476,7 +1520,7 @@ export const getRoundBatchView = cache(async (requestedBatchId?: number) => {
       ? batches[0]
       : batches.find((batch) => batch.sequenceNumber === requestedBatchId) ??
         batches.find((batch) => batch.id === requestedBatchId)) ?? batches[0];
-  const [{ assignments, forbiddenBusinessIdsByBusinessId }, roundBatchMatches] = await Promise.all([
+  const [{ assignments, forbiddenBusinessIdsByBusinessId, historicalContext }, roundBatchMatches] = await Promise.all([
     getRoundManagementContext(selectedBatch.id),
     prisma.match.findMany({
       select: roundBatchMatchSelect,
@@ -1598,6 +1642,9 @@ export const getRoundBatchView = cache(async (requestedBatchId?: number) => {
       serializeForbiddenBusinessIdsByBusinessId(
         forbiddenBusinessIdsByBusinessId,
       ),
+    pairedBusinessIdsByBusinessId: serializePairedBusinessIdsByBusinessId(
+      historicalContext.pairedBusinessIdsByBusinessId,
+    ),
     matchStatusRows,
     rows,
     selectableBusinesses: selectableBusinesses.map((business) =>
@@ -1835,6 +1882,19 @@ export async function updateRoundAssignment(
     }
 
     if (
+      isHistoricalRoundPair({
+        guestBusinessId,
+        hostBusinessId,
+        pairedBusinessIdsByBusinessId:
+          historicalContext.pairedBusinessIdsByBusinessId,
+      })
+    ) {
+      throw new Error(
+        "That draft pairing is blocked because these businesses already matched in a previous round.",
+      );
+    }
+
+    if (
       !isDirectedAssignmentEligible({
         currentAssignmentId: currentAssignment?.id,
         draftState,
@@ -1936,6 +1996,19 @@ export async function upsertRoundAssignmentRow(
     ) {
       throw new Error(
         "That draft pairing is blocked because this business pair is forbidden.",
+      );
+    }
+
+    if (
+      isHistoricalRoundPair({
+        guestBusinessId,
+        hostBusinessId,
+        pairedBusinessIdsByBusinessId:
+          historicalContext.pairedBusinessIdsByBusinessId,
+      })
+    ) {
+      throw new Error(
+        "That draft pairing is blocked because these businesses already matched in a previous round.",
       );
     }
 
