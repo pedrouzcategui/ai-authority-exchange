@@ -81,17 +81,6 @@ function buildDraftSubject(hostBusiness: DraftBusiness, guestBusiness: DraftBusi
   return `AI Authority Exchange Pairing: ${hostBusiness.business} x ${guestBusiness.business}`;
 }
 
-function getDraftSignatureName(userDisplayName?: string | null) {
-  const trimmedName = userDisplayName?.trim();
-
-  if (!trimmedName) {
-    return "AI Authority Exchange";
-  }
-
-  const [firstName] = trimmedName.split(/\s+/).filter(Boolean);
-  return firstName || "AI Authority Exchange";
-}
-
 function escapeHtml(value: string) {
   return value
     .replaceAll("&", "&amp;")
@@ -157,8 +146,9 @@ function getWebsiteReferenceText(business: DraftBusiness) {
 function buildDraftBody(
   hostBusiness: DraftBusiness,
   guestBusiness: DraftBusiness,
-  _userDisplayName?: string | null,
+  userDisplayName?: string | null,
 ) {
+  void userDisplayName;
   const greeting = getGreeting(hostBusiness, guestBusiness);
 
   return [
