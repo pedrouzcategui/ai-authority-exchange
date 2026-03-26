@@ -25,6 +25,7 @@ import {
   getRoundEmailDraftBlockedReason,
   type RoundDraftPlacementStatus,
 } from "@/lib/round-email-draft-eligibility";
+import { setRoundEditorBusy } from "@/lib/rounds-editor-busy";
 import { getRoundMatchMethod, type RoundMatchMethod } from "@/lib/round-match-method";
 import type {
   RoundDraftAssignmentRow,
@@ -211,6 +212,16 @@ function getBusinessDescriptionLabel(description: string | null) {
   return trimmedDescription.length > 220
     ? `${trimmedDescription.slice(0, 217)}...`
     : trimmedDescription;
+}
+
+function getHistoricalMatchHelperText(hiddenMatchCount: number) {
+  if (hiddenMatchCount <= 0) {
+    return null;
+  }
+
+  return hiddenMatchCount === 1
+    ? "1 previously matched business is hidden from this list."
+    : `${hiddenMatchCount} previously matched businesses are hidden from this list.`;
 }
 
 function getBusinessOptionLabel(params: {
@@ -434,6 +445,14 @@ export function RoundDraftTable({
   useEffect(() => {
     setDraftRows(assignmentRows.map((row) => createEditableAssignmentRow(row)));
   }, [assignmentRows]);
+
+  useEffect(() => {
+    setRoundEditorBusy(isPending);
+
+    return () => {
+      setRoundEditorBusy(false);
+    };
+  }, [isPending]);
 
   const draftOverviewRows = buildDraftOverviewRows({
     businessById,
@@ -688,6 +707,26 @@ export function RoundDraftTable({
 
       return true;
     });
+  }
+
+  function getHiddenHistoricalMatchCount(params: {
+    currentBusinessId: number;
+    selectedBusinessId: string;
+  }) {
+    const { currentBusinessId, selectedBusinessId } = params;
+    const parsedSelectedBusinessId = parseSelectedId(selectedBusinessId);
+
+    return selectableBusinesses.filter((business) => {
+      if (business.businessId === currentBusinessId) {
+        return false;
+      }
+
+      if (business.businessId === parsedSelectedBusinessId) {
+        return false;
+      }
+
+      return isHistoricalPair(currentBusinessId, business.businessId);
+    }).length;
   }
 
   function getLocalValidationMessage(row: EditableAssignmentRow) {
@@ -1123,6 +1162,12 @@ export function RoundDraftTable({
         currentBusinessId,
       }),
     );
+    const historicalMatchHelperText = getHistoricalMatchHelperText(
+      getHiddenHistoricalMatchCount({
+        currentBusinessId,
+        selectedBusinessId: counterpartBusinessId,
+      }),
+    );
 
     return (
       <div
@@ -1133,6 +1178,7 @@ export function RoundDraftTable({
           <div className="min-w-0 flex-1 space-y-3">
             <RoundBusinessCombobox
               disabled={isPending}
+              helperText={historicalMatchHelperText ?? undefined}
               onChange={(nextValue) =>
                 updateRowAndPersist({
                   field,

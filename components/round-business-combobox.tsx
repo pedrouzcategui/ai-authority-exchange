@@ -21,6 +21,7 @@ export type RoundBusinessComboboxOption = {
 type RoundBusinessComboboxProps = {
   disabled?: boolean;
   emptyMessage?: string;
+  helperText?: string;
   options: RoundBusinessComboboxOption[];
   placeholder: string;
   value: string;
@@ -130,6 +131,7 @@ function getPanelPosition(triggerElement: HTMLButtonElement): PanelPosition {
 export function RoundBusinessCombobox({
   disabled = false,
   emptyMessage = "No businesses match the current search.",
+  helperText,
   options,
   placeholder,
   value,
@@ -266,7 +268,7 @@ export function RoundBusinessCombobox({
       {isOpen && panelPosition && typeof document !== "undefined"
         ? createPortal(
             <div
-              className="z-[90]"
+              className="z-90"
               style={{
                 left: panelPosition.left,
                 position: "fixed",
@@ -275,7 +277,7 @@ export function RoundBusinessCombobox({
               }}
             >
               <div
-                className="overflow-hidden rounded-[1.5rem] border border-border bg-[rgba(255,255,255,0.97)] shadow-[0_24px_80px_rgba(51,71,91,0.18)] backdrop-blur-xl"
+                className="overflow-hidden rounded-3xl border border-border bg-[rgba(255,255,255,0.97)] shadow-[0_24px_80px_rgba(51,71,91,0.18)] backdrop-blur-xl"
                 ref={panelRef}
               >
                 <div className="border-b border-border/70 px-3 py-3">
@@ -289,6 +291,11 @@ export function RoundBusinessCombobox({
                       value={query}
                     />
                   </label>
+                  {helperText ? (
+                    <p className="mt-2 px-1 text-[11px] font-medium leading-5 text-muted">
+                      {helperText}
+                    </p>
+                  ) : null}
                 </div>
 
                 <div
@@ -309,7 +316,12 @@ export function RoundBusinessCombobox({
 
                   {filteredOptions.length === 0 ? (
                     <div className="rounded-2xl border border-border bg-white/65 px-4 py-6 text-center text-sm text-muted">
-                      {emptyMessage}
+                      <p>{emptyMessage}</p>
+                      {helperText ? (
+                        <p className="mt-2 text-xs leading-6 text-muted">
+                          {helperText}
+                        </p>
+                      ) : null}
                     </div>
                   ) : (
                     filteredOptions.map((option) => {
