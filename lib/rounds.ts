@@ -28,7 +28,7 @@ class RoundApplyConflictError extends Error {
 
   constructor(conflicts: RoundApplyConflict[]) {
     super(
-      "One or more round assignments now conflict with an existing match. Refresh the draft before applying it.",
+      "One or more round assignments conflict with a match already linked to a different round. Update the draft before applying it.",
     );
     this.name = "RoundApplyConflictError";
     this.conflicts = conflicts;
@@ -1356,6 +1356,7 @@ async function getSelectableRoundBusinessesFromDatabase(
 async function getHistoricalMatchesForBusinesses(
   database: RoundDatabaseClient,
   businessIds: number[],
+  excludedRoundBatchId?: number,
 ): Promise<HistoricalMatchRecord[]> {
   if (businessIds.length === 0) {
     return [];
@@ -1379,6 +1380,13 @@ async function getHistoricalMatchesForBusinesses(
       hostId: true,
     },
     where: {
+      ...(excludedRoundBatchId === undefined
+        ? {}
+        : {
+            NOT: {
+              roundBatchId: excludedRoundBatchId,
+            },
+          }),
       OR: [
         {
           guestId: {
@@ -1432,6 +1440,7 @@ async function getRoundManagementContext(
   const historicalMatches = await getHistoricalMatchesForBusinesses(
     database,
     activeBusinesses.map((business) => business.id),
+    roundBatchId,
   );
   const forbiddenBusinessIdsByBusinessId =
     await getForbiddenBusinessIdsByBusinessIds(
@@ -1538,13 +1547,24 @@ export const getRoundBatchView = cache(async (requestedBatchId?: number) => {
       },
     }),
   ]);
+  const assignmentPairKeys = new Set(
+    assignments.map((assignment) =>
+      pairKey(assignment.hostBusinessId, assignment.guestBusinessId),
+    ),
+  );
+  const visibleRoundBatchMatches =
+    selectedBatch.status === "draft"
+      ? roundBatchMatches.filter((match) =>
+          assignmentPairKeys.has(pairKey(match.hostId, match.guestId)),
+        )
+      : roundBatchMatches;
   const matchStatusByPairKey = new Map(
-    roundBatchMatches.map(
+    visibleRoundBatchMatches.map(
       (match) =>
         [pairKey(match.hostId, match.guestId), match.status ?? null] as const,
     ),
   );
-  const matchStatusRows = roundBatchMatches
+  const matchStatusRows = visibleRoundBatchMatches
     .map((match) => toRoundBatchMatchStatusRow(match))
     .toSorted((left, right) => {
       const guestComparison = businessNameCollator.compare(
@@ -2144,14 +2164,65 @@ export async function clearRoundBatch(roundBatchId: number) {
       throw new Error("Only draft rounds can be cleared.");
     }
 
-    const deletionResult = await database.roundAssignment.deleteMany({
+    const [deletedMatches, deletionResult] = await database.$transaction([
+      database.match.deleteMany({
+        where: {
+          roundBatchId,
+        },
+      }),
+      database.roundAssignment.deleteMany({
+        where: {
+          roundBatchId,
+        },
+      }),
+    ]);
+
+    return {
+      clearedCount: deletionResult.count,
+      deletedMatchCount: deletedMatches.count,
+      roundSequenceNumber: batch.sequenceNumber,
+    };
+  });
+}
+
+export async function reopenRoundBatch(roundBatchId: number) {
+  return withDatabaseRetry(async (database) => {
+    const [batch, latestBatch] = await Promise.all([
+      database.roundBatch.findUnique({
+        select: {
+          id: true,
+          sequenceNumber: true,
+          status: true,
+        },
+        where: {
+          id: roundBatchId,
+        },
+      }),
+      getLatestRoundBatch(database),
+    ]);
+
+    if (!batch) {
+      throw new Error("The selected round does not exist.");
+    }
+
+    if (batch.status === "draft") {
+      throw new Error("This round is already open as a draft.");
+    }
+
+    if (latestBatch?.id !== batch.id) {
+      throw new Error("Only the latest round can be moved back to draft.");
+    }
+
+    await database.roundBatch.update({
+      data: {
+        status: "draft",
+      },
       where: {
-        roundBatchId,
+        id: roundBatchId,
       },
     });
 
     return {
-      clearedCount: deletionResult.count,
       roundSequenceNumber: batch.sequenceNumber,
     };
   });
@@ -2203,136 +2274,185 @@ export async function deleteRoundBatch(roundBatchId: number) {
 
 export async function applyRoundBatch(roundBatchId: number) {
   return withDatabaseRetry(async (database) => {
-    const [batch, assignments] = await Promise.all([
-      database.roundBatch.findUnique({
+    return database.$transaction(async (transaction) => {
+      const [batch, assignments, currentBatchMatches] = await Promise.all([
+        transaction.roundBatch.findUnique({
+          select: {
+            id: true,
+            sequenceNumber: true,
+            status: true,
+          },
+          where: {
+            id: roundBatchId,
+          },
+        }),
+        transaction.roundAssignment.findMany({
+          select: {
+            guestBusiness: {
+              select: {
+                business: true,
+              },
+            },
+            guestBusinessId: true,
+            hostBusiness: {
+              select: {
+                business: true,
+              },
+            },
+            hostBusinessId: true,
+            id: true,
+          },
+          where: {
+            roundBatchId,
+          },
+        }),
+        transaction.match.findMany({
+          select: {
+            guestId: true,
+            hostId: true,
+            id: true,
+          },
+          where: {
+            roundBatchId,
+          },
+        }),
+      ]);
+
+      if (!batch) {
+        throw new Error("The selected round draft does not exist.");
+      }
+
+      if (batch.status !== "draft") {
+        throw new Error(
+          "This round must be moved back to draft before it can be applied.",
+        );
+      }
+
+      if (assignments.length === 0) {
+        throw new Error(
+          "The round draft does not contain any assignments to apply.",
+        );
+      }
+
+      const pairWhereClauses = assignments.flatMap((assignment) => [
+        {
+          guestId: assignment.guestBusinessId,
+          hostId: assignment.hostBusinessId,
+        },
+        {
+          guestId: assignment.hostBusinessId,
+          hostId: assignment.guestBusinessId,
+        },
+      ]);
+      const conflictingMatches = await transaction.match.findMany({
         select: {
+          guest: {
+            select: {
+              business: true,
+            },
+          },
+          guestId: true,
+          host: {
+            select: {
+              business: true,
+            },
+          },
+          hostId: true,
           id: true,
-          sequenceNumber: true,
-          status: true,
+          roundBatch: {
+            select: {
+              sequenceNumber: true,
+            },
+          },
+        },
+        where: {
+          NOT: {
+            roundBatchId,
+          },
+          OR: pairWhereClauses,
+        },
+      });
+
+      if (conflictingMatches.length > 0) {
+        const conflicts = assignments.flatMap((assignment) =>
+          conflictingMatches
+            .filter(
+              (match) =>
+                (match.hostId === assignment.hostBusinessId &&
+                  match.guestId === assignment.guestBusinessId) ||
+                (match.hostId === assignment.guestBusinessId &&
+                  match.guestId === assignment.hostBusinessId),
+            )
+            .map((match) => ({
+              assignmentId: assignment.id,
+              existingGuestBusiness: match.guest.business,
+              existingHostBusiness: match.host.business,
+              existingMatchId: match.id,
+              existingRoundSequenceNumber:
+                match.roundBatch?.sequenceNumber ?? null,
+              guestBusiness: assignment.guestBusiness.business,
+              hostBusiness: assignment.hostBusiness.business,
+            })),
+        );
+
+        throw new RoundApplyConflictError(conflicts);
+      }
+
+      const assignmentPairKeys = new Set(
+        assignments.map((assignment) =>
+          pairKey(assignment.hostBusinessId, assignment.guestBusinessId),
+        ),
+      );
+      const currentBatchMatchesByPairKey = new Map(
+        currentBatchMatches.map((match) => [
+          pairKey(match.hostId, match.guestId),
+          match,
+        ]),
+      );
+      const matchesToDelete = currentBatchMatches.filter(
+        (match) => !assignmentPairKeys.has(pairKey(match.hostId, match.guestId)),
+      );
+      const matchesToCreate = assignments.filter(
+        (assignment) =>
+          !currentBatchMatchesByPairKey.has(
+            pairKey(assignment.hostBusinessId, assignment.guestBusinessId),
+          ),
+      );
+
+      if (matchesToDelete.length > 0) {
+        await transaction.match.deleteMany({
+          where: {
+            id: {
+              in: matchesToDelete.map((match) => match.id),
+            },
+          },
+        });
+      }
+
+      if (matchesToCreate.length > 0) {
+        await transaction.match.createMany({
+          data: matchesToCreate.map((assignment) => ({
+            guestId: assignment.guestBusinessId,
+            hostId: assignment.hostBusinessId,
+            roundBatchId,
+          })),
+        });
+      }
+
+      await transaction.roundBatch.update({
+        data: {
+          appliedAt: new Date(),
+          status: "applied",
         },
         where: {
           id: roundBatchId,
         },
-      }),
-      database.roundAssignment.findMany({
-        select: {
-          guestBusiness: {
-            select: {
-              business: true,
-            },
-          },
-          guestBusinessId: true,
-          hostBusiness: {
-            select: {
-              business: true,
-            },
-          },
-          hostBusinessId: true,
-          id: true,
-        },
-        where: {
-          roundBatchId,
-        },
-      }),
-    ]);
+      });
 
-    if (!batch) {
-      throw new Error("The selected round draft does not exist.");
-    }
-
-    if (batch.status !== "draft") {
-      throw new Error("This round draft has already been applied.");
-    }
-
-    if (assignments.length === 0) {
-      throw new Error(
-        "The round draft does not contain any assignments to apply.",
-      );
-    }
-
-    const pairWhereClauses = assignments.flatMap((assignment) => [
-      {
-        guestId: assignment.guestBusinessId,
-        hostId: assignment.hostBusinessId,
-      },
-      {
-        guestId: assignment.hostBusinessId,
-        hostId: assignment.guestBusinessId,
-      },
-    ]);
-    const conflictingMatches = await database.match.findMany({
-      select: {
-        guest: {
-          select: {
-            business: true,
-          },
-        },
-        guestId: true,
-        host: {
-          select: {
-            business: true,
-          },
-        },
-        hostId: true,
-        id: true,
-        roundBatch: {
-          select: {
-            sequenceNumber: true,
-          },
-        },
-      },
-      where: {
-        OR: pairWhereClauses,
-      },
+      return {
+        appliedCount: assignments.length,
+        roundSequenceNumber: batch.sequenceNumber,
+      };
     });
-
-    if (conflictingMatches.length > 0) {
-      const conflicts = assignments.flatMap((assignment) =>
-        conflictingMatches
-          .filter(
-            (match) =>
-              (match.hostId === assignment.hostBusinessId &&
-                match.guestId === assignment.guestBusinessId) ||
-              (match.hostId === assignment.guestBusinessId &&
-                match.guestId === assignment.hostBusinessId),
-          )
-          .map((match) => ({
-            assignmentId: assignment.id,
-            existingGuestBusiness: match.guest.business,
-            existingHostBusiness: match.host.business,
-            existingMatchId: match.id,
-            existingRoundSequenceNumber:
-              match.roundBatch?.sequenceNumber ?? null,
-            guestBusiness: assignment.guestBusiness.business,
-            hostBusiness: assignment.hostBusiness.business,
-          })),
-      );
-
-      throw new RoundApplyConflictError(conflicts);
-    }
-
-    const creationResult = await database.match.createMany({
-      data: assignments.map((assignment) => ({
-        guestId: assignment.guestBusinessId,
-        hostId: assignment.hostBusinessId,
-        roundBatchId,
-      })),
-      skipDuplicates: true,
-    });
-
-    await database.roundBatch.update({
-      data: {
-        appliedAt: new Date(),
-        status: "applied",
-      },
-      where: {
-        id: roundBatchId,
-      },
-    });
-
-    return {
-      appliedCount: creationResult.count,
-      roundSequenceNumber: batch.sequenceNumber,
-    };
   });
 }

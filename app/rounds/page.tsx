@@ -41,6 +41,8 @@ export default async function RoundsPage({ searchParams }: RoundsPageProps) {
   const role = await getUserRoleForSessionUser(session?.user);
   const isAdmin = isAdminRole(role);
   const batchIsDraft = roundBatchView.batch?.status === "draft";
+  const selectedBatchIsLatest =
+    roundBatchView.batch?.id === roundBatchView.batches[0]?.id;
   const latestBatchIsDraft = roundBatchView.batches[0]?.status === "draft";
 
   return (
@@ -56,9 +58,10 @@ export default async function RoundsPage({ searchParams }: RoundsPageProps) {
             </h1>
             <p className="max-w-3xl text-base leading-7 text-muted sm:text-lg">
               Create the next round draft in one step, refine any pairings that
-              need manual changes, then apply the round once it is ready. New
-              rounds stay locked until the latest draft is explicitly applied or
-              deleted.
+              need manual changes, then apply the round once it is ready. The
+              latest applied round can be moved back to draft when manager
+              feedback changes the pairings, and new rounds stay locked while
+              the latest batch is open as a draft.
             </p>
           </div>
 
@@ -75,6 +78,11 @@ export default async function RoundsPage({ searchParams }: RoundsPageProps) {
           canClear={batchIsDraft && isAdmin}
           canCreateRoundDraft={!latestBatchIsDraft}
           canDelete={Boolean(roundBatchView.batch) && isAdmin}
+          canReopen={
+            Boolean(roundBatchView.batch) &&
+            roundBatchView.batch?.status === "applied" &&
+            selectedBatchIsLatest
+          }
           roundBatchId={roundBatchView.batch?.id ?? null}
           roundSequenceNumber={roundBatchView.batch?.sequenceNumber ?? null}
           roundStatus={roundBatchView.batch?.status ?? null}
