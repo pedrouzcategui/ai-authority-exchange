@@ -37,6 +37,7 @@ type RoundBatchActionsProps = {
   canClear: boolean;
   canCreateRoundDraft: boolean;
   canDelete: boolean;
+  canReopen: boolean;
   roundBatchId: number | null;
   roundSequenceNumber: number | null;
   roundStatus: RoundBatchStatus | null;
@@ -47,6 +48,7 @@ export function RoundBatchActions({
   canClear,
   canCreateRoundDraft,
   canDelete,
+  canReopen,
   roundBatchId,
   roundSequenceNumber,
   roundStatus,
@@ -144,7 +146,7 @@ export function RoundBatchActions({
     setConfirmationState({
       confirmLabel: "Clear Draft",
       description:
-        "This removes every directed assignment from the selected draft round, but keeps the batch so you can rebuild it immediately.",
+        "This removes every directed assignment from the selected draft round and clears any saved matches still linked to it, but keeps the batch so you can rebuild it immediately.",
       onConfirm: () => {
         setConfirmationState(null);
         startTransition(async () => {
@@ -173,6 +175,45 @@ export function RoundBatchActions({
         });
       },
       title: `Clear round ${roundSequenceNumber ?? "draft"}?`,
+      tone: "warning",
+    });
+  }
+
+  function reopenRound() {
+    if (!roundBatchId) {
+      return;
+    }
+
+    setConfirmationState({
+      confirmLabel: "Move Back To Draft",
+      description:
+        "This reopens the latest applied round for editing. Existing saved matches stay linked to the batch and will be reused, added, or removed the next time you apply it.",
+      onConfirm: () => {
+        setConfirmationState(null);
+        startTransition(async () => {
+          const response = await fetch(`/api/rounds/${roundBatchId}`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ action: "reopen" }),
+          });
+
+          const payload = (await response.json().catch(() => null)) as {
+            error?: string;
+            message?: string;
+          } | null;
+
+          if (!response.ok) {
+            toast.error(payload?.error ?? "The round could not be reopened.");
+            return;
+          }
+
+          toast.success(payload?.message ?? "Round moved back to draft.");
+          router.refresh();
+        });
+      },
+      title: `Move round ${roundSequenceNumber ?? "draft"} back to draft?`,
       tone: "warning",
     });
   }
@@ -249,6 +290,17 @@ export function RoundBatchActions({
           </button>
         ) : null}
 
+        {canReopen && roundBatchId ? (
+          <button
+            className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#cbb58f] bg-[#fff8e9] px-5 py-3 text-sm font-semibold text-[#856229] transition hover:-translate-y-0.5 hover:border-[#b28a4b] hover:text-[#6f4f1f] disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={isPending}
+            onClick={reopenRound}
+            type="button"
+          >
+            {isPending ? "Reopening round..." : "Move Back To Draft"}
+          </button>
+        ) : null}
+
         {canDelete && roundBatchId ? (
           <button
             className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#d98d8a] bg-[#fff5f4] px-5 py-3 text-sm font-semibold text-[#a93e39] transition hover:-translate-y-0.5 hover:border-[#bf5d57] hover:text-[#8f2e2a] disabled:cursor-not-allowed disabled:opacity-60"
@@ -295,7 +347,7 @@ export function RoundBatchActions({
       <ConfirmationDialog
         cancelLabel="Close"
         confirmLabel="Refresh"
-        description="These draft assignments already exist in the match history, so the round cannot be applied until they are changed or removed."
+        description="These draft assignments already exist outside this batch's saved matches, so this round cannot be applied until they are changed or removed."
         details={
           applyConflictState ? (
             <div className="space-y-3">
@@ -332,7 +384,7 @@ export function RoundBatchActions({
           setApplyConflictState(null);
           router.refresh();
         }}
-        title={`Round ${roundSequenceNumber ?? "draft"} has repeated matches`}
+        title={`Round ${roundSequenceNumber ?? "draft"} has conflicting matches`}
         tone="warning"
       />
     </>

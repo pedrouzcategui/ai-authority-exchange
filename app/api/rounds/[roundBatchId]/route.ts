@@ -6,6 +6,7 @@ import {
   deleteRoundBatch,
   generateRoundDraftForBatch,
   isRoundApplyConflictError,
+  reopenRoundBatch,
 } from "@/lib/rounds";
 import { getUserRoleForSessionUser, isAdminRole } from "@/lib/user-role";
 
@@ -55,6 +56,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   if (
     payload.action !== "generate" &&
     payload.action !== "apply" &&
+    payload.action !== "reopen" &&
     payload.action !== "clear" &&
     payload.action !== "delete"
   ) {
@@ -93,9 +95,11 @@ export async function PATCH(request: Request, context: RouteContext) {
 
       return NextResponse.json({
         message:
-          result.clearedCount === 0
+          result.clearedCount === 0 && result.deletedMatchCount === 0
             ? `Round ${result.roundSequenceNumber} was already empty.`
-            : `Round ${result.roundSequenceNumber} was cleared of ${result.clearedCount} directed assignment${result.clearedCount === 1 ? "" : "s"}.`,
+            : result.deletedMatchCount === 0
+              ? `Round ${result.roundSequenceNumber} was cleared of ${result.clearedCount} directed assignment${result.clearedCount === 1 ? "" : "s"}.`
+              : `Round ${result.roundSequenceNumber} was cleared of ${result.clearedCount} directed assignment${result.clearedCount === 1 ? "" : "s"} and ${result.deletedMatchCount} saved match${result.deletedMatchCount === 1 ? "" : "es"}.`,
       });
     }
 
@@ -109,6 +113,14 @@ export async function PATCH(request: Request, context: RouteContext) {
             : result.isComplete
               ? `Round ${result.sequenceNumber} was generated with ${result.assignmentCount} directed assignment${result.assignmentCount === 1 ? "" : "s"}. Every active business received a full placement.`
               : `Round ${result.sequenceNumber} was generated with ${result.assignmentCount} directed assignment${result.assignmentCount === 1 ? "" : "s"}, but ${result.unresolvedBusinessCount} business${result.unresolvedBusinessCount === 1 ? " still needs" : "es still need"} a complete placement because the remaining pairings are blocked by current rules.`,
+      });
+    }
+
+    if (payload.action === "reopen") {
+      const result = await reopenRoundBatch(roundBatchId);
+
+      return NextResponse.json({
+        message: `Round ${result.roundSequenceNumber} was moved back to draft. Existing saved matches will be reconciled the next time you apply it.`,
       });
     }
 
@@ -135,6 +147,8 @@ export async function PATCH(request: Request, context: RouteContext) {
         ? "deleted"
         : payload.action === "generate"
           ? "generated"
+          : payload.action === "reopen"
+            ? "reopened"
           : payload.action === "clear"
             ? "cleared"
             : "applied";

@@ -372,7 +372,7 @@ export function RoundMatchStatusTable({
           </p>
           <p className="mt-2 text-sm leading-7 text-muted">
             {roundStatus === "draft"
-              ? "Apply the round to create match records, or attach matches to this batch before tracking interview workflow here."
+              ? "Apply the round to sync the saved matches for its current assignments, or attach matches to this batch before tracking interview workflow here."
               : "Once matches are linked to this batch, their workflow fields will be editable here."}
           </p>
         </div>
