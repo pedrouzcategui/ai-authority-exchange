@@ -5,6 +5,7 @@ import {
   type BusinessRoleType,
 } from "@/generated/prisma/client";
 import type { ExchangeParticipationStatus } from "@/lib/ai-authority-exchange";
+import { replaceBusinessRoleAssignments } from "@/lib/business-contact-assignments";
 import { requireLegacyUserSession } from "@/lib/auth-session";
 import { buildExchangeLifecycleFields } from "@/lib/business-exchange-lifecycle";
 import { prisma } from "@/lib/prisma";
@@ -573,9 +574,11 @@ export async function POST(request: Request) {
           exchangeLifecycleFields.isActiveOnAiAuthorityExchange,
         websiteUrl,
       };
+      let marketerContactId: number | null = null;
+      let expertContactId: number | null = null;
 
       if (hasMarketerContact) {
-        const marketerContactId = await persistBusinessRoleContact({
+        marketerContactId = await persistBusinessRoleContact({
           input: marketerContact!.value,
           role: "marketer",
           tx,
@@ -587,7 +590,7 @@ export async function POST(request: Request) {
       }
 
       if (hasExpertContact) {
-        const expertContactId = await persistBusinessRoleContact({
+        expertContactId = await persistBusinessRoleContact({
           input: expertContact!.value,
           role: "expert",
           tx,
@@ -597,13 +600,35 @@ export async function POST(request: Request) {
         createData.expertRole = expertContactId === null ? null : "expert";
       }
 
-      return tx.business.create({
+      const createdBusiness = await tx.business.create({
         data: createData,
         select: {
           business: true,
           id: true,
         },
       });
+
+      await Promise.all([
+        hasMarketerContact
+          ? replaceBusinessRoleAssignments({
+              businessId: createdBusiness.id,
+              contactIds:
+                marketerContactId === null ? [] : [marketerContactId],
+              role: "marketer",
+              tx,
+            })
+          : Promise.resolve(),
+        hasExpertContact
+          ? replaceBusinessRoleAssignments({
+              businessId: createdBusiness.id,
+              contactIds: expertContactId === null ? [] : [expertContactId],
+              role: "expert",
+              tx,
+            })
+          : Promise.resolve(),
+      ]);
+
+      return createdBusiness;
     });
 
     return NextResponse.json(
@@ -971,8 +996,11 @@ export async function PATCH(request: Request) {
     }
 
     const business = await prisma.$transaction(async (tx) => {
+      let marketerContactId: number | null | undefined;
+      let expertContactId: number | null | undefined;
+
       if (hasMarketerContact) {
-        const marketerContactId = await persistBusinessRoleContact({
+        marketerContactId = await persistBusinessRoleContact({
           input: marketerContact!.value,
           role: "marketer",
           tx,
@@ -984,7 +1012,7 @@ export async function PATCH(request: Request) {
       }
 
       if (hasExpertContact) {
-        const expertContactId = await persistBusinessRoleContact({
+        expertContactId = await persistBusinessRoleContact({
           input: expertContact!.value,
           role: "expert",
           tx,
@@ -994,7 +1022,7 @@ export async function PATCH(request: Request) {
         updateData.expertRole = expertContactId === null ? null : "expert";
       }
 
-      return tx.business.update({
+      const updatedBusiness = await tx.business.update({
         data: updateData,
         select: {
           business: true,
@@ -1004,6 +1032,33 @@ export async function PATCH(request: Request) {
           id: businessId,
         },
       });
+
+      await Promise.all([
+        hasMarketerContact
+          ? replaceBusinessRoleAssignments({
+              businessId,
+              contactIds:
+                marketerContactId === null || marketerContactId === undefined
+                  ? []
+                  : [marketerContactId],
+              role: "marketer",
+              tx,
+            })
+          : Promise.resolve(),
+        hasExpertContact
+          ? replaceBusinessRoleAssignments({
+              businessId,
+              contactIds:
+                expertContactId === null || expertContactId === undefined
+                  ? []
+                  : [expertContactId],
+              role: "expert",
+              tx,
+            })
+          : Promise.resolve(),
+      ]);
+
+      return updatedBusiness;
     });
 
     return NextResponse.json(

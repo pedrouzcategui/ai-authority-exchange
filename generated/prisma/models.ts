@@ -10,6 +10,7 @@
  */
 export type * from './models/Business'
 export type * from './models/BusinessContact'
+export type * from './models/BusinessContactAssignment'
 export type * from './models/Match'
 export type * from './models/RoundBatch'
 export type * from './models/RoundAssignment'

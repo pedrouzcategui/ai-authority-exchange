@@ -53,6 +53,7 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   Business: 'Business',
   BusinessContact: 'BusinessContact',
+  BusinessContactAssignment: 'BusinessContactAssignment',
   Match: 'Match',
   RoundBatch: 'RoundBatch',
   RoundAssignment: 'RoundAssignment',
@@ -126,6 +127,18 @@ export const BusinessContactScalarFieldEnum = {
 } as const
 
 export type BusinessContactScalarFieldEnum = (typeof BusinessContactScalarFieldEnum)[keyof typeof BusinessContactScalarFieldEnum]
+
+
+export const BusinessContactAssignmentScalarFieldEnum = {
+  id: 'id',
+  businessId: 'businessId',
+  contactId: 'contactId',
+  role: 'role',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BusinessContactAssignmentScalarFieldEnum = (typeof BusinessContactAssignmentScalarFieldEnum)[keyof typeof BusinessContactAssignmentScalarFieldEnum]
 
 
 export const MatchScalarFieldEnum = {

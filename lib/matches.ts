@@ -18,19 +18,30 @@ const businessContactSelection = {
   role: true,
 } as const;
 
-const businessContactAssignmentSelection = {
+const assignedBusinessSelection = {
   business: true,
   id: true,
 } as const;
 
+const businessContactDirectoryAssignmentSelection = {
+  business: {
+    select: assignedBusinessSelection,
+  },
+  role: true,
+} as const;
+
 const businessContactDirectorySelection = {
   ...businessContactSelection,
-  expertForBusinesses: {
-    select: businessContactAssignmentSelection,
+  businessAssignments: {
+    select: businessContactDirectoryAssignmentSelection,
   },
-  marketerForBusinesses: {
-    select: businessContactAssignmentSelection,
+} as const;
+
+const businessAssignmentContactSelection = {
+  contact: {
+    select: businessContactSelection,
   },
+  role: true,
 } as const;
 
 const businessSelection = {
@@ -43,6 +54,9 @@ const businessSelection = {
   },
   aiAuthorityExchangeRetiredInRoundBatchId: true,
   business: true,
+  businessContactAssignments: {
+    select: businessAssignmentContactSelection,
+  },
   clientType: true,
   domain_rating: true,
   expert: {
@@ -60,7 +74,38 @@ type SelectedBusiness = Prisma.BusinessGetPayload<{
   select: typeof businessSelection;
 }>;
 
+function dedupeContacts(contacts: BusinessContactOption[]) {
+  return Array.from(
+    new Map(contacts.map((contact) => [contact.id, contact] as const)).values(),
+  ).toSorted(compareBusinessContacts);
+}
+
+function splitBusinessContacts(
+  assignments: SelectedBusiness["businessContactAssignments"],
+) {
+  const marketers: BusinessContactOption[] = [];
+  const experts: BusinessContactOption[] = [];
+
+  for (const assignment of assignments) {
+    if (assignment.role === "marketer") {
+      marketers.push(assignment.contact);
+      continue;
+    }
+
+    experts.push(assignment.contact);
+  }
+
+  return {
+    experts: dedupeContacts(experts),
+    marketers: dedupeContacts(marketers),
+  };
+}
+
 function toBusinessOption(business: SelectedBusiness) {
+  const { experts, marketers } = splitBusinessContacts(
+    business.businessContactAssignments,
+  );
+
   return {
     aiAuthorityExchangeJoinedAt: business.aiAuthorityExchangeJoinedAt,
     aiAuthorityExchangeParticipationStatus:
@@ -73,11 +118,13 @@ function toBusinessOption(business: SelectedBusiness) {
     business: business.business,
     clientType: business.clientType,
     domain_rating: business.domain_rating,
-    expert: business.expert,
+    expert: experts[0] ?? business.expert,
+    experts,
     id: business.id,
     isActiveOnAiAuthorityExchange:
       business.isActiveOnAiAuthorityExchange === true,
-    marketer: business.marketer,
+    marketer: marketers[0] ?? business.marketer,
+    marketers,
     websiteUrl: business.websiteUrl,
   };
 }
@@ -173,8 +220,8 @@ export type BusinessContactOption = Prisma.BusinessContactGetPayload<{
   select: typeof businessContactSelection;
 }>;
 
-export type BusinessContactAssignment = Prisma.BusinessGetPayload<{
-  select: typeof businessContactAssignmentSelection;
+export type BusinessContactAssignment = Prisma.BusinessContactAssignmentGetPayload<{
+  select: typeof businessContactDirectoryAssignmentSelection;
 }>;
 
 type SelectedBusinessContactDirectoryRow = Prisma.BusinessContactGetPayload<{
@@ -242,14 +289,19 @@ export const getBusinessContacts = cache(async () => {
 function toBusinessContactDirectoryRow(
   contact: SelectedBusinessContactDirectoryRow,
 ) {
+  const marketerForBusinesses = contact.businessAssignments
+    .filter((assignment) => assignment.role === "marketer")
+    .map((assignment) => assignment.business)
+    .toSorted(compareBusinessNames);
+  const expertForBusinesses = contact.businessAssignments
+    .filter((assignment) => assignment.role === "expert")
+    .map((assignment) => assignment.business)
+    .toSorted(compareBusinessNames);
+
   return {
     ...contact,
-    expertForBusinesses: [...contact.expertForBusinesses].toSorted(
-      compareBusinessNames,
-    ),
-    marketerForBusinesses: [...contact.marketerForBusinesses].toSorted(
-      compareBusinessNames,
-    ),
+    expertForBusinesses,
+    marketerForBusinesses,
   };
 }
 
@@ -280,9 +332,11 @@ export type BusinessDirectoryRow = {
   business: string;
   businessCategoryName: string | null;
   expert: BusinessDirectoryContact | null;
+  experts: BusinessDirectoryContact[];
   id: number;
   isActiveOnAiAuthorityExchange: boolean;
   marketer: BusinessDirectoryContact | null;
+  marketers: BusinessDirectoryContact[];
   subcategory: string | null;
   websiteUrl: string | null;
 };
@@ -360,6 +414,9 @@ export const getBusinessDirectoryRows = cache(async () => {
   const businesses = await prisma.business.findMany({
     select: {
       business: true,
+      businessContactAssignments: {
+        select: businessAssignmentContactSelection,
+      },
       business_categories: {
         select: {
           name: true,
@@ -380,18 +437,25 @@ export const getBusinessDirectoryRows = cache(async () => {
 
   return businesses
     .map(
-      (business) =>
-        ({
+      (business) => {
+        const { experts, marketers } = splitBusinessContacts(
+          business.businessContactAssignments,
+        );
+
+        return {
           business: business.business,
           businessCategoryName: business.business_categories?.name ?? null,
-          expert: business.expert,
+          expert: experts[0] ?? business.expert,
+          experts,
           id: business.id,
           isActiveOnAiAuthorityExchange:
             business.isActiveOnAiAuthorityExchange === true,
-          marketer: business.marketer,
+          marketer: marketers[0] ?? business.marketer,
+          marketers,
           subcategory: business.subcategory,
           websiteUrl: business.websiteUrl,
-        }) satisfies BusinessDirectoryRow,
+        } satisfies BusinessDirectoryRow;
+      },
     )
     .toSorted(compareBusinessNames);
 });
