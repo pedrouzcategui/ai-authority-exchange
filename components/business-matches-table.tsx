@@ -76,6 +76,7 @@ const statusOptions: Array<{ label: string; value: MatchStatus }> = [
   { label: "Draft Created", value: "Draft_Created" },
   { label: "In Progress", value: "In_Progress" },
   { label: "Done", value: "Done" },
+  { label: "Match Denied", value: "Match_Denied" },
   { label: "Leaving", value: "Leaving" },
   { label: "Partner Leaving", value: "Partner_Leaving" },
 ];
@@ -140,6 +141,8 @@ function getStatusSelectClassName(status: MatchStatus | null) {
       return "border-[#abc0d6] bg-[#edf3fa] text-[#3a536b] focus:border-brand-deep focus:ring-brand-deep/15";
     case "Done":
       return "border-[#8cc6a7] bg-[#e9f8ef] text-[#276b4a] focus:border-[#4eab78] focus:ring-[#4eab78]/20";
+    case "Match_Denied":
+      return "border-[#d7a4a0] bg-[#fdf0ef] text-[#8f3d36] focus:border-[#c2574d] focus:ring-[#c2574d]/20";
     case "Leaving":
       return "border-[#efb1a8] bg-[#fff0ec] text-[#b55247] focus:border-accent focus:ring-accent/15";
     case "Partner_Leaving":

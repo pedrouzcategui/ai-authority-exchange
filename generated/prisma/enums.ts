@@ -37,6 +37,7 @@ export const MatchStatus = {
   Not_Started: 'Not_Started',
   In_Progress: 'In_Progress',
   Done: 'Done',
+  Match_Denied: 'Match_Denied',
   Leaving: 'Leaving',
   Partner_Leaving: 'Partner_Leaving',
   Draft_Created: 'Draft_Created'
