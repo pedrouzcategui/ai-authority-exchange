@@ -28,6 +28,11 @@ export type Business = Prisma.BusinessModel
  */
 export type BusinessContact = Prisma.BusinessContactModel
 /**
+ * Model BusinessContactAssignment
+ * 
+ */
+export type BusinessContactAssignment = Prisma.BusinessContactAssignmentModel
+/**
  * Model Match
  * 
  */

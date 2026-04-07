@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { BusinessContactRoleType } from "@/generated/prisma/client";
+import { replaceBusinessRoleAssignments } from "@/lib/business-contact-assignments";
 import { requireLegacyUserSession } from "@/lib/auth-session";
 import { prisma } from "@/lib/prisma";
 
@@ -11,6 +12,7 @@ type RouteContext = {
 };
 
 type UpdateBusinessContactPayload = {
+  contactIds?: unknown;
   selectedContactId?: unknown;
 };
 
@@ -44,6 +46,30 @@ function parseNullableNumericId(value: unknown) {
   return Number.isInteger(parsedValue) && parsedValue > 0 ? parsedValue : null;
 }
 
+function parseNumericIdList(value: unknown) {
+  if (!Array.isArray(value)) {
+    return null;
+  }
+
+  const contactIds: number[] = [];
+  const seenIds = new Set<number>();
+
+  for (const item of value) {
+    const parsedValue = parseNullableNumericId(item);
+
+    if (parsedValue === null) {
+      return null;
+    }
+
+    if (!seenIds.has(parsedValue)) {
+      seenIds.add(parsedValue);
+      contactIds.push(parsedValue);
+    }
+  }
+
+  return contactIds;
+}
+
 export async function PATCH(request: Request, context: RouteContext) {
   const session = await requireLegacyUserSession();
 
@@ -73,7 +99,15 @@ export async function PATCH(request: Request, context: RouteContext) {
     );
   }
 
-  const selectedContactId = parseNullableNumericId(payload.selectedContactId);
+  const hasContactIds = Object.prototype.hasOwnProperty.call(payload, "contactIds");
+  const parsedContactIds = hasContactIds
+    ? parseNumericIdList(payload.contactIds)
+    : null;
+  const selectedContactId = hasContactIds
+    ? null
+    : parseNullableNumericId(payload.selectedContactId);
+  const contactIds =
+    parsedContactIds ?? (selectedContactId === null ? [] : [selectedContactId]);
 
   const business = await prisma.business.findUnique({
     select: {
@@ -92,55 +126,79 @@ export async function PATCH(request: Request, context: RouteContext) {
     );
   }
 
-  if (payload.selectedContactId !== null && selectedContactId === null) {
+  if (
+    (hasContactIds && parsedContactIds === null) ||
+    (!hasContactIds && payload.selectedContactId !== null && selectedContactId === null)
+  ) {
     return NextResponse.json(
-      { error: "Please select a valid contact." },
+      { error: "Please select one or more valid contacts." },
       { status: 400 },
     );
   }
 
-  let selectedContact: {
+  let selectedContacts: Array<{
+    id: number;
     role: BusinessContactRoleType;
-  } | null = null;
+  }> = [];
 
-  if (selectedContactId !== null) {
-    selectedContact = await prisma.businessContact.findUnique({
+  if (contactIds.length > 0) {
+    selectedContacts = await prisma.businessContact.findMany({
       select: {
+        id: true,
         role: true,
       },
       where: {
-        id: selectedContactId,
+        id: {
+          in: contactIds,
+        },
       },
     });
 
-    if (!selectedContact || selectedContact.role !== role) {
+    const hasInvalidContact =
+      selectedContacts.length !== contactIds.length ||
+      selectedContacts.some((contact) => contact.role !== role);
+
+    if (hasInvalidContact) {
       return NextResponse.json(
-        { error: `The selected ${role} is invalid for this business.` },
+        { error: `One or more selected ${role}s are invalid for this business.` },
         { status: 400 },
       );
     }
   }
 
+  const legacySelectedContactId = contactIds[0] ?? null;
+
   try {
-    await prisma.business.update({
-      data:
-        role === "marketer"
-          ? {
-              marketerContactId: selectedContactId,
-              marketerRole: selectedContactId === null ? null : "marketer",
-            }
-          : {
-              expertContactId: selectedContactId,
-              expertRole: selectedContactId === null ? null : "expert",
-            },
-      where: {
-        id: businessId,
-      },
+    await prisma.$transaction(async (tx) => {
+      await tx.business.update({
+        data:
+          role === "marketer"
+            ? {
+                marketerContactId: legacySelectedContactId,
+                marketerRole:
+                  legacySelectedContactId === null ? null : "marketer",
+              }
+            : {
+                expertContactId: legacySelectedContactId,
+                expertRole:
+                  legacySelectedContactId === null ? null : "expert",
+              },
+        where: {
+          id: businessId,
+        },
+      });
+
+      await replaceBusinessRoleAssignments({
+        businessId,
+        contactIds,
+        role,
+        tx,
+      });
     });
 
     return NextResponse.json({
       message:
-        selectedContactId === null
+        contactIds.length === 0
           ? `${business.business} ${role} cleared successfully.`
           : `${business.business} ${role} updated successfully.`,
     });

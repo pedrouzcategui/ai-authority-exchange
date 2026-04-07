@@ -386,6 +386,7 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 export const ModelName = {
   Business: 'Business',
   BusinessContact: 'BusinessContact',
+  BusinessContactAssignment: 'BusinessContactAssignment',
   Match: 'Match',
   RoundBatch: 'RoundBatch',
   RoundAssignment: 'RoundAssignment',
@@ -414,7 +415,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "business" | "businessContact" | "match" | "roundBatch" | "roundAssignment" | "business_categories" | "client_details" | "economic_sectors" | "publications" | "users" | "user" | "account" | "session" | "verificationToken" | "ai_authority_exchange_forbidden_business_pairs"
+    modelProps: "business" | "businessContact" | "businessContactAssignment" | "match" | "roundBatch" | "roundAssignment" | "business_categories" | "client_details" | "economic_sectors" | "publications" | "users" | "user" | "account" | "session" | "verificationToken" | "ai_authority_exchange_forbidden_business_pairs"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -563,6 +564,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.BusinessContactCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.BusinessContactCountAggregateOutputType> | number
+        }
+      }
+    }
+    BusinessContactAssignment: {
+      payload: Prisma.$BusinessContactAssignmentPayload<ExtArgs>
+      fields: Prisma.BusinessContactAssignmentFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.BusinessContactAssignmentFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BusinessContactAssignmentPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.BusinessContactAssignmentFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BusinessContactAssignmentPayload>
+        }
+        findFirst: {
+          args: Prisma.BusinessContactAssignmentFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BusinessContactAssignmentPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.BusinessContactAssignmentFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BusinessContactAssignmentPayload>
+        }
+        findMany: {
+          args: Prisma.BusinessContactAssignmentFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BusinessContactAssignmentPayload>[]
+        }
+        create: {
+          args: Prisma.BusinessContactAssignmentCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BusinessContactAssignmentPayload>
+        }
+        createMany: {
+          args: Prisma.BusinessContactAssignmentCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.BusinessContactAssignmentCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BusinessContactAssignmentPayload>[]
+        }
+        delete: {
+          args: Prisma.BusinessContactAssignmentDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BusinessContactAssignmentPayload>
+        }
+        update: {
+          args: Prisma.BusinessContactAssignmentUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BusinessContactAssignmentPayload>
+        }
+        deleteMany: {
+          args: Prisma.BusinessContactAssignmentDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.BusinessContactAssignmentUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.BusinessContactAssignmentUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BusinessContactAssignmentPayload>[]
+        }
+        upsert: {
+          args: Prisma.BusinessContactAssignmentUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BusinessContactAssignmentPayload>
+        }
+        aggregate: {
+          args: Prisma.BusinessContactAssignmentAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateBusinessContactAssignment>
+        }
+        groupBy: {
+          args: Prisma.BusinessContactAssignmentGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BusinessContactAssignmentGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.BusinessContactAssignmentCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BusinessContactAssignmentCountAggregateOutputType> | number
         }
       }
     }
@@ -1611,6 +1686,18 @@ export const BusinessContactScalarFieldEnum = {
 export type BusinessContactScalarFieldEnum = (typeof BusinessContactScalarFieldEnum)[keyof typeof BusinessContactScalarFieldEnum]
 
 
+export const BusinessContactAssignmentScalarFieldEnum = {
+  id: 'id',
+  businessId: 'businessId',
+  contactId: 'contactId',
+  role: 'role',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BusinessContactAssignmentScalarFieldEnum = (typeof BusinessContactAssignmentScalarFieldEnum)[keyof typeof BusinessContactAssignmentScalarFieldEnum]
+
+
 export const MatchScalarFieldEnum = {
   id: 'id',
   hostId: 'hostId',
@@ -2078,6 +2165,7 @@ export type PrismaClientOptions = ({
 export type GlobalOmitConfig = {
   business?: Prisma.BusinessOmit
   businessContact?: Prisma.BusinessContactOmit
+  businessContactAssignment?: Prisma.BusinessContactAssignmentOmit
   match?: Prisma.MatchOmit
   roundBatch?: Prisma.RoundBatchOmit
   roundAssignment?: Prisma.RoundAssignmentOmit

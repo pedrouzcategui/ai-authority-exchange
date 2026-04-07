@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { type BusinessContactRoleType } from "@/generated/prisma/client";
+import { replaceContactBusinessAssignments } from "@/lib/business-contact-assignments";
 import { requireLegacyUserSession } from "@/lib/auth-session";
 import { prisma } from "@/lib/prisma";
 
@@ -131,9 +132,7 @@ export async function PUT(request: Request, context: RouteContext) {
           : await transaction.business.findMany({
               select: {
                 business: true,
-                expertContactId: true,
                 id: true,
-                marketerContactId: true,
               },
               where: {
                 id: {
@@ -142,21 +141,52 @@ export async function PUT(request: Request, context: RouteContext) {
               },
             });
 
+      const conflictingAssignments =
+        businessIds.value.length === 0
+          ? []
+          : await transaction.businessContactAssignment.findMany({
+              select: {
+                business: {
+                  select: {
+                    business: true,
+                    id: true,
+                  },
+                },
+              },
+              where: {
+                businessId: {
+                  in: businessIds.value,
+                },
+                contactId: {
+                  not: contactId,
+                },
+                role: contact.role,
+              },
+            });
+
       if (selectedBusinesses.length !== businessIds.value.length) {
         throw new Error("One or more selected businesses do not exist.");
       }
 
-      const conflictingBusinesses = selectedBusinesses.filter((business) =>
-        contact.role === "marketer"
-          ? business.marketerContactId !== null &&
-            business.marketerContactId !== contactId
-          : business.expertContactId !== null &&
-            business.expertContactId !== contactId,
+      const conflictingBusinesses = Array.from(
+        new Map(
+          conflictingAssignments.map((assignment) => [
+            assignment.business.id,
+            assignment.business,
+          ]),
+        ).values(),
       );
 
       if (conflictingBusinesses.length > 0) {
         throw new Error(getConflictMessage(contact.role, conflictingBusinesses));
       }
+
+      await replaceContactBusinessAssignments({
+        businessIds: businessIds.value,
+        contactId,
+        role: contact.role,
+        tx: transaction,
+      });
 
       if (contact.role === "marketer") {
         await transaction.business.updateMany({

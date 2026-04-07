@@ -131,17 +131,12 @@ export async function PATCH(request: Request, context: RouteContext) {
 
   const contact = await prisma.businessContact.findUnique({
     select: {
-      expertForBusinesses: {
+      businessAssignments: {
         select: {
           id: true,
         },
       },
       id: true,
-      marketerForBusinesses: {
-        select: {
-          id: true,
-        },
-      },
       role: true,
     },
     where: {
@@ -156,10 +151,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     );
   }
 
-  const currentAssignments =
-    contact.role === "marketer"
-      ? contact.marketerForBusinesses
-      : contact.expertForBusinesses;
+  const currentAssignments = contact.businessAssignments;
 
   if (contact.role !== role && currentAssignments.length > 0) {
     return NextResponse.json(
@@ -229,17 +221,12 @@ export async function DELETE(_request: Request, context: RouteContext) {
 
   const contact = await prisma.businessContact.findUnique({
     select: {
-      expertForBusinesses: {
+      businessAssignments: {
         select: {
           id: true,
         },
       },
       id: true,
-      marketerForBusinesses: {
-        select: {
-          id: true,
-        },
-      },
       role: true,
     },
     where: {
@@ -254,10 +241,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
     );
   }
 
-  const assignedBusinesses =
-    contact.role === "marketer"
-      ? contact.marketerForBusinesses
-      : contact.expertForBusinesses;
+  const assignedBusinesses = contact.businessAssignments;
 
   try {
     await prisma.$transaction(async (transaction) => {

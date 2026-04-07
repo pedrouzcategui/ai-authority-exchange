@@ -38,6 +38,17 @@ function normalizeSearchValue(value: string | null | undefined) {
   return value?.trim().toLocaleLowerCase() ?? "";
 }
 
+function matchesContactSearch(
+  contacts: BusinessDirectoryRow["marketers"],
+  normalizedSearchQuery: string,
+) {
+  return contacts.some((contact) =>
+    [contact.email, contact.firstName, contact.fullName, contact.lastName].some(
+      (value) => normalizeSearchValue(value).includes(normalizedSearchQuery),
+    ),
+  );
+}
+
 function getContactFilterLabel(contact: BusinessContactOption) {
   if (contact.fullName && contact.fullName.trim().length > 0) {
     return contact.fullName.trim();
@@ -113,19 +124,13 @@ export function BusinessDirectoryTable({
         [
           business.business,
           business.businessCategoryName,
-          business.expert?.email,
-          business.expert?.firstName,
-          business.expert?.fullName,
-          business.expert?.lastName,
-          business.marketer?.email,
-          business.marketer?.firstName,
-          business.marketer?.fullName,
-          business.marketer?.lastName,
           business.subcategory,
           business.websiteUrl,
         ].some((value) =>
           normalizeSearchValue(value).includes(normalizedSearchQuery),
-        );
+        ) ||
+        matchesContactSearch(business.marketers, normalizedSearchQuery) ||
+        matchesContactSearch(business.experts, normalizedSearchQuery);
 
       const matchesCategory =
         selectedCategorySet.size === 0 ||
@@ -145,13 +150,17 @@ export function BusinessDirectoryTable({
 
       const matchesMarketer =
         marketerFilter === "all" ||
-        (marketerFilter === "none" && business.marketer === null) ||
-        business.marketer?.id.toString() === marketerFilter;
+        (marketerFilter === "none" && business.marketers.length === 0) ||
+        business.marketers.some(
+          (contact) => contact.id.toString() === marketerFilter,
+        );
 
       const matchesExpert =
         expertFilter === "all" ||
-        (expertFilter === "none" && business.expert === null) ||
-        business.expert?.id.toString() === expertFilter;
+        (expertFilter === "none" && business.experts.length === 0) ||
+        business.experts.some(
+          (contact) => contact.id.toString() === expertFilter,
+        );
 
       return (
         matchesSearch &&
@@ -464,7 +473,7 @@ export function BusinessDirectoryTable({
                         availableContacts={marketerContacts}
                         businessId={business.id}
                         businessName={business.business}
-                        initialContact={business.marketer}
+                        initialContacts={business.marketers}
                         role="marketer"
                       />
                     </td>
@@ -473,7 +482,7 @@ export function BusinessDirectoryTable({
                         availableContacts={expertContacts}
                         businessId={business.id}
                         businessName={business.business}
-                        initialContact={business.expert}
+                        initialContacts={business.experts}
                         role="expert"
                       />
                     </td>

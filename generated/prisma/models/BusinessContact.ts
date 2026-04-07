@@ -224,6 +224,7 @@ export type BusinessContactWhereInput = {
   fullName?: Prisma.StringNullableFilter<"BusinessContact"> | string | null
   email?: Prisma.StringNullableFilter<"BusinessContact"> | string | null
   role?: Prisma.EnumBusinessContactRoleTypeFilter<"BusinessContact"> | $Enums.BusinessContactRoleType
+  businessAssignments?: Prisma.BusinessContactAssignmentListRelationFilter
   marketerForBusinesses?: Prisma.BusinessListRelationFilter
   expertForBusinesses?: Prisma.BusinessListRelationFilter
 }
@@ -235,6 +236,7 @@ export type BusinessContactOrderByWithRelationInput = {
   fullName?: Prisma.SortOrderInput | Prisma.SortOrder
   email?: Prisma.SortOrderInput | Prisma.SortOrder
   role?: Prisma.SortOrder
+  businessAssignments?: Prisma.BusinessContactAssignmentOrderByRelationAggregateInput
   marketerForBusinesses?: Prisma.BusinessOrderByRelationAggregateInput
   expertForBusinesses?: Prisma.BusinessOrderByRelationAggregateInput
 }
@@ -251,6 +253,7 @@ export type BusinessContactWhereUniqueInput = Prisma.AtLeast<{
   fullName?: Prisma.StringNullableFilter<"BusinessContact"> | string | null
   email?: Prisma.StringNullableFilter<"BusinessContact"> | string | null
   role?: Prisma.EnumBusinessContactRoleTypeFilter<"BusinessContact"> | $Enums.BusinessContactRoleType
+  businessAssignments?: Prisma.BusinessContactAssignmentListRelationFilter
   marketerForBusinesses?: Prisma.BusinessListRelationFilter
   expertForBusinesses?: Prisma.BusinessListRelationFilter
 }, "id" | "id_role" | "email_role">
@@ -287,6 +290,7 @@ export type BusinessContactCreateInput = {
   fullName?: string | null
   email?: string | null
   role: $Enums.BusinessContactRoleType
+  businessAssignments?: Prisma.BusinessContactAssignmentCreateNestedManyWithoutContactInput
   marketerForBusinesses?: Prisma.BusinessCreateNestedManyWithoutMarketerInput
   expertForBusinesses?: Prisma.BusinessCreateNestedManyWithoutExpertInput
 }
@@ -298,6 +302,7 @@ export type BusinessContactUncheckedCreateInput = {
   fullName?: string | null
   email?: string | null
   role: $Enums.BusinessContactRoleType
+  businessAssignments?: Prisma.BusinessContactAssignmentUncheckedCreateNestedManyWithoutContactInput
   marketerForBusinesses?: Prisma.BusinessUncheckedCreateNestedManyWithoutMarketerInput
   expertForBusinesses?: Prisma.BusinessUncheckedCreateNestedManyWithoutExpertInput
 }
@@ -308,6 +313,7 @@ export type BusinessContactUpdateInput = {
   fullName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumBusinessContactRoleTypeFieldUpdateOperationsInput | $Enums.BusinessContactRoleType
+  businessAssignments?: Prisma.BusinessContactAssignmentUpdateManyWithoutContactNestedInput
   marketerForBusinesses?: Prisma.BusinessUpdateManyWithoutMarketerNestedInput
   expertForBusinesses?: Prisma.BusinessUpdateManyWithoutExpertNestedInput
 }
@@ -319,6 +325,7 @@ export type BusinessContactUncheckedUpdateInput = {
   fullName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumBusinessContactRoleTypeFieldUpdateOperationsInput | $Enums.BusinessContactRoleType
+  businessAssignments?: Prisma.BusinessContactAssignmentUncheckedUpdateManyWithoutContactNestedInput
   marketerForBusinesses?: Prisma.BusinessUncheckedUpdateManyWithoutMarketerNestedInput
   expertForBusinesses?: Prisma.BusinessUncheckedUpdateManyWithoutExpertNestedInput
 }
@@ -399,6 +406,11 @@ export type BusinessContactSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
 }
 
+export type BusinessContactScalarRelationFilter = {
+  is?: Prisma.BusinessContactWhereInput
+  isNot?: Prisma.BusinessContactWhereInput
+}
+
 export type BusinessContactCreateNestedOneWithoutMarketerForBusinessesInput = {
   create?: Prisma.XOR<Prisma.BusinessContactCreateWithoutMarketerForBusinessesInput, Prisma.BusinessContactUncheckedCreateWithoutMarketerForBusinessesInput>
   connectOrCreate?: Prisma.BusinessContactCreateOrConnectWithoutMarketerForBusinessesInput
@@ -435,12 +447,27 @@ export type EnumBusinessContactRoleTypeFieldUpdateOperationsInput = {
   set?: $Enums.BusinessContactRoleType
 }
 
+export type BusinessContactCreateNestedOneWithoutBusinessAssignmentsInput = {
+  create?: Prisma.XOR<Prisma.BusinessContactCreateWithoutBusinessAssignmentsInput, Prisma.BusinessContactUncheckedCreateWithoutBusinessAssignmentsInput>
+  connectOrCreate?: Prisma.BusinessContactCreateOrConnectWithoutBusinessAssignmentsInput
+  connect?: Prisma.BusinessContactWhereUniqueInput
+}
+
+export type BusinessContactUpdateOneRequiredWithoutBusinessAssignmentsNestedInput = {
+  create?: Prisma.XOR<Prisma.BusinessContactCreateWithoutBusinessAssignmentsInput, Prisma.BusinessContactUncheckedCreateWithoutBusinessAssignmentsInput>
+  connectOrCreate?: Prisma.BusinessContactCreateOrConnectWithoutBusinessAssignmentsInput
+  upsert?: Prisma.BusinessContactUpsertWithoutBusinessAssignmentsInput
+  connect?: Prisma.BusinessContactWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.BusinessContactUpdateToOneWithWhereWithoutBusinessAssignmentsInput, Prisma.BusinessContactUpdateWithoutBusinessAssignmentsInput>, Prisma.BusinessContactUncheckedUpdateWithoutBusinessAssignmentsInput>
+}
+
 export type BusinessContactCreateWithoutMarketerForBusinessesInput = {
   firstName?: string | null
   lastName?: string | null
   fullName?: string | null
   email?: string | null
   role: $Enums.BusinessContactRoleType
+  businessAssignments?: Prisma.BusinessContactAssignmentCreateNestedManyWithoutContactInput
   expertForBusinesses?: Prisma.BusinessCreateNestedManyWithoutExpertInput
 }
 
@@ -451,6 +478,7 @@ export type BusinessContactUncheckedCreateWithoutMarketerForBusinessesInput = {
   fullName?: string | null
   email?: string | null
   role: $Enums.BusinessContactRoleType
+  businessAssignments?: Prisma.BusinessContactAssignmentUncheckedCreateNestedManyWithoutContactInput
   expertForBusinesses?: Prisma.BusinessUncheckedCreateNestedManyWithoutExpertInput
 }
 
@@ -465,6 +493,7 @@ export type BusinessContactCreateWithoutExpertForBusinessesInput = {
   fullName?: string | null
   email?: string | null
   role: $Enums.BusinessContactRoleType
+  businessAssignments?: Prisma.BusinessContactAssignmentCreateNestedManyWithoutContactInput
   marketerForBusinesses?: Prisma.BusinessCreateNestedManyWithoutMarketerInput
 }
 
@@ -475,6 +504,7 @@ export type BusinessContactUncheckedCreateWithoutExpertForBusinessesInput = {
   fullName?: string | null
   email?: string | null
   role: $Enums.BusinessContactRoleType
+  businessAssignments?: Prisma.BusinessContactAssignmentUncheckedCreateNestedManyWithoutContactInput
   marketerForBusinesses?: Prisma.BusinessUncheckedCreateNestedManyWithoutMarketerInput
 }
 
@@ -500,6 +530,7 @@ export type BusinessContactUpdateWithoutMarketerForBusinessesInput = {
   fullName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumBusinessContactRoleTypeFieldUpdateOperationsInput | $Enums.BusinessContactRoleType
+  businessAssignments?: Prisma.BusinessContactAssignmentUpdateManyWithoutContactNestedInput
   expertForBusinesses?: Prisma.BusinessUpdateManyWithoutExpertNestedInput
 }
 
@@ -510,6 +541,7 @@ export type BusinessContactUncheckedUpdateWithoutMarketerForBusinessesInput = {
   fullName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumBusinessContactRoleTypeFieldUpdateOperationsInput | $Enums.BusinessContactRoleType
+  businessAssignments?: Prisma.BusinessContactAssignmentUncheckedUpdateManyWithoutContactNestedInput
   expertForBusinesses?: Prisma.BusinessUncheckedUpdateManyWithoutExpertNestedInput
 }
 
@@ -530,6 +562,7 @@ export type BusinessContactUpdateWithoutExpertForBusinessesInput = {
   fullName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumBusinessContactRoleTypeFieldUpdateOperationsInput | $Enums.BusinessContactRoleType
+  businessAssignments?: Prisma.BusinessContactAssignmentUpdateManyWithoutContactNestedInput
   marketerForBusinesses?: Prisma.BusinessUpdateManyWithoutMarketerNestedInput
 }
 
@@ -540,7 +573,66 @@ export type BusinessContactUncheckedUpdateWithoutExpertForBusinessesInput = {
   fullName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumBusinessContactRoleTypeFieldUpdateOperationsInput | $Enums.BusinessContactRoleType
+  businessAssignments?: Prisma.BusinessContactAssignmentUncheckedUpdateManyWithoutContactNestedInput
   marketerForBusinesses?: Prisma.BusinessUncheckedUpdateManyWithoutMarketerNestedInput
+}
+
+export type BusinessContactCreateWithoutBusinessAssignmentsInput = {
+  firstName?: string | null
+  lastName?: string | null
+  fullName?: string | null
+  email?: string | null
+  role: $Enums.BusinessContactRoleType
+  marketerForBusinesses?: Prisma.BusinessCreateNestedManyWithoutMarketerInput
+  expertForBusinesses?: Prisma.BusinessCreateNestedManyWithoutExpertInput
+}
+
+export type BusinessContactUncheckedCreateWithoutBusinessAssignmentsInput = {
+  id?: number
+  firstName?: string | null
+  lastName?: string | null
+  fullName?: string | null
+  email?: string | null
+  role: $Enums.BusinessContactRoleType
+  marketerForBusinesses?: Prisma.BusinessUncheckedCreateNestedManyWithoutMarketerInput
+  expertForBusinesses?: Prisma.BusinessUncheckedCreateNestedManyWithoutExpertInput
+}
+
+export type BusinessContactCreateOrConnectWithoutBusinessAssignmentsInput = {
+  where: Prisma.BusinessContactWhereUniqueInput
+  create: Prisma.XOR<Prisma.BusinessContactCreateWithoutBusinessAssignmentsInput, Prisma.BusinessContactUncheckedCreateWithoutBusinessAssignmentsInput>
+}
+
+export type BusinessContactUpsertWithoutBusinessAssignmentsInput = {
+  update: Prisma.XOR<Prisma.BusinessContactUpdateWithoutBusinessAssignmentsInput, Prisma.BusinessContactUncheckedUpdateWithoutBusinessAssignmentsInput>
+  create: Prisma.XOR<Prisma.BusinessContactCreateWithoutBusinessAssignmentsInput, Prisma.BusinessContactUncheckedCreateWithoutBusinessAssignmentsInput>
+  where?: Prisma.BusinessContactWhereInput
+}
+
+export type BusinessContactUpdateToOneWithWhereWithoutBusinessAssignmentsInput = {
+  where?: Prisma.BusinessContactWhereInput
+  data: Prisma.XOR<Prisma.BusinessContactUpdateWithoutBusinessAssignmentsInput, Prisma.BusinessContactUncheckedUpdateWithoutBusinessAssignmentsInput>
+}
+
+export type BusinessContactUpdateWithoutBusinessAssignmentsInput = {
+  firstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fullName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumBusinessContactRoleTypeFieldUpdateOperationsInput | $Enums.BusinessContactRoleType
+  marketerForBusinesses?: Prisma.BusinessUpdateManyWithoutMarketerNestedInput
+  expertForBusinesses?: Prisma.BusinessUpdateManyWithoutExpertNestedInput
+}
+
+export type BusinessContactUncheckedUpdateWithoutBusinessAssignmentsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  firstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fullName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumBusinessContactRoleTypeFieldUpdateOperationsInput | $Enums.BusinessContactRoleType
+  marketerForBusinesses?: Prisma.BusinessUncheckedUpdateManyWithoutMarketerNestedInput
+  expertForBusinesses?: Prisma.BusinessUncheckedUpdateManyWithoutExpertNestedInput
 }
 
 
@@ -549,11 +641,13 @@ export type BusinessContactUncheckedUpdateWithoutExpertForBusinessesInput = {
  */
 
 export type BusinessContactCountOutputType = {
+  businessAssignments: number
   marketerForBusinesses: number
   expertForBusinesses: number
 }
 
 export type BusinessContactCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  businessAssignments?: boolean | BusinessContactCountOutputTypeCountBusinessAssignmentsArgs
   marketerForBusinesses?: boolean | BusinessContactCountOutputTypeCountMarketerForBusinessesArgs
   expertForBusinesses?: boolean | BusinessContactCountOutputTypeCountExpertForBusinessesArgs
 }
@@ -566,6 +660,13 @@ export type BusinessContactCountOutputTypeDefaultArgs<ExtArgs extends runtime.Ty
    * Select specific fields to fetch from the BusinessContactCountOutputType
    */
   select?: Prisma.BusinessContactCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * BusinessContactCountOutputType without action
+ */
+export type BusinessContactCountOutputTypeCountBusinessAssignmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.BusinessContactAssignmentWhereInput
 }
 
 /**
@@ -590,6 +691,7 @@ export type BusinessContactSelect<ExtArgs extends runtime.Types.Extensions.Inter
   fullName?: boolean
   email?: boolean
   role?: boolean
+  businessAssignments?: boolean | Prisma.BusinessContact$businessAssignmentsArgs<ExtArgs>
   marketerForBusinesses?: boolean | Prisma.BusinessContact$marketerForBusinessesArgs<ExtArgs>
   expertForBusinesses?: boolean | Prisma.BusinessContact$expertForBusinessesArgs<ExtArgs>
   _count?: boolean | Prisma.BusinessContactCountOutputTypeDefaultArgs<ExtArgs>
@@ -624,6 +726,7 @@ export type BusinessContactSelectScalar = {
 
 export type BusinessContactOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "firstName" | "lastName" | "fullName" | "email" | "role", ExtArgs["result"]["businessContact"]>
 export type BusinessContactInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  businessAssignments?: boolean | Prisma.BusinessContact$businessAssignmentsArgs<ExtArgs>
   marketerForBusinesses?: boolean | Prisma.BusinessContact$marketerForBusinessesArgs<ExtArgs>
   expertForBusinesses?: boolean | Prisma.BusinessContact$expertForBusinessesArgs<ExtArgs>
   _count?: boolean | Prisma.BusinessContactCountOutputTypeDefaultArgs<ExtArgs>
@@ -634,6 +737,7 @@ export type BusinessContactIncludeUpdateManyAndReturn<ExtArgs extends runtime.Ty
 export type $BusinessContactPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "BusinessContact"
   objects: {
+    businessAssignments: Prisma.$BusinessContactAssignmentPayload<ExtArgs>[]
     marketerForBusinesses: Prisma.$BusinessPayload<ExtArgs>[]
     expertForBusinesses: Prisma.$BusinessPayload<ExtArgs>[]
   }
@@ -1038,6 +1142,7 @@ readonly fields: BusinessContactFieldRefs;
  */
 export interface Prisma__BusinessContactClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  businessAssignments<T extends Prisma.BusinessContact$businessAssignmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.BusinessContact$businessAssignmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BusinessContactAssignmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   marketerForBusinesses<T extends Prisma.BusinessContact$marketerForBusinessesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.BusinessContact$marketerForBusinessesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BusinessPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   expertForBusinesses<T extends Prisma.BusinessContact$expertForBusinessesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.BusinessContact$expertForBusinessesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BusinessPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
@@ -1460,6 +1565,30 @@ export type BusinessContactDeleteManyArgs<ExtArgs extends runtime.Types.Extensio
    * Limit how many BusinessContacts to delete.
    */
   limit?: number
+}
+
+/**
+ * BusinessContact.businessAssignments
+ */
+export type BusinessContact$businessAssignmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the BusinessContactAssignment
+   */
+  select?: Prisma.BusinessContactAssignmentSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the BusinessContactAssignment
+   */
+  omit?: Prisma.BusinessContactAssignmentOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.BusinessContactAssignmentInclude<ExtArgs> | null
+  where?: Prisma.BusinessContactAssignmentWhereInput
+  orderBy?: Prisma.BusinessContactAssignmentOrderByWithRelationInput | Prisma.BusinessContactAssignmentOrderByWithRelationInput[]
+  cursor?: Prisma.BusinessContactAssignmentWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.BusinessContactAssignmentScalarFieldEnum | Prisma.BusinessContactAssignmentScalarFieldEnum[]
 }
 
 /**
