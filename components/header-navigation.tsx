@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 type HeaderNavigationProps = {
+  isDevelopment: boolean;
   isAuthenticated: boolean;
 };
 
@@ -31,7 +32,10 @@ const navigationItems = [
   },
 ] as const;
 
-export function HeaderNavigation({ isAuthenticated }: HeaderNavigationProps) {
+export function HeaderNavigation({
+  isDevelopment,
+  isAuthenticated,
+}: HeaderNavigationProps) {
   const pathname = usePathname();
 
   if (!isAuthenticated) {
@@ -60,6 +64,12 @@ export function HeaderNavigation({ isAuthenticated }: HeaderNavigationProps) {
           </Link>
         );
       })}
+
+      {isDevelopment ? (
+        <span className="inline-flex min-h-10 items-center justify-center rounded-full border border-warning-strong/20 bg-warning-soft px-4 py-2 text-sm font-semibold uppercase tracking-[0.14em] text-warning-strong">
+          Development
+        </span>
+      ) : null}
     </nav>
   );
 }

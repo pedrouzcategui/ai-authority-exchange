@@ -275,6 +275,7 @@ enum MatchStatus {
   Not_Started     @map("Not Started")
   In_Progress     @map("In Progress")
   Done
+  Match_Denied    @map("Match Denied")
   Leaving
   Partner_Leaving @map("Partner Leaving")
   Draft_Created   @map("Draft Created")

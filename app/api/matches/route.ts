@@ -36,6 +36,7 @@ const matchStatusValues: MatchStatus[] = [
   "Draft_Created",
   "In_Progress",
   "Done",
+  "Match_Denied",
   "Leaving",
   "Partner_Leaving",
 ];

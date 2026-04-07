@@ -30,6 +30,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const session = await getServerSession(authOptions);
+  const isDevelopment = process.env.NODE_ENV === "development";
   const homeHref = session?.user?.legacyUserId ? "/matches" : "/";
 
   return (
@@ -60,6 +61,7 @@ export default async function RootLayout({
               </div>
 
               <HeaderNavigation
+                isDevelopment={isDevelopment}
                 isAuthenticated={Boolean(session?.user?.legacyUserId)}
               />
 
