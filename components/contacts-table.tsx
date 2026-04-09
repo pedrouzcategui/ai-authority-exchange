@@ -83,6 +83,12 @@ function getRoleClassName(role: RoleFilter) {
     : "border-[#c7d5f1] bg-[#eef4ff] text-[#325188]";
 }
 
+function getAssignedBusinessClassName(isActiveOnAiAuthorityExchange: boolean) {
+  return isActiveOnAiAuthorityExchange
+    ? "border-[#8cc6a7] bg-[#e9f8ef] text-[#276b4a] hover:border-[#4eab78] hover:text-[#1f5a3e] focus-visible:ring-[#4eab78]/20"
+    : "border-[#c3ceda] bg-[#f1f5f8] text-[#55697e] hover:border-[#97a8ba] hover:text-[#334659] focus-visible:ring-brand-deep/15";
+}
+
 function getSortButtonClassName(isActive: boolean) {
   return isActive
     ? "inline-flex items-center gap-1 rounded-sm bg-transparent p-0 text-foreground uppercase tracking-[0.16em] decoration-2 underline underline-offset-4 decoration-accent transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
@@ -107,6 +113,11 @@ export function ContactsTable({ businesses, contacts }: ContactsTableProps) {
   const [isDeleting, startDeleteTransition] = useTransition();
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const normalizedSearchQuery = normalizeSearchValue(deferredSearchQuery);
+  const businessExchangeStatusById = new Map(
+    businesses.map((business) =>
+      [business.id, business.isActiveOnAiAuthorityExchange] as const,
+    ),
+  );
 
   const filteredContacts = contacts
     .filter((contact) => {
@@ -437,15 +448,29 @@ export function ContactsTable({ businesses, contacts }: ContactsTableProps) {
                           <span className="text-sm text-muted">Unassigned</span>
                         ) : (
                           <div className="flex flex-wrap gap-2">
-                            {assignedBusinesses.map((business) => (
-                              <Link
-                                key={`${contact.id}-${business.id}`}
-                                className="inline-flex items-center rounded-full border border-border bg-white/80 px-3 py-1 text-sm font-medium text-foreground transition hover:border-accent hover:text-accent"
-                                href={`/business/${business.id}`}
-                              >
-                                {business.business}
-                              </Link>
-                            ))}
+                            {assignedBusinesses.map((business) => {
+                              const isActiveOnAiAuthorityExchange =
+                                businessExchangeStatusById.get(business.id) ===
+                                true;
+                              const exchangeStatusLabel =
+                                isActiveOnAiAuthorityExchange
+                                  ? "Active in exchange"
+                                  : "Inactive in exchange";
+
+                              return (
+                                <Link
+                                  aria-label={`${business.business} (${exchangeStatusLabel})`}
+                                  key={`${contact.id}-${business.id}`}
+                                  className={`inline-flex items-center rounded-full border px-3 py-1 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 ${getAssignedBusinessClassName(
+                                    isActiveOnAiAuthorityExchange,
+                                  )}`}
+                                  href={`/business/${business.id}`}
+                                  title={`${business.business} (${exchangeStatusLabel})`}
+                                >
+                                  {business.business}
+                                </Link>
+                              );
+                            })}
                           </div>
                         )}
                       </td>
